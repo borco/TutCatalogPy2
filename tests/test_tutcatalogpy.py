@@ -1,4 +1,4 @@
-from tutcatalogpy2 import __version__
+from tutcatalogpy import __version__
 
 
 def test_version():

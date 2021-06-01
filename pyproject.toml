@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "tutcatalogpy2"
+name = "tutcatalogpy"
 version = "0.1.0"
 description = ""
 authors = ["Ioan Calin <iborco@gmail.com>"]
