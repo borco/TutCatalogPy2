@@ -1,3 +1,6 @@
+[tool.poetry.scripts]
+tutcatalogpy = 'tutcatalogpy.catalog.main:run'
+
 [tool.poetry]
 name = "tutcatalogpy"
 version = "0.1.0"
