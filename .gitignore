@@ -1,0 +1,12 @@
+.eggs
+.env
+.venv
+.idea
+.mypy_cache
+.pytest_cache
+__pycache__
+build
+dist
+*.egg-info/
+*.pyc
+*.pyproject.user
