@@ -5,7 +5,16 @@ description = ""
 authors = ["Ioan Calin <iborco@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.10"
+PySide2 = "^5.15.2"
+pyobjc-framework-Cocoa = "^7.2"
+"ruamel.yaml" = "^0.17.7"
+SQLAlchemy = "^1.4.17"
+py2app = "^0.24"
+humanize = "^3.6.0"
+Markdown = "^3.3.4"
+natsort = "^7.1.1"
+pymediainfo = "^5.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
