@@ -8,14 +8,16 @@ from tutcatalogpy.common.files import relative_path
 
 
 class DockWidget(QDockWidget):
-    dock_icon: str
-    dock_status_tip: str
-    dock_icon_size: Final[int] = 12
-    dock_stylesheet: Final[str] = """
+    DOCK_CLOSE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/close.svg')
+    DOCK_ICON_SIZE: Final[int] = 12
+    DOCK_STYLESHEET: Final[str] = """
         QToolBar {background: #444; color: white;}
         QLabel {color: #444;}
     """
-    dock_close_icon: Final[str] = relative_path(__file__, '../../resources/icons/close.svg')
+
+    _dock_icon: str
+    _dock_status_tip: str
+
     toolbar_actions: List[QAction] = []
 
     def __init__(self, *args, **kwargs) -> None:
@@ -23,15 +25,15 @@ class DockWidget(QDockWidget):
 
     def setup_dock(self) -> None:
         action = self.toggleViewAction()
-        action.setIcon(QIcon(self.dock_icon))
-        action.setStatusTip(self.dock_status_tip)
+        action.setIcon(QIcon(self._dock_icon))
+        action.setStatusTip(self._dock_status_tip)
         self.toolbar_actions.append(action)
 
     def setup_dock_toolbar(self, actions: List[Optional[QAction]]) -> None:
         toolbar = QToolBar()
         # toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        toolbar.setStyleSheet(self.dock_stylesheet)
-        toolbar.setIconSize(QSize(self.dock_icon_size, self.dock_icon_size))
+        toolbar.setStyleSheet(self.DOCK_STYLESHEET)
+        toolbar.setIconSize(QSize(self.DOCK_ICON_SIZE, self.DOCK_ICON_SIZE))
 
         label = QLabel(f'  {self.windowTitle()}')
         toolbar.addWidget(label)
@@ -50,7 +52,7 @@ class DockWidget(QDockWidget):
         toolbar.addWidget(spacer)
 
         action = QAction(self)
-        action.setIcon(QIcon(self.dock_close_icon))
+        action.setIcon(QIcon(self.DOCK_CLOSE_ICON))
         action.triggered.connect(lambda: self.close())
         toolbar.addAction(action)
 
