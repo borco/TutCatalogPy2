@@ -12,6 +12,8 @@ class MainWindow(CommonMainWindow):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
+        self.setWindowTitle(self.WINDOW_TITLE)
+
         self._setup_statusbar()
         self._setup_docks()
         self._setup_toolbars()
