@@ -1,4 +1,4 @@
-from PySide2.QtCore import Qt
+from PySide2.QtCore import QSettings, Qt
 from PySide2.QtWidgets import QFrame, QLabel, QStatusBar, QToolBar
 
 from tutcatalogpy.common.files import relative_path
@@ -45,7 +45,6 @@ class MainWindow(CommonMainWindow):
 
         for dock in self.__docks:
             self.addDockWidget(Qt.LeftDockWidgetArea, dock)
-            dock.statusbar = self.statusBar()
             dock.setup_dock()
 
     def __setup_toolbars(self) -> None:
@@ -55,6 +54,18 @@ class MainWindow(CommonMainWindow):
 
         for dock in self.__docks:
             self.__toolbar.addActions(dock.toolbar_actions)
+
+    def _save_settings(self, settings: QSettings) -> None:
+        super()._save_settings(settings)
+
+        for dock in self.__docks:
+            dock.save_settings(settings)
+
+    def _load_settings(self, settings: QSettings) -> None:
+        super()._load_settings(settings)
+
+        for dock in self.__docks:
+            dock.load_settings(settings)
 
 
 if __name__ == '__main__':

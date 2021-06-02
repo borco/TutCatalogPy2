@@ -24,7 +24,7 @@ def run():
     Application.set_icon(app, MainWindow.WINDOW_ICON_FILE)
 
     window = MainWindow()
-    window.read_settings()
+    window.load_settings()
     window.show()
 
     success = app.exec_()

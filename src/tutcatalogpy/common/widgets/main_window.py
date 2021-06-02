@@ -8,17 +8,25 @@ class CommonMainWindow(QMainWindow):
     SETTINGS_WINDOW_GEOMETRY = 'geometry'
     SETTINGS_WINDOW_STATE = 'state'
 
-    def closeEvent(self, event: QCloseEvent) -> None:
-        settings = QSettings()
+    def _save_settings(self, settings: QSettings) -> None:
         settings.beginGroup(self.SETTINGS_GROUP)
         settings.setValue(self.SETTINGS_WINDOW_GEOMETRY, self.saveGeometry())
         settings.setValue(self.SETTINGS_WINDOW_STATE, self.saveState())
-        del settings
-        super().closeEvent(event)
+        settings.endGroup()
 
-    def read_settings(self) -> None:
-        settings = QSettings()
+    def _load_settings(self, settings: QSettings) -> None:
         settings.beginGroup(self.SETTINGS_GROUP)
         self.restoreGeometry(settings.value(self.SETTINGS_WINDOW_GEOMETRY, b''))
         self.restoreState(settings.value(self.SETTINGS_WINDOW_STATE, b''))
+        settings.endGroup()
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        settings = QSettings()
+        self._save_settings(settings)
+        del settings
+        super().closeEvent(event)
+
+    def load_settings(self) -> None:
+        settings = QSettings()
+        self._load_settings(settings)
         del settings
