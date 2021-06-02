@@ -3,6 +3,7 @@
     "python.linting.mypyEnabled": false,
     "python.linting.enabled": true,
     "cSpell.ignoreWords": [
+        "noqa",
         "tutcatalogpy"
     ]
 }

@@ -3,6 +3,7 @@ import sys
 
 from PySide2.QtWidgets import QApplication
 
+import tutcatalogpy.common.logging_config  # noqa: F401
 from tutcatalogpy.catalog.widgets.main_window import MainWindow
 from tutcatalogpy.common.settings import setup_settings
 from tutcatalogpy.common.widgets.application import Application
@@ -17,6 +18,7 @@ def run():
     # can't extend QApplication because of a bug in Qt
     # that will result in a SIGSEGV when the garbage
     # collector runs at exit...
+    # https://bugreports.qt.io/browse/PYSIDE-1447
     Application.set_title(MainWindow.WINDOW_TITLE)
     app = QApplication(sys.argv)
     Application.set_icon(app, MainWindow.WINDOW_ICON_FILE)
