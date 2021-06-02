@@ -8,12 +8,13 @@ ignore =
     D105, # Missing docstring in magic method
     D106, # Missing docstring in public nested class
     D107, # Missing docstring in __init__
-    E501, # Line < 80 chars
- 
+    E501, # Line > 80 chars
+    I001, # Import Line > 80 chars
+
 exclude =
     .git,
     __pycache__,
     build,
     dist
- 
+
 max-complexity = 10
