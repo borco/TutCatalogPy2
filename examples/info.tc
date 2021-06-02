@@ -1,0 +1,72 @@
+publisher: Some Publisher
+title: Some Title
+author: [Author 1, Author 2]
+released: 2020/07
+duration: 1h 2m
+level: any
+url: https://some.site/some/page
+complete: no
+todo: yes
+viewed: yes
+keep: yes
+tags: [bar, foo]
+extraTags: [bar, baz, foo]
+online: yes
+learning_paths:
+  - Learning Path 1
+  - Learning Path 2 [10]
+rating: 2
+description: |
+  ![cover](cover.jpg)
+  
+  # H1 Title
+  
+  ## H2 Title
+  
+  ### H3 Title
+  
+  #### H4 Title
+  
+  ---
+  
+  *Bold*
+  
+  **Italic**
+  
+  ***Bold & Italic***
+  
+  <u>Underlined</u>
+  
+  ~~Striked~~
+  
+  some `inline code` inside other text
+  
+  line 1
+  line 2
+  
+  ```
+  # block code
+  ls -l
+  ```
+  
+  # List
+  
+  * item 1
+  * item 2
+    * subitem 2.1
+    * subitme 2.2
+      * subitem 2.2.1
+      * subitem 2.2.2
+  
+  # Tables
+  
+  First Header  | Second Header
+  ------------- | -------------
+  Content Cell  | Content Cell
+  Content Cell  | Content Cell
+  
+  # Admonition
+  
+  !!! note
+      Some note
+  

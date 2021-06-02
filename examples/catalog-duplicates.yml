@@ -1,0 +1,20 @@
+disks:
+  -
+    path: ~/Downloads/_NEW_TUTORIALS/TUTORIALS_DOWNLOADS/TUTORIALS_DOWNLOADS/
+    location: local
+    depth: 0 # TUTORIAL
+
+  -
+    path: /Volumes/Tutorials WD RED 6T NAS/TUTORIALS_1
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
+
+  -
+    path: ~/Downloads/_NEW_TUTORIALS/TUTORIALS_DOWNLOADS/TUTORIALS_DOWNLOADS/
+    location: local
+    depth: 2 # TUTORIAL
+
+  -
+    path: ~/Downloads/_NEW_TUTORIALS/TUTORIALS_DOWNLOADS/TUTORIALS_DOWNLOADS/
+    location: remote
+    depth: 0 # TUTORIAL

@@ -1,0 +1,69 @@
+disks:
+  -
+    path: ~/Downloads/downthemall/
+    location: local
+    role: uploads
+    monitored: true
+    depth: 0 # TUTORIAL
+
+  -
+    path: ~/Downloads/TUTORIALS_DOWNLOADS/
+    location: local
+    role: uploads
+    monitored: true
+    depth: 0 # TUTORIAL
+
+  -
+    path: ~/Downloads/_TUTORIALS_TO_LEARN
+    location: local
+    role: scheduled
+    monitored: true
+    depth: 0 # TUTORIAL
+
+  -
+    path: /Volumes/HTSG-500G/Downloads [External]/downthemall
+    location: local
+    role: uploads
+    monitored: true
+    depth: 0 # TUTORIAL
+
+  -
+    path: /Volumes/HTSG-500G/Downloads [External]/downthemall [old]
+    location: local
+    role: uploads
+    monitored: true
+    depth: 0 # TUTORIAL
+
+  -
+    path: /Volumes/Tutorials WD RED 6T NAS/_TUTORIALS_NEW/_TUTORIALS_NEW
+    location: remote
+    depth: 0 # TUTORIAL
+
+  -
+    path: /Volumes/Tutorials WD RED 6T NAS/_TUTORIALS_NEW/_TUTORIALS_NEW_2021
+    location: remote
+    depth: 0 # TUTORIAL
+
+  -
+    path: /Volumes/Tutorials WD RED 6T NAS/TUTORIALS_1
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
+
+  -
+    path: /Volumes/Tutorials WD RED 6T NAS/TUTORIALS_2
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
+
+  -
+    path: /Volumes/Tutorials WD RED 6T NAS/TUTORIALS_ONLINE_1
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
+
+  -
+    path: /Volumes/Tutorials WD RED 6T NAS/TUTORIALS_ONLINE_2
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
+
+cache:
+  type: sqlite
+  path: catalog-full.db
