@@ -9,37 +9,36 @@ from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.db.disk import Disk
 
 
-def test_empty_config():
-    config.load_stream('', StringIO(''))
-    assert dal.session is not None
-
-
-def test_cache_set_to_sqlite_by_default():
-    config.load_stream('', StringIO(''))
-    assert dal.url == 'sqlite:///:memory:'
-
-
-def test_sqlite_cache_without_path_raises():
+def test_empty_config_raises():
     with pytest.raises(RuntimeError) as excinfo:
-        config.load_stream('', StringIO("""
-            cache:
-                type: sqlite
-        """))
-    assert str(excinfo.value) == 'cache path not set'
+        config.load_stream('', StringIO(''))
+    assert str(excinfo.value) == 'sqlite cache path not set'
 
 
-def test_sqlite_cache_with_implicit_path(tmp_path):
-    config.load_stream(tmp_path / 'foo.yml', StringIO("""
-        cache:
-            type: sqlite
-    """))
+def test_sqlite_cache_inferred_from_config_file_name(tmp_path):
+    config.load_stream(tmp_path / 'foo.yml', StringIO(''))
     assert dal.url == f'sqlite:///{tmp_path}/foo.db'
 
 
 def test_sqlite_cache_with_explicit_path(tmp_path):
+    config.load_stream('', StringIO(f"""
+        cache:
+            path: {tmp_path}/bar.db
+    """))
+    assert dal.url == f'sqlite:///{tmp_path}/bar.db'
+
+
+def test_sqlite_cache_explicit_path_overrides_implicit_path(tmp_path):
     config.load_stream(tmp_path / 'foo.yml', StringIO(f"""
         cache:
-            type: sqlite
+            path: {tmp_path}/bar.db
+    """))
+    assert dal.url == f'sqlite:///{tmp_path}/bar.db'
+
+
+def test_sqlite_cache_with_explicit_path_with_empty_file_name(tmp_path):
+    config.load_stream('', StringIO(f"""
+        cache:
             path: {tmp_path}/bar.db
     """))
     assert dal.url == f'sqlite:///{tmp_path}/bar.db'
@@ -54,18 +53,18 @@ def test_unknown_cache_type_raises():
     assert str(excinfo.value) == 'cache not supported: foo'
 
 
-def test_load_config_with_one_disk():
+def test_load_config_with_one_disk(tmp_path):
     CONFIG: Final[str] = """
         disks:
             -
                 path: ~/Downloads/foo/
                 location: local
                 role: uploads
-                monitored: true
-                depth: 0
+                depth: 2
     """
 
-    config.load_stream('', StringIO(CONFIG))
+    config_file = tmp_path / 'test.yml'
+    config.load_stream(config_file, StringIO(CONFIG))
 
     disks = dal.session.query(Disk)
 
@@ -76,22 +75,17 @@ def test_load_config_with_one_disk():
     assert disk.path_parent == str(Path('~/Downloads/').expanduser().absolute())
     assert disk.path_name == 'foo'
     assert disk.role == Disk.Role.UPLOADS
-    assert disk.monitored is True
-    assert disk.depth == 0
+    assert disk.depth == 2
     assert disk.location == Disk.Location.LOCAL
     assert disk.id_ == 1
     assert disk.index_ == 0
 
 
-def test_load_config_with_many_disk():
+def test_load_config_with_many_disk(tmp_path):
     CONFIG: Final[str] = """
         disks:
             -
                 path: ~/Downloads/foo/
-                location: local
-                role: uploads
-                monitored: true
-                depth: 0
             -
                 path: ~/Downloads/bar/
                 location: remote
@@ -99,7 +93,8 @@ def test_load_config_with_many_disk():
                 depth: 2
     """
 
-    config.load_stream('', StringIO(CONFIG))
+    config_file = tmp_path / 'test.yml'
+    config.load_stream(config_file, StringIO(CONFIG))
 
     disks = dal.session.query(Disk)
 
@@ -110,31 +105,24 @@ def test_load_config_with_many_disk():
     assert disk.path_parent == str(Path('~/Downloads/').expanduser().absolute())
     assert disk.path_name == 'bar'
     assert disk.role == Disk.Role.DEFAULT
-    assert disk.monitored is False
     assert disk.depth == 2
     assert disk.location == Disk.Location.REMOTE
     assert disk.id_ == 2
     assert disk.index_ == 1
 
 
-def test_reload_same_config_with_many_disk():
+def test_reload_same_config_with_many_disk(tmp_path):
     CONFIG: Final[str] = """
         disks:
             -
                 path: ~/Downloads/foo/
-                location: local
-                role: uploads
-                monitored: true
-                depth: 0
             -
                 path: ~/Downloads/bar/
-                location: remote
-                monitored: false
-                depth: 2
     """
 
-    config.load_stream('', StringIO(CONFIG))
-    config.load_stream('', StringIO(CONFIG))
+    config_file = tmp_path / 'test.yml'
+    config.load_stream(config_file, StringIO(CONFIG))
+    config.load_stream(config_file, StringIO(CONFIG))
 
     disks = dal.session.query(Disk).all()
 
@@ -154,46 +142,29 @@ def test_reload_same_config_with_many_disk():
 
 
 def test_reload_config_with_many_disk_updates_disk_index(tmp_path):
-    CONFIG1: Final[str] = f"""
+    CONFIG1: Final[str] = """
         cache:
             type: sqlite
-            path: {tmp_path}/test.db
-
         disks:
             -
                 path: ~/Downloads/foo/
-                location: local
-                role: uploads
-                monitored: true
-                depth: 0
             -
                 path: ~/Downloads/bar/
-                location: remote
-                monitored: false
-                depth: 2
     """
 
-    CONFIG2: Final[str] = f"""
+    CONFIG2: Final[str] = """
         cache:
             type: sqlite
-            path: {tmp_path}/test.db
-
         disks:
             -
                 path: ~/Downloads/bar/
-                location: remote
-                monitored: false
-                depth: 2
             -
                 path: ~/Downloads/foo/
-                location: local
-                role: uploads
-                monitored: true
-                depth: 0
     """
 
-    config.load_stream('', StringIO(CONFIG1))
-    config.load_stream('', StringIO(CONFIG2))
+    config_file = tmp_path / 'test.yml'
+    config.load_stream(config_file, StringIO(CONFIG1))
+    config.load_stream(config_file, StringIO(CONFIG2))
 
     disks = dal.session.query(Disk).order_by(Disk.index_).all()
 
@@ -213,40 +184,29 @@ def test_reload_config_with_many_disk_updates_disk_index(tmp_path):
 
 
 def test_disks_removed_from_cache_when_removed_from_config(tmp_path):
-    CONFIG1: Final[str] = f"""
+    CONFIG1: Final[str] = """
         cache:
             type: sqlite
-            path: {tmp_path}/test.db
 
         disks:
             -
                 path: ~/Downloads/foo/
-                location: local
-                role: uploads
-                monitored: true
-                depth: 0
             -
                 path: ~/Downloads/bar/
-                location: remote
-                monitored: false
-                depth: 2
     """
 
-    CONFIG2: Final[str] = f"""
+    CONFIG2: Final[str] = """
         cache:
             type: sqlite
-            path: {tmp_path}/test.db
 
         disks:
             -
                 path: ~/Downloads/bar/
-                location: remote
-                monitored: false
-                depth: 2
     """
 
-    config.load_stream('', StringIO(CONFIG1))
-    config.load_stream('', StringIO(CONFIG2))
+    config_file = tmp_path / 'test.yml'
+    config.load_stream(config_file, StringIO(CONFIG1))
+    config.load_stream(config_file, StringIO(CONFIG2))
 
     disks = dal.session.query(Disk).order_by(Disk.index_).all()
 
@@ -268,15 +228,8 @@ def test_disks_remembers_old_db_index(tmp_path):
         disks:
             -
                 path: ~/Downloads/foo/
-                location: local
-                role: uploads
-                monitored: true
-                depth: 0
             -
                 path: ~/Downloads/bar/
-                location: remote
-                monitored: false
-                depth: 2
     """
 
     CONFIG2: Final[str] = f"""
@@ -287,9 +240,6 @@ def test_disks_remembers_old_db_index(tmp_path):
         disks:
             -
                 path: ~/Downloads/bar/
-                location: remote
-                monitored: false
-                depth: 2
     """
 
     config.load_stream('', StringIO(CONFIG1))

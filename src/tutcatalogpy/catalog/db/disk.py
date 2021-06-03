@@ -30,7 +30,6 @@ class Disk(Base):
     role = Column(Enum(Role), default=Role.DEFAULT, nullable=False)
     depth = Column(Integer, default=1, nullable=False)
     enabled = Column(Boolean, default=True, nullable=False)
-    monitored = Column(Boolean, default=False, nullable=False)
     online = Column(Boolean, default=False, nullable=False)
     status = Column(Integer, default=Status.OK, nullable=False)
 

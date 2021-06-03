@@ -47,8 +47,9 @@ class Config(QObject):
         cache_type = data.get('type')
 
         if cache_type is None:
-            dal.connect('sqlite:///:memory:')
-        elif cache_type == Config.CacheType.SQLITE.value:
+            cache_type = Config.CacheType.SQLITE.value
+
+        if cache_type == Config.CacheType.SQLITE.value:
             path = data.get('path')
             if path is not None and path != '':
                 p = Path(path)
@@ -59,12 +60,12 @@ class Config(QObject):
                 path = str(Path(file_name).expanduser().absolute().with_suffix('.db'))
                 path = '/' + path
             else:
-                raise RuntimeError('cache path not set')
+                raise RuntimeError('sqlite cache path not set')
             connection_string = f'sqlite://{path}'
-            dal.connect(connection_string)
         else:
             raise RuntimeError(f'cache not supported: {cache_type}')
 
+        dal.connect(connection_string)
         dal.session = dal.Session()
 
     def __config_disks(self, data) -> None:

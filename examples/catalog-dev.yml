@@ -3,21 +3,15 @@ disks:
     path: ~/Downloads/_NEW_TUTORIALS/
     location: local
     role: uploads
-    monitored: true
     depth: 2 # TUTORIAL
 
   -
     path: ~/Downloads/downthemall/
     location: local
     role: uploads
-    monitored: true
     depth: 0 # TUTORIAL
 
   -
     path: /Volumes/Tutorials WD RED 6T NAS/TUTORIALS_2
     location: remote
     depth: 1 # PUBLISHER / TUTORIAL
-
-cache:
-  type: sqlite
-  path: catalog-dev.db
