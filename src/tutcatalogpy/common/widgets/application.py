@@ -1,8 +1,12 @@
+import logging
 import sys
 from typing import Optional
 
 from PySide2.QtGui import QIcon
 from PySide2.QtWidgets import QApplication
+
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 
 class Application(QApplication):
@@ -23,7 +27,7 @@ class Application(QApplication):
                     if app_info is not None:
                         app_info['CFBundleName'] = title
             except Exception as err:
-                print(err)
+                log.warning(err)
 
     @staticmethod
     def set_icon(application: QApplication, icon_file: Optional[str]) -> None:
