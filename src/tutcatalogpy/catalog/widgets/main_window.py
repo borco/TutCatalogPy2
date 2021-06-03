@@ -47,6 +47,11 @@ class MainWindow(CommonMainWindow):
         self.__setup_menus()
         self._setup_toolbars()
 
+        self._persistent_objects += [
+            self.__recent_files
+        ]
+        self._persistent_objects += self._docks
+
     def __connect_objects(self) -> None:
         config.loaded.connect(self.__on_config_loaded)
 

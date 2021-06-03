@@ -11,6 +11,7 @@ class CommonMainWindow(QMainWindow):
     SETTINGS_WINDOW_STATE: Final[str] = 'state'
 
     _docks: List = []
+    _persistent_objects: List = []  # objects that save and load from settings
 
     def _setup_statusbar(self) -> None:
         self._statusbar = QStatusBar()
@@ -28,7 +29,6 @@ class CommonMainWindow(QMainWindow):
             self.addDockWidget(Qt.LeftDockWidgetArea, dock)
             dock.setup_dock()
 
-
     def _setup_toolbars(self) -> None:
         self.__toolbar = QToolBar()
         self.__toolbar.setObjectName('main_toolbar')
@@ -43,8 +43,8 @@ class CommonMainWindow(QMainWindow):
         settings.setValue(self.SETTINGS_WINDOW_STATE, self.saveState())
         settings.endGroup()
 
-        for dock in self._docks:
-            dock.save_settings(settings)
+        for po in self._persistent_objects:
+            po.save_settings(settings)
 
     def __load_settings(self, settings: QSettings) -> None:
         settings.beginGroup(self.SETTINGS_GROUP)
@@ -52,8 +52,8 @@ class CommonMainWindow(QMainWindow):
         self.restoreState(settings.value(self.SETTINGS_WINDOW_STATE, b''))
         settings.endGroup()
 
-        for dock in self._docks:
-            dock.load_settings(settings)
+        for po in self._persistent_objects:
+            po.load_settings(settings)
 
     def closeEvent(self, event: QCloseEvent) -> None:
         settings = QSettings()
