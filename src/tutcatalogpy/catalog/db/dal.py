@@ -1,7 +1,10 @@
 import logging
+from typing import Optional
 
 from sqlalchemy import create_engine
+from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.session import Session
 
 from tutcatalogpy.catalog.db.base import Base
 
@@ -12,11 +15,13 @@ log.addHandler(logging.NullHandler())
 class DataAccessLayer:
 
     def __init__(self):
-        self.__engine = None
-        self.session = None
+        self.__engine: Optional[Engine] = None
+        self.session: Optional[Session] = None
 
     def connect(self, connection: str):
         from tutcatalogpy.catalog.db.disk import Disk  # noqa: F401
+
+        # print(f'dal connect to: {connection}')
 
         self.disconnect()
 
@@ -39,6 +44,10 @@ class DataAccessLayer:
     @property
     def connected(self) -> bool:
         return self.__engine is not None and self.session is not None
+
+    @property
+    def url(self) -> str:
+        return str(self.__engine.url) if self.__engine is not None else ''
 
 
 dal = DataAccessLayer()

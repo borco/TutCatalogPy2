@@ -1,10 +1,10 @@
 import logging
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TextIO
 
+import yaml
 from PySide2.QtCore import QObject, Signal
-from ruamel.yaml import YAML
 
 from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.db.disk import Disk
@@ -21,29 +21,29 @@ class Config(QObject):
 
     class CacheType(str, Enum):
         SQLITE = 'sqlite'
-        MYSQL = 'mysql'
 
     def load(self, file_name: Optional[str] = None) -> None:
         log.info('Loading %s', file_name)
         self.file_name = file_name
-        if self.file_name is not None:
+        if file_name is not None:
             try:
-                with open(self.file_name, encoding='utf-8', mode='r') as f:
-                    yaml = YAML()
-                    data = yaml.load(f)
-                    self.__config_cache(data.get('cache', {}), self.file_name)
-                    self.__config_disks(data.get('disks', []))
+                self.load_stream(file_name, open(file_name, encoding='utf-8', mode='r'))
             except Exception as e:
-                log.warn('Could not load config %s: %s', file_name, str(e))
+                log.warning('Could not load config %s: %s', file_name, str(e))
                 self.clear()
         else:
             self.clear()
         self.loaded.emit()
 
+    def load_stream(self, file_name: str, stream: TextIO) -> None:
+        data = yaml.load(stream, Loader=yaml.CLoader) or {}
+        self.__config_cache(file_name, data.get('cache', {}))
+        self.__config_disks(data.get('disks', []))
+
     def clear(self):
         dal.disconnect()
 
-    def __config_cache(self, data, file_name: str) -> None:
+    def __config_cache(self, file_name: str, data) -> None:
         cache_type = data.get('type')
 
         if cache_type is None:
@@ -53,7 +53,10 @@ class Config(QObject):
             if path is not None and path != '':
                 p = Path(path)
                 if not p.is_absolute() and file_name is not None:
-                    path = str(Path(file_name).absolute().parent / path)
+                    path = str(Path(file_name).expanduser().absolute().parent / path)
+                path = '/' + path
+            elif file_name != '':
+                path = str(Path(file_name).expanduser().absolute().with_suffix('.db'))
                 path = '/' + path
             else:
                 raise RuntimeError('cache path not set')
@@ -65,10 +68,16 @@ class Config(QObject):
         dal.session = dal.Session()
 
     def __config_disks(self, data) -> None:
-        if len(data) == 0:
+        session = dal.session
+
+        if len(data) == 0 or session is None:
             return
 
-        session = dal.session
+        (
+            session
+            .query(Disk)
+            .update({Disk.status: Disk.Status.UNKNOWN})
+        )
 
         for index, d in enumerate(data):
             path = d['path']
@@ -90,6 +99,15 @@ class Config(QObject):
             disk.depth = int(d.get('depth', 1))
             disk.monitored = d.get('monitored', False)
             disk.online = path.exists()
+            disk.status = Disk.Status.OK
+
+        # delete disks that still have their status set to UNKNOWN
+        (
+            session
+            .query(Disk)
+            .filter(Disk.status == Disk.Status.UNKNOWN)
+            .delete()
+        )
 
         session.commit()
 

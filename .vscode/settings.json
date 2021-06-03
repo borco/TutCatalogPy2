@@ -4,6 +4,7 @@
     "python.linting.enabled": true,
     "cSpell.ignoreWords": [
         "noqa",
+        "pytest",
         "tutcatalogpy"
     ]
 }
