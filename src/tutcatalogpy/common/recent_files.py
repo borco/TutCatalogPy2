@@ -30,14 +30,15 @@ class RecentFiles(QObject):
     def menu(self) -> QMenu:
         return self.__menu
 
-    def most_recent_action(self) -> Union[QAction, None]:
+    def __most_recent_action(self) -> Union[QAction, None]:
         action = self.__menu.actions()[0]
         if action.isSeparator() is False:
             return action
         return None
 
-    def mostRecentFile(self) -> Union[str, None]:
-        action = self.most_recent_action()
+    @property
+    def most_recent_file(self) -> Union[str, None]:
+        action = self.__most_recent_action()
         if action is not None:
             return action.data()
         return None
@@ -64,16 +65,16 @@ class RecentFiles(QObject):
         self.__actions.clear()
         self.__menu.setEnabled(False)
 
-    def add_file(self, fileName: str, toTop: bool = True):
-        action = self.__actions.pop(fileName, None)
+    def add_file(self, file_name: str):
+        action = self.__actions.pop(file_name, None)
         if action is not None:
             self.__menu.removeAction(action)
 
         action = QAction(self)
-        action.setText(Path(fileName).name)
-        action.setData(fileName)
-        action.setStatusTip(f'Open config {fileName}')
-        action.triggered.connect(lambda: self.triggered.emit(fileName))
-        self.__actions[fileName] = action
+        action.setText(Path(file_name).name)
+        action.setData(file_name)
+        action.setStatusTip(f'Open config {file_name}')
+        action.triggered.connect(lambda: self.triggered.emit(file_name))
+        self.__actions[file_name] = action
         self.__menu.insertAction(self.__menu.actions()[0], action)
         self.__menu.setEnabled(True)

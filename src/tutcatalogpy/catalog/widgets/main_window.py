@@ -90,7 +90,7 @@ class MainWindow(CommonMainWindow):
         action.triggered.connect(self.__open_config)
         menu.addAction(action)
 
-        self.__recent_files.triggered.connect(self.load_config)
+        self.__recent_files.triggered.connect(self.__load_config)
         menu.addMenu(self.__recent_files.menu)
 
         action = QAction(self.FILE_QUIT_MENU, self)
@@ -109,7 +109,7 @@ class MainWindow(CommonMainWindow):
 
         self.__menubar.addMenu(menu)
 
-    def load_config(self, file_name: Optional[str] = None) -> None:
+    def __load_config(self, file_name: Optional[str] = None) -> None:
         config.load(file_name)
 
     def __open_config(self) -> None:
@@ -129,6 +129,10 @@ class MainWindow(CommonMainWindow):
             self.setWindowTitle(f'{config.file_name} - {self.WINDOW_TITLE}')
         else:
             self.setWindowTitle(self.WINDOW_TITLE)
+
+    def show(self) -> None:
+        super().show()
+        self.__load_config(self.__recent_files.most_recent_file)
 
 
 if __name__ == '__main__':
