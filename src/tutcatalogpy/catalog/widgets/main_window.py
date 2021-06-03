@@ -1,16 +1,18 @@
 import logging
-from typing import Final
+from typing import Final, List, Optional
 
+from PySide2.QtCore import Qt
 from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QAction, QFrame, QLabel, QMenu, QMenuBar
+from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenuBar
 
+from tutcatalogpy.catalog.config import config
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
 from tutcatalogpy.common.widgets.logging_dock import LoggingDock
 from tutcatalogpy.common.widgets.main_window import CommonMainWindow
 
 log = logging.getLogger(__name__)
-log.info('Launching app.')
+log.addHandler(logging.NullHandler())
 
 
 class MainWindow(CommonMainWindow):
@@ -18,9 +20,16 @@ class MainWindow(CommonMainWindow):
     WINDOW_ICON_FILE: Final[str] = relative_path(__file__, '../../resources/icons/catalog.png')
 
     FILE_MENU: Final[str] = 'File'
+
     FILE_OPEN_MENU: Final[str] = 'Open...'
     FILE_OPEN_SHORTCUT: Final[QKeySequence] = QKeySequence.Open
     FILE_OPEN_TIP: Final[str] = 'Open config ...'
+
+    FILE_OPEN_DIALOG_TITLE: Final[str] = 'Open TutCatalogPy config file'
+    FILE_OPEN_DIALOG_FILTERS: Final[List[str]] = [
+        'TutCatalogPy config files (*.yml)',
+        'Any Files (*)'
+    ]
 
     FILE_QUIT_MENU: Final[str] = 'Quit'
     FILE_QUIT_SHORTCUT: Final[QKeySequence] = QKeySequence.Quit
@@ -32,10 +41,14 @@ class MainWindow(CommonMainWindow):
 
         self.__recent_files = RecentFiles(self)
 
+        self.__connect_objects()
         self._setup_statusbar()
         self._setup_docks()
         self.__setup_menus()
         self._setup_toolbars()
+
+    def __connect_objects(self) -> None:
+        config.loaded.connect(self.__on_config_loaded)
 
     def _setup_statusbar(self) -> None:
         super()._setup_statusbar()
@@ -91,11 +104,26 @@ class MainWindow(CommonMainWindow):
 
         self.__menubar.addMenu(menu)
 
-    def load_config(self, file_name: str) -> None:
-        log.info('Loading config file: %s', file_name)
+    def load_config(self, file_name: Optional[str] = None) -> None:
+        config.load(file_name)
 
     def __open_config(self) -> None:
-        log.info('Open config file trigerred')
+        dialog = QFileDialog(self, Qt.Sheet)
+        dialog.setWindowTitle(self.FILE_OPEN_DIALOG_TITLE)
+        dialog.setNameFilters(self.FILE_OPEN_DIALOG_FILTERS)
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+
+        if dialog.exec_():
+            if len(dialog.selectedFiles()) == 1:
+                config.load(dialog.selectedFiles()[0])
+
+    def __on_config_loaded(self) -> None:
+        if config.file_name is not None:
+            self.__recent_files.add_file(config.file_name)
+            self.setWindowTitle(f'{config.file_name} - {self.WINDOW_TITLE}')
+        else:
+            self.setWindowTitle(self.WINDOW_TITLE)
 
 
 if __name__ == '__main__':
