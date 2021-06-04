@@ -6,6 +6,7 @@ from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenuBar
 
 from tutcatalogpy.catalog.config import config
+from tutcatalogpy.catalog.models.disks_model import disks_model
 from tutcatalogpy.catalog.widgets.disks_dock import DisksDock
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
@@ -40,6 +41,8 @@ class MainWindow(CommonMainWindow):
 
         self.setWindowTitle(self.WINDOW_TITLE)
 
+        disks_model.setParent(self)
+
         self.__recent_files = RecentFiles(self)
 
         self.__connect_objects()
@@ -69,6 +72,8 @@ class MainWindow(CommonMainWindow):
             _show_sql = True
 
         self.__disks_dock = DisksDock()
+        self.__disks_dock.set_model(disks_model)
+
         self.__log_dock = CatalogLoggingDock()
 
         self._docks = [
@@ -132,6 +137,8 @@ class MainWindow(CommonMainWindow):
             self.setWindowTitle(f'{config.file_name} - {self.WINDOW_TITLE}')
         else:
             self.setWindowTitle(self.WINDOW_TITLE)
+
+        disks_model.refresh()
 
     def show(self) -> None:
         super().show()
