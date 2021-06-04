@@ -106,12 +106,21 @@ class DisksModel(QAbstractTableModel):
     def flags(self, index: QModelIndex) -> Any:
         column = index.column()
 
-        flags = Qt.ItemIsSelectable | Qt.ItemIsEnabled
+        flags = Qt.ItemIsSelectable | Qt.ItemIsEnabled | super().flags(index)
 
         if column == DisksModel.Columns.ENABLED.value:
             flags |= Qt.ItemIsUserCheckable
 
         return flags
+
+    def __query(self) -> Query:
+        query = (
+            dal
+            .session
+            .query(Disk)
+        )
+
+        return query
 
     def disk(self, row) -> Optional[Any]:
         if row < 0 or row >= self.__row_count:
@@ -128,15 +137,6 @@ class DisksModel(QAbstractTableModel):
         self.__cache[row] = data
 
         return data
-
-    def __query(self) -> Query:
-        query = (
-            dal
-            .session
-            .query(Disk)
-        )
-
-        return query
 
     def __disk(self, row: int) -> Any:
         query = self.__query()
