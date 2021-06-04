@@ -261,3 +261,40 @@ def test_disks_remembers_old_db_index(tmp_path):
     assert disk.path_name == 'bar'
     assert disk.index_ == 1
     assert disk.id_ == 2
+
+
+def test_disk_enabled_by_default(tmp_path):
+    CONFIG: Final[str] = f"""
+        disks:
+            -
+                path: ~/Downloads/foo/
+    """
+    config_file = tmp_path / 'test.yml'
+    config.load_stream(config_file, StringIO(CONFIG))
+
+    disks = dal.session.query(Disk)
+
+    assert disks.count() == 1
+
+    disk = disks.one()
+
+    assert disk.enabled is True
+
+
+def test_disk_remembers_enabled_state(tmp_path):
+    CONFIG: Final[str] = f"""
+        disks:
+            -
+                path: ~/Downloads/foo/
+    """
+    config_file = tmp_path / 'test.yml'
+    config.load_stream(config_file, StringIO(CONFIG))
+
+    disk = dal.session.query(Disk).one()
+    disk.enabled = False
+    dal.session.commit()
+
+    config.load_stream(config_file, StringIO(CONFIG))
+
+    disk = dal.session.query(Disk).one()
+    assert disk.enabled is False
