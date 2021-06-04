@@ -9,7 +9,7 @@ from sqlalchemy.orm import Query
 
 from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.db.disk import Disk
-from tutcatalogpy.common.labeled_enum import LabeledEnum
+from tutcatalogpy.common.table_column_enum import TableColumnEnum
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -19,14 +19,14 @@ class DisksModel(QAbstractTableModel):
 
     disk_enabled_changed = Signal(int)
 
-    class Columns(LabeledEnum):
-        ENABLED = (0, 'Enabled')
-        INDEX = (1, 'Index')
-        NAME = (2, 'Name')
-        PATH = (3, 'Path')
-        LOCATION = (4, 'Location')
-        ROLE = (5, 'Role')
-        DEPTH = (6, 'Depth')
+    class Columns(TableColumnEnum):
+        ENABLED = (0, 'Enabled', 'enabled')
+        INDEX = (1, 'Index', 'index_')
+        NAME = (2, 'Name', 'path_name')
+        PATH = (3, 'Path', 'path_parent')
+        LOCATION = (4, 'Location', 'location')
+        ROLE = (5, 'Role', 'role')
+        DEPTH = (6, 'Depth', 'depth')
 
     def __init__(self) -> None:
         super().__init__()
@@ -72,16 +72,8 @@ class DisksModel(QAbstractTableModel):
         elif role == Qt.DisplayRole:
             if column == DisksModel.Columns.INDEX.value:
                 return disk.index_ + 1
-            elif column == DisksModel.Columns.NAME.value:
-                return disk.path_name
-            elif column == DisksModel.Columns.PATH.value:
-                return disk.path_parent
-            elif column == DisksModel.Columns.LOCATION.value:
-                return disk.location
-            elif column == DisksModel.Columns.ROLE.value:
-                return disk.role
-            elif column == DisksModel.Columns.DEPTH.value:
-                return disk.depth
+            else:
+                return getattr(disk, DisksModel.Columns(column).column)
         elif role == Qt.UserRole:
             return disk
 
