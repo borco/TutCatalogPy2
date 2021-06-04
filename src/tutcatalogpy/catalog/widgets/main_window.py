@@ -8,6 +8,7 @@ from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenu
 from tutcatalogpy.catalog.config import config
 from tutcatalogpy.catalog.models.disks_model import disks_model
 from tutcatalogpy.catalog.widgets.disks_dock import DisksDock
+from tutcatalogpy.catalog.widgets.scan_config_dock import ScanConfigDock
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
 from tutcatalogpy.common.widgets.logging_dock import LoggingDock
@@ -52,7 +53,7 @@ class MainWindow(CommonMainWindow):
         self._setup_toolbars()
 
         self._persistent_objects += [
-            self.__recent_files
+            self.__recent_files,
         ]
         self._persistent_objects += self._docks
 
@@ -76,9 +77,12 @@ class MainWindow(CommonMainWindow):
 
         self.__log_dock = CatalogLoggingDock()
 
+        self.__scan_config_dock = ScanConfigDock()
+
         self._docks = [
             self.__disks_dock,
             self.__log_dock,
+            self.__scan_config_dock,
         ]
 
         super()._setup_docks()
