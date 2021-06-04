@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Final, List, Optional
 
 from PySide2.QtCore import QSettings, QSize
@@ -29,7 +30,7 @@ class DockWidget(QDockWidget):
         action.setStatusTip(self._dock_status_tip)
         self.toolbar_actions.append(action)
 
-    def setup_dock_toolbar(self, actions: List[Optional[QAction]]) -> None:
+    def _setup_dock_toolbar(self, actions: List[Optional[QAction]] = None) -> None:
         toolbar = QToolBar()
         # toolbar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         toolbar.setStyleSheet(self.DOCK_STYLESHEET)
@@ -38,14 +39,14 @@ class DockWidget(QDockWidget):
         label = QLabel(f'  {self.windowTitle()}')
         toolbar.addWidget(label)
 
-        if len(actions) > 0:
+        if actions is not None:
             toolbar.addSeparator()
 
-        for action in actions:
-            if action is None:
-                toolbar.addSeparator()
-            else:
-                toolbar.addAction(action)
+            for action in actions:
+                if action is None:
+                    toolbar.addSeparator()
+                else:
+                    toolbar.addAction(action)
 
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -58,9 +59,11 @@ class DockWidget(QDockWidget):
 
         self.setTitleBarWidget(toolbar)
 
+    @abstractmethod
     def save_settings(self, settings: QSettings):
         pass
 
+    @abstractmethod
     def load_settings(self, settings: QSettings):
         pass
 

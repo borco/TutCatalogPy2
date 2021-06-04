@@ -6,6 +6,7 @@ from PySide2.QtGui import QKeySequence
 from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenuBar
 
 from tutcatalogpy.catalog.config import config
+from tutcatalogpy.catalog.widgets.disks_dock import DisksDock
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
 from tutcatalogpy.common.widgets.logging_dock import LoggingDock
@@ -67,9 +68,11 @@ class MainWindow(CommonMainWindow):
         class CatalogLoggingDock(LoggingDock):
             _show_sql = True
 
+        self.__disks_dock = DisksDock()
         self.__log_dock = CatalogLoggingDock()
 
         self._docks = [
+            self.__disks_dock,
             self.__log_dock,
         ]
 

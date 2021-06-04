@@ -31,7 +31,7 @@ class LoggingDock(DockWidget):
     TOGGLE_WRAP_ICON: Final[str] = relative_path(__file__, '../../resources/icons/wrap_line.svg')
     TOGGLE_WRAP_TIP: Final[str] = 'Wrap log lines.'
 
-    _dock_icon = relative_path(__file__, '../../resources/icons/log.svg')
+    _dock_icon: Final[str] = relative_path(__file__, '../../resources/icons/log.svg')
     _dock_status_tip: Final[str] = 'Toggle log dock'
     _show_sql: bool = False
 
@@ -90,7 +90,7 @@ class LoggingDock(DockWidget):
         self.__clear.setStatusTip(self.CLEAR_TIP)
         self.__clear.triggered.connect(self.__logging_browser.clear)
 
-        self.setup_dock_toolbar([
+        self._setup_dock_toolbar([
             self.__toggle_verbose,
             self.__toggle_debug,
             self.__toggle_sql,
