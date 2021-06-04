@@ -1,6 +1,6 @@
 from typing import Final, List
 
-from PySide2.QtCore import QSettings, Qt
+from PySide2.QtCore import QSettings, QSize, Qt
 from PySide2.QtGui import QCloseEvent
 from PySide2.QtWidgets import QMainWindow, QStatusBar, QToolBar
 
@@ -9,6 +9,8 @@ class CommonMainWindow(QMainWindow):
     SETTINGS_GROUP: Final[str] = 'main_window'
     SETTINGS_WINDOW_GEOMETRY: Final[str] = 'geometry'
     SETTINGS_WINDOW_STATE: Final[str] = 'state'
+
+    DOCK_ICON_SIZE: Final[int] = 24
 
     _docks: List = []
     _persistent_objects: List = []  # objects that save and load from settings
@@ -32,6 +34,7 @@ class CommonMainWindow(QMainWindow):
     def _setup_toolbars(self) -> None:
         self.__toolbar = QToolBar()
         self.__toolbar.setObjectName('main_toolbar')
+        self.__toolbar.setIconSize(QSize(self.DOCK_ICON_SIZE, self.DOCK_ICON_SIZE))
         self.addToolBar(self.__toolbar)
 
         for dock in self._docks:
