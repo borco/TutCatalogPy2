@@ -98,7 +98,6 @@ class Config(QObject):
             disk.location = Disk.Location(d.get('location', Disk.Location.REMOTE))
             disk.role = Disk.Role(d.get('role', Disk.Role.DEFAULT))
             disk.depth = int(d.get('depth', 1))
-            disk.monitored = d.get('monitored', False)
             disk.online = path.exists()
             disk.status = Disk.Status.OK
 
