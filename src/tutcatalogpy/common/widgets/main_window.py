@@ -11,6 +11,7 @@ class CommonMainWindow(QMainWindow):
     SETTINGS_WINDOW_STATE: Final[str] = 'state'
 
     DOCK_ICON_SIZE: Final[int] = 24
+    DOCKS_TOOLBAR_OBJECT_NAME: Final[str] = 'docks_toolbar'
 
     _docks: List = []
     _persistent_objects: List = []  # objects that save and load from settings
@@ -31,9 +32,9 @@ class CommonMainWindow(QMainWindow):
             self.addDockWidget(Qt.LeftDockWidgetArea, dock)
             dock.setup_dock()
 
-    def _setup_toolbars(self) -> None:
+    def _setup_docks_toolbar(self) -> None:
         self.__toolbar = QToolBar()
-        self.__toolbar.setObjectName('main_toolbar')
+        self.__toolbar.setObjectName(self.DOCKS_TOOLBAR_OBJECT_NAME)
         self.__toolbar.setIconSize(QSize(self.DOCK_ICON_SIZE, self.DOCK_ICON_SIZE))
         self.addToolBar(self.__toolbar)
 

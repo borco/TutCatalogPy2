@@ -16,7 +16,7 @@ class MainWindow(CommonMainWindow):
 
         self._setup_statusbar()
         self._setup_docks()
-        self._setup_toolbars()
+        self._setup_docks_toolbar()
 
     def _setup_docks(self) -> None:
         self.__log_dock = LoggingDock()

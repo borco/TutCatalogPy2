@@ -1,14 +1,16 @@
 import logging
 from typing import Final, List, Optional
 
-from PySide2.QtCore import Qt
-from PySide2.QtGui import QKeySequence
-from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenuBar
+from PySide2.QtCore import QSize, QTimer, Qt
+from PySide2.QtGui import QCloseEvent, QIcon, QKeySequence
+from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenuBar, QToolBar
 
 from tutcatalogpy.catalog.config import config
 from tutcatalogpy.catalog.models.disks_model import disks_model
+from tutcatalogpy.catalog.scan_controller import scan_controller
 from tutcatalogpy.catalog.widgets.disks_dock import DisksDock
 from tutcatalogpy.catalog.widgets.scan_config_dock import ScanConfigDock
+from tutcatalogpy.catalog.widgets.scan_dialog import ScanDialog
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
 from tutcatalogpy.common.widgets.logging_dock import LoggingDock
@@ -49,8 +51,11 @@ class MainWindow(CommonMainWindow):
         self.__connect_objects()
         self._setup_statusbar()
         self._setup_docks()
+        self.__setup_actions()
         self.__setup_menus()
-        self._setup_toolbars()
+        self.__setup_controllers()
+        self.__setup_dialogs()
+        self.__setup_toolbars()
 
         self._persistent_objects += [
             self.__recent_files,
@@ -87,6 +92,28 @@ class MainWindow(CommonMainWindow):
 
         super()._setup_docks()
 
+    def __setup_actions(self) -> None:
+        self.__scan_startup_action = QAction()
+        self.__scan_startup_action.setToolTip('Startup scan')
+        self.__scan_startup_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan_startup.svg')))
+        self.__scan_startup_action.triggered.connect(self.__on_scan_startup_action_triggered)
+
+        self.__scan_quick_action = QAction()
+        self.__scan_quick_action.setToolTip('Scan')
+        self.__scan_quick_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan.svg')))
+        self.__scan_quick_action.triggered.connect(self.__on_scan_quick_action_triggered)
+
+        self.__scan_extended_action = QAction()
+        self.__scan_extended_action.setToolTip('Scan more')
+        self.__scan_extended_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan_more.svg')))
+        self.__scan_extended_action.triggered.connect(self.__on_scan_extended_action_triggered)
+
+        self.__scan_actions = [
+            self.__scan_startup_action,
+            self.__scan_quick_action,
+            self.__scan_extended_action,
+        ]
+
     def __setup_menus(self) -> None:
         self.__menubar = QMenuBar()
         self.setMenuBar(self.__menubar)
@@ -121,6 +148,64 @@ class MainWindow(CommonMainWindow):
 
         self.__menubar.addMenu(menu)
 
+    def __setup_controllers(self) -> None:
+        scan_controller.setParent(self)
+        scan_controller.setup()
+        scan_worker = scan_controller.worker
+        scan_worker.scan_started.connect(self.__on_scan_worker_scan_started)
+        # scan_worker.disks_scan_finished.connect(disk_model.refresh)
+
+    def __setup_toolbars(self) -> None:
+        self.__toolbar = QToolBar()
+        self.__toolbar.setObjectName('main_toolbar')
+        self.__toolbar.setIconSize(QSize(self.DOCK_ICON_SIZE, self.DOCK_ICON_SIZE))
+        self.addToolBar(self.__toolbar)
+
+        self.__toolbar.addActions([
+            self.__scan_startup_action,
+            self.__scan_quick_action,
+            self.__scan_extended_action
+        ])
+
+        self._setup_docks_toolbar()
+
+    def __cleanup_controllers(self) -> None:
+        scan_controller.cleanup()
+
+    def __setup_dialogs(self) -> None:
+        self.__scan_dialog: Optional[ScanDialog] = None
+        self.__scan_dialog = ScanDialog(parent=self)
+        self.__scan_dialog.set_scan_worker(scan_controller.worker)
+        self.__scan_dialog.finished.connect(self.__on_scan_dialog_finished)
+
+    def __on_scan_startup_action_triggered(self) -> None:
+        scan_controller.scan_startup()
+
+    def __on_scan_quick_action_triggered(self) -> None:
+        scan_controller.scan_quick()
+
+    def __on_scan_extended_action_triggered(self) -> None:
+        scan_controller.scan_more()
+
+    def __on_scan_worker_scan_started(self) -> None:
+        for action in self.__scan_actions:
+            action.setEnabled(False)
+
+        self.__scan_dialog.reset()
+        self.__scan_dialog.show()
+        QTimer.singleShot(500, self.__check_scan_finished_too_quickly)
+
+    def __check_scan_finished_too_quickly(self) -> None:
+        if self.__scan_dialog and not scan_controller.worker.scanning:
+            log.debug('Scan finished extremely quickly!')
+            self.__scan_dialog.accept()
+        else:
+            log.debug('Still scanning...')
+
+    def __on_scan_dialog_finished(self) -> None:
+        for action in self.__scan_actions:
+            action.setEnabled(True)
+
     def __load_config(self, file_name: Optional[str] = None) -> None:
         config.load(file_name)
 
@@ -147,6 +232,10 @@ class MainWindow(CommonMainWindow):
     def show(self) -> None:
         super().show()
         self.__load_config(self.__recent_files.most_recent_file)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self.__cleanup_controllers()
+        super().closeEvent(event)
 
 
 if __name__ == '__main__':

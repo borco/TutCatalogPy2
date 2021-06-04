@@ -20,6 +20,7 @@ class DataAccessLayer:
 
     def connect(self, connection: str):
         from tutcatalogpy.catalog.db.disk import Disk  # noqa: F401
+        from tutcatalogpy.catalog.db.folder import Folder  # noqa: F401
 
         # print(f'dal connect to: {connection}')
 
