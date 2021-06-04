@@ -20,7 +20,7 @@ class DisksModel(QAbstractTableModel):
     disk_enabled_changed = Signal(int)
 
     class Columns(LabeledEnum):
-        ENABLED = (0, '')
+        ENABLED = (0, 'Enabled')
         INDEX = (1, 'Index')
         NAME = (2, 'Name')
         PATH = (3, 'Path')
@@ -38,7 +38,10 @@ class DisksModel(QAbstractTableModel):
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int) -> Optional[Any]:
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return DisksModel.Columns(section).label
+            if section in [DisksModel.Columns.ENABLED.value, DisksModel.Columns.INDEX.value]:
+                return ''
+            else:
+                return DisksModel.Columns(section).label
 
     def rowCount(self, index) -> int:
         return self.__row_count
