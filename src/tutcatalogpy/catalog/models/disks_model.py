@@ -4,7 +4,6 @@ from typing import Any, Dict, Optional
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from PySide2.QtGui import QBrush
 
-from sqlalchemy.sql.functions import func
 from sqlalchemy.orm import Query
 
 from tutcatalogpy.catalog.db.dal import dal
@@ -21,7 +20,7 @@ class DisksModel(QAbstractTableModel):
 
     class Columns(TableColumnEnum):
         ENABLED = (0, 'Enabled', 'enabled')
-        INDEX = (1, 'Index', 'index_')
+        INDEX = (1, 'Index', 'index')
         NAME = (2, 'Name', 'path_name')
         PATH = (3, 'Path', 'path_parent')
         LOCATION = (4, 'Location', 'location')
@@ -32,6 +31,8 @@ class DisksModel(QAbstractTableModel):
         super().__init__()
         self.__cache: Dict[int, Any] = {}
         self.__row_count: int = 0
+        self.__sort_column: int = 0
+        self.__sort_ascending: bool = True
 
     def columnCount(self, index) -> int:
         return len(DisksModel.Columns)
@@ -48,7 +49,7 @@ class DisksModel(QAbstractTableModel):
 
     def refresh(self) -> None:
         self.beginResetModel()
-        self.__row_count = dal.session.query(func.count(Disk.id_)).scalar() if dal.connected else 0
+        self.__row_count = self.__query().count() if dal.connected else 0
         self.__cache.clear()
         self.endResetModel()
         log.debug('Disk model refreshed.')
@@ -133,9 +134,20 @@ class DisksModel(QAbstractTableModel):
     def __disk(self, row: int) -> Any:
         query = self.__query()
 
-        # TODO: do the sorting
+        column = Disk.__table__.columns[DisksModel.Columns(self.__sort_column).column]
+        column = column.asc() if self.__sort_ascending else column.desc()
+        query = query.order_by(column)
+        if column != Disk.path_name:
+            query = query.order_by(Disk.path_name.asc())
 
         return query.offset(row).limit(1).one()
+
+    def sort(self, index: int, sort_oder: Qt.SortOrder) -> None:
+        self.beginResetModel()
+        self.__sort_column = index
+        self.__sort_ascending = (sort_oder == Qt.SortOrder.AscendingOrder)
+        self.__cache.clear()
+        self.endResetModel()
 
 
 disks_model = DisksModel()
