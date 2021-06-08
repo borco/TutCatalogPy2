@@ -7,6 +7,7 @@ import pytest
 from tutcatalogpy.catalog.config import config
 from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.db.disk import Disk
+from tutcatalogpy.catalog.db.folder import Folder
 
 
 def test_empty_config_raises():
@@ -264,7 +265,7 @@ def test_disks_remembers_old_db_index(tmp_path):
 
 
 def test_disk_enabled_by_default(tmp_path):
-    CONFIG: Final[str] = f"""
+    CONFIG: Final[str] = """
         disks:
             -
                 path: ~/Downloads/foo/
@@ -282,7 +283,7 @@ def test_disk_enabled_by_default(tmp_path):
 
 
 def test_disk_remembers_enabled_state(tmp_path):
-    CONFIG: Final[str] = f"""
+    CONFIG: Final[str] = """
         disks:
             -
                 path: ~/Downloads/foo/
@@ -298,3 +299,44 @@ def test_disk_remembers_enabled_state(tmp_path):
 
     disk = dal.session.query(Disk).one()
     assert disk.enabled is False
+
+
+def test_remove_folders_on_deleted_disks(tmp_path):
+    PATH_NAME1: Final[str] = 'foo1'
+    PATH_NAME2: Final[str] = 'foo2'
+
+    CONFIG1: Final[str] = f"""
+        disks:
+            -
+                path: {tmp_path}/{PATH_NAME1}/
+            -
+                path: {tmp_path}/{PATH_NAME2}/
+    """
+
+    CONFIG2: Final[str] = f"""
+        disks:
+            -
+                path: {tmp_path}/{PATH_NAME2}/
+    """
+
+    config_file = tmp_path / 'test.yml'
+    config.load_stream(config_file, StringIO(CONFIG1))
+
+    session = dal.session
+
+    disk1 = session.query(Disk).filter(Disk.path_name == PATH_NAME1).one()
+    disk2 = session.query(Disk).filter(Disk.path_name == PATH_NAME2).one()
+
+    session.add(Folder(disk=disk1, tutorial_path='.', tutorial_name='xxx', system_id='1'))
+    session.add(Folder(disk=disk2, tutorial_path='.', tutorial_name='xxx', system_id='1'))
+    session.commit()
+
+    config.load_stream(config_file, StringIO(CONFIG2))
+
+    folders = session.query(Folder).all()
+
+    assert len(folders) == 1
+
+    folder = folders[0]
+
+    assert folder.disk.path_name == PATH_NAME2

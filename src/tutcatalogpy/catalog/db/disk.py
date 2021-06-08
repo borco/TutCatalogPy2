@@ -2,6 +2,7 @@ import enum
 from pathlib import Path
 
 from sqlalchemy import Boolean, Column, Enum, Integer, Text, UniqueConstraint
+from sqlalchemy.orm import relationship
 
 from tutcatalogpy.catalog.db.base import Base
 
@@ -32,6 +33,9 @@ class Disk(Base):
     enabled = Column(Boolean, default=True, nullable=False)
     online = Column(Boolean, default=False, nullable=False)
     status = Column(Integer, default=Status.OK, nullable=False)
+
+    # https://esmithy.net/2020/06/20/sqlalchemy-cascade-delete/
+    folders = relationship('Folder', back_populates='disk', cascade='all, delete')
 
     __table_args__ = (
         UniqueConstraint('path_parent', 'path_name'),

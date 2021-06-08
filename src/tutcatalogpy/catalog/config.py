@@ -102,12 +102,9 @@ class Config(QObject):
             disk.status = Disk.Status.OK
 
         # delete disks that still have their status set to UNKNOWN
-        (
-            session
-            .query(Disk)
-            .filter(Disk.status == Disk.Status.UNKNOWN)
-            .delete()
-        )
+        # we must use 'session.delete()' to make sqlachemy delete the associated folders
+        for disk in session.query(Disk).filter(Disk.status == Disk.Status.UNKNOWN):
+            session.delete(disk)
 
         session.commit()
 
