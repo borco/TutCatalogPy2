@@ -69,7 +69,7 @@ class ScanConfigDock(DockWidget):
             text = option.name.replace('_', ' ').capitalize()
             grid.addWidget(QLabel(text), row_index + 1, 0)
 
-            for column_index, mode in enumerate([ScanConfig.Mode.STARTUP, ScanConfig.Mode.QUICK, ScanConfig.Mode.EXTENDED]):
+            for column_index, mode in enumerate([ScanConfig.Mode.STARTUP, ScanConfig.Mode.NORMAL, ScanConfig.Mode.EXTENDED]):
                 checkbox = ScanConfigDock.CheckBox(mode, option)
                 checkbox.setChecked(scan_config.option[mode] & option)
                 checkbox.toggled.connect(self.__on_checkbox_toggled)

@@ -98,10 +98,10 @@ class MainWindow(CommonMainWindow):
         self.__scan_startup_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan_startup.svg')))
         self.__scan_startup_action.triggered.connect(self.__on_scan_startup_action_triggered)
 
-        self.__scan_quick_action = QAction()
-        self.__scan_quick_action.setStatusTip('Normal scan')
-        self.__scan_quick_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan.svg')))
-        self.__scan_quick_action.triggered.connect(self.__on_scan_quick_action_triggered)
+        self.__scan_normal_action = QAction()
+        self.__scan_normal_action.setStatusTip('Normal scan')
+        self.__scan_normal_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan.svg')))
+        self.__scan_normal_action.triggered.connect(self.__on_scan_normal_action_triggered)
 
         self.__scan_extended_action = QAction()
         self.__scan_extended_action.setStatusTip('Extended scan')
@@ -110,7 +110,7 @@ class MainWindow(CommonMainWindow):
 
         self.__scan_actions = [
             self.__scan_startup_action,
-            self.__scan_quick_action,
+            self.__scan_normal_action,
             self.__scan_extended_action,
         ]
 
@@ -163,7 +163,7 @@ class MainWindow(CommonMainWindow):
 
         self.__toolbar.addActions([
             self.__scan_startup_action,
-            self.__scan_quick_action,
+            self.__scan_normal_action,
             self.__scan_extended_action
         ])
 
@@ -181,11 +181,11 @@ class MainWindow(CommonMainWindow):
     def __on_scan_startup_action_triggered(self) -> None:
         scan_controller.scan_startup()
 
-    def __on_scan_quick_action_triggered(self) -> None:
-        scan_controller.scan_quick()
+    def __on_scan_normal_action_triggered(self) -> None:
+        scan_controller.scan_normal()
 
     def __on_scan_extended_action_triggered(self) -> None:
-        scan_controller.scan_more()
+        scan_controller.scan_extended()
 
     def __on_scan_worker_scan_started(self) -> None:
         for action in self.__scan_actions:
