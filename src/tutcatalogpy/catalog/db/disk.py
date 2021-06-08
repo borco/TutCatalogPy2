@@ -28,7 +28,7 @@ class Disk(Base):
     path_name = Column(Text, nullable=False)
     location = Column(Enum(Location), default=Location.LOCAL, nullable=False)
     role = Column(Enum(Role), default=Role.DEFAULT, nullable=False)
-    depth = Column(Integer, default=1, nullable=False)
+    depth = Column(Integer, default=0, nullable=False)
     enabled = Column(Boolean, default=True, nullable=False)
     online = Column(Boolean, default=False, nullable=False)
     status = Column(Integer, default=Status.OK, nullable=False)
