@@ -7,12 +7,12 @@ from PySide2.QtCore import QSettings
 class ScanConfig:
     SETTINGS_GROUP: Final[str] = 'scan_config'
     SETTINGS_STARTUP: Final[str] = 'startup'
-    SETTINGS_QUICK: Final[str] = 'quick'
+    SETTINGS_NORMAL: Final[str] = 'normal'
     SETTINGS_EXTENDED: Final[str] = 'extended'
 
     class Mode(IntEnum):
         STARTUP = auto()
-        QUICK = auto()
+        NORMAL = auto()
         EXTENDED = auto()
 
     class Option(IntFlag):
@@ -26,7 +26,7 @@ class ScanConfig:
         Option.NOTHING
     )
 
-    DEFAULT_QUICK: Final = (
+    DEFAULT_NORMAL: Final = (
         Option.LOCAL_DISKS
         | Option.FOLDER_DETAILS
     )
@@ -40,7 +40,7 @@ class ScanConfig:
 
     option: dict[Mode, Option] = {
         Mode.STARTUP: DEFAULT_STARTUP,
-        Mode.QUICK: DEFAULT_QUICK,
+        Mode.NORMAL: DEFAULT_NORMAL,
         Mode.EXTENDED: DEFAULT_EXTENDED,
     }
 
@@ -48,7 +48,7 @@ class ScanConfig:
         settings.beginGroup(self.SETTINGS_GROUP)
         for key, mode in [
             (ScanConfig.SETTINGS_STARTUP, ScanConfig.Mode.STARTUP),
-            (ScanConfig.SETTINGS_QUICK, ScanConfig.Mode.QUICK),
+            (ScanConfig.SETTINGS_NORMAL, ScanConfig.Mode.NORMAL),
             (ScanConfig.SETTINGS_EXTENDED, ScanConfig.Mode.EXTENDED),
         ]:
             settings.setValue(key, int(self.option[mode]))
@@ -58,7 +58,7 @@ class ScanConfig:
         settings.beginGroup(self.SETTINGS_GROUP)
         for key, mode, default_value in [
             (ScanConfig.SETTINGS_STARTUP, ScanConfig.Mode.STARTUP, ScanConfig.DEFAULT_STARTUP),
-            (ScanConfig.SETTINGS_QUICK, ScanConfig.Mode.QUICK, ScanConfig.DEFAULT_QUICK),
+            (ScanConfig.SETTINGS_NORMAL, ScanConfig.Mode.NORMAL, ScanConfig.DEFAULT_NORMAL),
             (ScanConfig.SETTINGS_EXTENDED, ScanConfig.Mode.EXTENDED, ScanConfig.DEFAULT_EXTENDED),
         ]:
             self.option[mode] = ScanConfig.Option(settings.value(key, defaultValue=int(default_value), type=int))

@@ -22,10 +22,10 @@ class ScanController(QObject):
     def scan_startup(self) -> None:
         self.__scan.emit(ScanConfig.Mode.STARTUP)
 
-    def scan_quick(self) -> None:
-        self.__scan.emit(ScanConfig.Mode.QUICK)
+    def scan_normal(self) -> None:
+        self.__scan.emit(ScanConfig.Mode.NORMAL)
 
-    def scan_more(self) -> None:
+    def scan_extended(self) -> None:
         self.__scan.emit(ScanConfig.Mode.EXTENDED)
 
     def update_folder_details(self, folders: List[Tuple[str, str, str]]) -> None:
