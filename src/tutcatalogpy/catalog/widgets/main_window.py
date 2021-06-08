@@ -94,17 +94,17 @@ class MainWindow(CommonMainWindow):
 
     def __setup_actions(self) -> None:
         self.__scan_startup_action = QAction()
-        self.__scan_startup_action.setToolTip('Startup scan')
+        self.__scan_startup_action.setStatusTip('Startup scan')
         self.__scan_startup_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan_startup.svg')))
         self.__scan_startup_action.triggered.connect(self.__on_scan_startup_action_triggered)
 
         self.__scan_quick_action = QAction()
-        self.__scan_quick_action.setToolTip('Scan')
+        self.__scan_quick_action.setStatusTip('Normal scan')
         self.__scan_quick_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan.svg')))
         self.__scan_quick_action.triggered.connect(self.__on_scan_quick_action_triggered)
 
         self.__scan_extended_action = QAction()
-        self.__scan_extended_action.setToolTip('Scan more')
+        self.__scan_extended_action.setStatusTip('Extended scan')
         self.__scan_extended_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan_more.svg')))
         self.__scan_extended_action.triggered.connect(self.__on_scan_extended_action_triggered)
 

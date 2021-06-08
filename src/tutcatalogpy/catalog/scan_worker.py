@@ -183,8 +183,8 @@ class ScanWorker(QObject):
                 log.debug('Skipping remote %s', disk.path_name)
                 continue
 
-            if (not disk.enabled and not scan_config.can_scan(mode, ScanConfig.Option.DISABLED_DISKS)):
-                log.debug('Skipping disable %s', disk.path_name)
+            if (not disk.enabled and not scan_config.can_scan(mode, ScanConfig.Option.UNCHECKED_DISKS)):
+                log.debug('Skipping unchecked %s', disk.path_name)
                 continue
 
             self.__scan_folders_on_disk(mode, session, disk)
@@ -326,7 +326,7 @@ class ScanWorker(QObject):
         elif not scan_config.can_scan(mode, ScanConfig.Option.LOCAL_DISKS) and scan_config.can_scan(mode, ScanConfig.Option.REMOTE_DISKS):
             query = query.filter(Disk.location == Disk.Location.REMOTE)
 
-        if not scan_config.can_scan(mode, ScanConfig.Option.DISABLED_DISKS):
+        if not scan_config.can_scan(mode, ScanConfig.Option.UNCHECKED_DISKS):
             query = query.filter(Disk.enabled == True)
 
         folder_count = query.count()

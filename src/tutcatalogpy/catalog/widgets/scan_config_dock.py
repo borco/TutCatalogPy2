@@ -1,5 +1,5 @@
 import logging
-from typing import Final, List
+from typing import Final, List, Tuple
 
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QPixmap
@@ -19,10 +19,10 @@ class ScanConfigDock(DockWidget):
     DOCK_TITLE: Final[str] = 'Scan Config'
     DOCK_OBJECT_NAME: Final[str] = 'scan_config_dock'
 
-    SCAN_ICONS: Final[List[str]] = [
-        relative_path(__file__, '../../resources/icons/scan_startup.svg'),
-        relative_path(__file__, '../../resources/icons/scan.svg'),
-        relative_path(__file__, '../../resources/icons/scan_more.svg'),
+    SCAN_ICONS: Final[List[Tuple[str, str]]] = [
+        ('Startup scan', relative_path(__file__, '../../resources/icons/scan_startup.svg')),
+        ('Normal scan', relative_path(__file__, '../../resources/icons/scan.svg')),
+        ('Extended scan', relative_path(__file__, '../../resources/icons/scan_more.svg')),
     ]
 
     _dock_icon: Final[str] = relative_path(__file__, '../../resources/icons/scan_config.svg')
@@ -56,9 +56,10 @@ class ScanConfigDock(DockWidget):
 
         grid.addWidget(QLabel('<b>Options</b>'), 0, 0)
 
-        for index, path in enumerate(self.SCAN_ICONS):
+        for index, (status, path) in enumerate(self.SCAN_ICONS):
             label = QLabel()
             label.setPixmap(QPixmap(path))
+            label.setStatusTip(status)
             grid.addWidget(label, 0, index + 1, Qt.AlignHCenter)
 
         for row_index, option in enumerate(ScanConfig.Option):

@@ -19,7 +19,7 @@ class ScanConfig:
         NOTHING = 0
         LOCAL_DISKS = auto()
         REMOTE_DISKS = auto()
-        DISABLED_DISKS = auto()
+        UNCHECKED_DISKS = auto()
         FOLDER_DETAILS = auto()
 
     DEFAULT_STARTUP: Final = (
@@ -34,7 +34,7 @@ class ScanConfig:
     DEFAULT_EXTENDED: Final = (
         Option.LOCAL_DISKS
         | Option.REMOTE_DISKS
-        | Option.DISABLED_DISKS
+        | Option.UNCHECKED_DISKS
         | Option.FOLDER_DETAILS
     )
 
