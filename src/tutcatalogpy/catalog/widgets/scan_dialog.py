@@ -79,7 +79,7 @@ class ScanDialog(QDialog):
         if worker:
             self.__scan_worker = worker
             worker.scan_finished.connect(self.__on_scan_worker_scan_finished)
-            worker.info_changed.connect(self.__on_scan_worker_info_changed)
+            worker.progress_changed.connect(self.__on_scan_worker_progress_changed)
             self.finished.connect(worker.cancel, Qt.DirectConnection)
 
     def unset_scan_worker(self) -> None:
@@ -95,16 +95,16 @@ class ScanDialog(QDialog):
             self.__close_button.setText('Close')
         log.info('Scan finished in %s.', self.__scan_worker.elapsed_time_str)
 
-    def __on_scan_worker_info_changed(self, info: ScanWorker.Info) -> None:
-        self.__step.setText(info.step_name)
-        self.__disk.setText(info.disk_name)
-        self.__tutorial_path.setText(info.tutorial_path)
-        self.__tutorial_name.setText(info.tutorial_name)
+    def __on_scan_worker_progress_changed(self, progress: ScanWorker.Progress) -> None:
+        self.__step.setText(progress.step_name)
+        self.__disk.setText(progress.disk_name)
+        self.__tutorial_path.setText(progress.tutorial_path)
+        self.__tutorial_name.setText(progress.tutorial_name)
         self.__elapsed_time.setText(self.__scan_worker.elapsed_time_str)
 
-        if info.folder_count > 0:
-            self.__folder_progress.setMaximum(info.folder_count)
-            self.__folder_progress.setValue(info.folder_index)
+        if progress.folder_count > 0:
+            self.__folder_progress.setMaximum(progress.folder_count)
+            self.__folder_progress.setValue(progress.folder_index)
         else:
             self.__folder_progress.setMaximum(0)
             self.__folder_progress.setValue(-1)

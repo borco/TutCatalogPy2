@@ -19,7 +19,7 @@ log.addHandler(logging.NullHandler())
 
 
 class ScanWorker(QObject):
-    class Info:
+    class Progress:
         disk_name: str = ''
         step_name: str = ''
         tutorial_path: str = ''
@@ -29,11 +29,7 @@ class ScanWorker(QObject):
 
     scan_started = Signal()
     scan_finished = Signal()
-    disks_scan_finished = Signal()
-    folders_scan_finished = Signal()
-    folders_details_scan_finished = Signal()
-    folder_details_updated = Signal(str, str, str, str)
-    info_changed = Signal(Info)
+    progress_changed = Signal(Progress)
 
     def __init__(self):
         super().__init__()
@@ -71,7 +67,7 @@ class ScanWorker(QObject):
         self.__scanning = True
         self.__cancel = False
 
-        self.__info = self.Info()
+        self.__progress = self.Progress()
 
         session = None
 
@@ -104,20 +100,20 @@ class ScanWorker(QObject):
         self.__scanning = True
         self.__cancel = False
 
-        info = self.Info()
-        info.step_name = 'Updating Folder Details'
-        info.folder_count = len(folders)
+        progress = self.Progress()
+        progress.step_name = 'Updating Folder Details'
+        progress.folder_count = len(folders)
 
         session = None
 
         try:
             session = dal.Session()
             for index, (disk_parent, disk_name, tutorial_path, tutorial_name) in enumerate(folders, start=1):
-                info.disk_name = disk_name
-                info.tutorial_path = tutorial_path
-                info.tutorial_name = tutorial_name
-                info.folder_index = index
-                self.info_changed.emit(info)
+                progress.disk_name = disk_name
+                progress.tutorial_path = tutorial_path
+                progress.tutorial_name = tutorial_name
+                progress.folder_index = index
+                self.progress_changed.emit(progress)
 
                 if self.__cancel:
                     break
@@ -138,7 +134,6 @@ class ScanWorker(QObject):
                 if query:
                     folder, disk = query
                     self.__update_folder_details(session, folder, disk)
-                    self.folder_details_updated.emit(disk_parent, disk_name, tutorial_path, tutorial_name)
                     log.info('Updated folder details: %s | %s | %s | %s', disk_parent, disk_name, tutorial_path, tutorial_name)
                 else:
                     log.warning('Could not find folder in db: %s | %s | %s | %s', disk_parent, disk_name , tutorial_path, tutorial_name)
@@ -155,7 +150,6 @@ class ScanWorker(QObject):
 
         self.__scanning = False
 
-        self.folders_details_scan_finished.emit()
         self.scan_finished.emit()
 
     def __scan(self, session, mode: ScanConfig.Mode) -> None:
@@ -172,12 +166,10 @@ class ScanWorker(QObject):
 
         session.commit()
 
-        self.disks_scan_finished.emit()
-
     def __scan_folders(self, session, mode: ScanConfig.Mode) -> None:
-        self.__info.step_name = 'Folders'
+        self.__progress.step_name = 'Folders'
 
-        self.__info.folder_index = 0
+        self.__progress.folder_index = 0
         for disk in session.query(Disk):
             if not disk.online:
                 log.debug('Skipping offline %s', disk.path_name)
@@ -197,9 +189,7 @@ class ScanWorker(QObject):
 
             self.__scan_folders_on_disk(mode, session, disk)
 
-        log.info('Scanned %s folders for basic info in %s.', self.__info.folder_index, self.elapsed_time_str)
-
-        self.folders_scan_finished.emit()
+        log.info('Scanned %s folders for basic info in %s.', self.__progress.folder_index, self.elapsed_time_str)
 
     def __scan_folders_on_disk(self, mode, session, disk) -> None:
         if self.__cancel:
@@ -231,7 +221,7 @@ class ScanWorker(QObject):
         if self.__cancel:
             return
 
-        self.__info.disk_name = disk.path_name
+        self.__progress.disk_name = disk.path_name
 
         for p in path.iterdir():
             if self.__cancel:
@@ -307,20 +297,20 @@ class ScanWorker(QObject):
 
         session.commit()
 
-        self.__info.tutorial_path = folder.tutorial_path
-        self.__info.tutorial_name = folder.tutorial_name
+        self.__progress.tutorial_path = folder.tutorial_path
+        self.__progress.tutorial_name = folder.tutorial_name
         # QThread.msleep(100)
 
-        self.info_changed.emit(self.__info)
-        self.__info.folder_index += 1
+        self.progress_changed.emit(self.__progress)
+        self.__progress.folder_index += 1
 
     def __scan_folders_details(self, session, mode: ScanConfig.Mode) -> None:
         if not scan_config.can_scan(mode, ScanConfig.Option.FOLDER_DETAILS):
             log.info('Skipping folder details.')
             return
 
-        self.__info.folder_index = 0
-        self.__info.step_name = 'Folder details'
+        self.__progress.folder_index = 0
+        self.__progress.step_name = 'Folder details'
 
         query = (
             session
@@ -342,7 +332,7 @@ class ScanWorker(QObject):
         folder_count = query.count()
         log.info('Getting details for %s folders.', folder_count)
 
-        self.__info.folder_count = folder_count
+        self.__progress.folder_count = folder_count
 
         for folder, disk in query:
             if self.__cancel:
@@ -352,14 +342,12 @@ class ScanWorker(QObject):
                 if scan_config.can_scan(mode, ScanConfig.Option.FOLDER_DETAILS):
                     self.__update_folder_details(session, folder, disk)
 
-            self.__info.disk_name = disk.path_name
-            self.__info.tutorial_path = folder.tutorial_path
-            self.__info.tutorial_name = folder.tutorial_name
-            self.info_changed.emit(self.__info)
-            self.__info.folder_index += 1
+            self.__progress.disk_name = disk.path_name
+            self.__progress.tutorial_path = folder.tutorial_path
+            self.__progress.tutorial_name = folder.tutorial_name
+            self.progress_changed.emit(self.__progress)
+            self.__progress.folder_index += 1
             # QThread.msleep(100)
-
-        self.folders_details_scan_finished.emit()
 
     def __update_folder_details(self, session, folder, disk):
         path = Path(disk.path_parent) / disk.path_name / folder.tutorial_path / folder.tutorial_name
