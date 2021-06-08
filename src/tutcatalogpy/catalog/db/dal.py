@@ -22,8 +22,6 @@ class DataAccessLayer:
         from tutcatalogpy.catalog.db.disk import Disk  # noqa: F401
         from tutcatalogpy.catalog.db.folder import Folder  # noqa: F401
 
-        # print(f'dal connect to: {connection}')
-
         self.disconnect()
 
         log.info('Creating engine %s', connection)
