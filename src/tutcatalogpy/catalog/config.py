@@ -94,7 +94,7 @@ class Config(QObject):
                 disk = Disk(disk_parent=pp, disk_name=pn)
                 session.add(disk)
 
-            disk.index_ = index
+            disk.index_ = index + 1
             disk.location = Disk.Location(d.get('location', Disk.Location.REMOTE))
             disk.role = Disk.Role(d.get('role', Disk.Role.DEFAULT))
             disk.depth = int(d.get('depth', 1))
