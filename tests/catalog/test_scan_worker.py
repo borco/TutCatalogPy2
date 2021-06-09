@@ -18,11 +18,11 @@ def session():
 
 
 def test_scan_disks_for_offline_disks(tmp_path, session):
-    PATH_PARENT: Final[str] = str(tmp_path)
-    PATH_NAME: Final[str] = 'foo'
-    disk_path: Path = tmp_path / PATH_NAME
+    DISK_PARENT: Final[str] = str(tmp_path)
+    DISK_NAME: Final[str] = 'foo'
+    disk_path: Path = tmp_path / DISK_NAME
 
-    session.add(Disk(disk_parent=PATH_PARENT, disk_name=PATH_NAME, index_=0))
+    session.add(Disk(disk_parent=DISK_PARENT, disk_name=DISK_NAME, index_=0))
     session.commit()
 
     worker = ScanWorker()
@@ -33,11 +33,11 @@ def test_scan_disks_for_offline_disks(tmp_path, session):
 
 
 def test_scan_disks_for_online_disks(tmp_path, session):
-    PATH_PARENT: Final[str] = str(tmp_path)
-    PATH_NAME: Final[str] = 'foo'
-    disk_path: Path = tmp_path / PATH_NAME
+    DISK_PARENT: Final[str] = str(tmp_path)
+    DISK_NAME: Final[str] = 'foo'
+    disk_path: Path = tmp_path / DISK_NAME
 
-    session.add(Disk(disk_parent=PATH_PARENT, disk_name=PATH_NAME, index_=0))
+    session.add(Disk(disk_parent=DISK_PARENT, disk_name=DISK_NAME, index_=0))
     session.commit()
 
     worker = ScanWorker()
@@ -48,11 +48,11 @@ def test_scan_disks_for_online_disks(tmp_path, session):
 
 
 def test_scan_disks_updates_online(tmp_path, session):
-    PATH_PARENT: Final[str] = str(tmp_path)
-    PATH_NAME: Final[str] = 'foo'
-    disk_path: Path = tmp_path / PATH_NAME
+    DISK_PARENT: Final[str] = str(tmp_path)
+    DISK_NAME: Final[str] = 'foo'
+    disk_path: Path = tmp_path / DISK_NAME
 
-    session.add(Disk(disk_parent=PATH_PARENT, disk_name=PATH_NAME, index_=0))
+    session.add(Disk(disk_parent=DISK_PARENT, disk_name=DISK_NAME, index_=0))
     session.commit()
 
     worker = ScanWorker()
