@@ -153,7 +153,7 @@ class MainWindow(CommonMainWindow):
         scan_controller.setup()
         scan_worker = scan_controller.worker
         scan_worker.scan_started.connect(self.__on_scan_worker_scan_started)
-        # scan_worker.disks_scan_finished.connect(disk_model.refresh)
+        scan_worker.scan_finished.connect(self.__on_scan_worker_scan_finished)
 
     def __setup_toolbars(self) -> None:
         self.__toolbar = QToolBar()
@@ -194,6 +194,9 @@ class MainWindow(CommonMainWindow):
         self.__scan_dialog.reset()
         self.__scan_dialog.show()
         QTimer.singleShot(500, self.__check_scan_finished_too_quickly)
+
+    def __on_scan_worker_scan_finished(self) -> None:
+        disks_model.refresh()
 
     def __check_scan_finished_too_quickly(self) -> None:
         if self.__scan_dialog and not scan_controller.worker.scanning:
