@@ -22,8 +22,8 @@ class ScanWorker(QObject):
     class Progress:
         disk_name: str = ''
         step_name: str = ''
-        tutorial_path: str = ''
-        tutorial_name: str = ''
+        folder_parent: str = ''
+        folder_name: str = ''
         folder_count: int = 0
         folder_index: int = 0
 
@@ -108,10 +108,10 @@ class ScanWorker(QObject):
 
         try:
             session = dal.Session()
-            for index, (disk_parent, disk_name, tutorial_path, tutorial_name) in enumerate(folders, start=1):
+            for index, (disk_parent, disk_name, folder_parent, folder_name) in enumerate(folders, start=1):
                 progress.disk_name = disk_name
-                progress.tutorial_path = tutorial_path
-                progress.tutorial_name = tutorial_name
+                progress.folder_parent = folder_parent
+                progress.folder_name = folder_name
                 progress.folder_index = index
                 self.progress_changed.emit(progress)
 
@@ -126,17 +126,17 @@ class ScanWorker(QObject):
                     .filter(
                         Disk.disk_parent == disk_parent,
                         Disk.disk_name == disk_name,
-                        Folder.tutorial_path == tutorial_path,
-                        Folder.tutorial_name == tutorial_name
+                        Folder.folder_parent == folder_parent,
+                        Folder.folder_name == folder_name
                     )
                     .first()
                 )
                 if query:
                     folder, disk = query
                     self.__update_folder_details(session, folder, disk)
-                    log.info('Updated folder details: %s | %s | %s | %s', disk_parent, disk_name, tutorial_path, tutorial_name)
+                    log.info('Updated folder details: %s | %s | %s | %s', disk_parent, disk_name, folder_parent, folder_name)
                 else:
-                    log.warning('Could not find folder in db: %s | %s | %s | %s', disk_parent, disk_name , tutorial_path, tutorial_name)
+                    log.warning('Could not find folder in db: %s | %s | %s | %s', disk_parent, disk_name, folder_parent, folder_name)
         except Exception:
             log.exception('Update failed.')
         finally:
@@ -237,8 +237,8 @@ class ScanWorker(QObject):
 
     def __update_folder(self, mode, session, disk: Disk, path: Path) -> None:
         relative_path = path.relative_to(disk.path())
-        tutorial_path = str(relative_path.parent)
-        tutorial_name = str(relative_path.name)
+        folder_parent = str(relative_path.parent)
+        folder_name = str(relative_path.name)
         stat = path.stat()
         modified = get_modification_datetime(stat)
         created = get_creation_datetime(stat)
@@ -257,16 +257,16 @@ class ScanWorker(QObject):
                 session
                 .query(Folder)
                 .filter(Folder.disk_id == disk.id_)
-                .filter(Folder.tutorial_path == tutorial_path)
-                .filter(Folder.tutorial_name == tutorial_name)
+                .filter(Folder.folder_parent == folder_parent)
+                .filter(Folder.folder_name == folder_name)
                 .first()
             )
 
             if folder is None:
-                log.debug('Found new folder: %s/%s', tutorial_path, tutorial_name)
+                log.debug('Found new folder: %s/%s', folder_parent, folder_name)
                 folder = Folder(
-                    tutorial_path=tutorial_path,
-                    tutorial_name=tutorial_name,
+                    folder_parent=folder_parent,
+                    folder_name=folder_name,
                     disk_id=disk.id_,
                     system_id=system_id,
                     status=Folder.Status.NEW.value,
@@ -275,7 +275,7 @@ class ScanWorker(QObject):
                 )
                 session.add(folder)
             else:
-                log.debug('Found new folder with old name: %s/%s', tutorial_path, tutorial_name)
+                log.debug('Found new folder with old name: %s/%s', folder_parent, folder_name)
                 folder.system_id = system_id
                 folder.status = Folder.Status.NEW.value
                 folder.created = created
@@ -289,16 +289,16 @@ class ScanWorker(QObject):
                 folder.status = Folder.Status.CHANGED.value
 
             # if both modified and renamed, we keep the RENAMED status and modified value
-            if folder.tutorial_name != tutorial_name or folder.tutorial_path != tutorial_path:
-                log.debug('Found renamed folder: %s/%s-> %s/%s', folder.tutorial_path, folder.tutorial_name, tutorial_path, tutorial_name)
-                folder.tutorial_path = tutorial_path
-                folder.tutorial_name = tutorial_name
+            if folder.folder_name != folder_name or folder.folder_parent != folder_parent:
+                log.debug('Found renamed folder: %s/%s-> %s/%s', folder.folder_parent, folder.folder_name, folder_parent, folder_name)
+                folder.folder_parent = folder_parent
+                folder.folder_name = folder_name
                 folder.status = Folder.Status.RENAMED.value
 
         session.commit()
 
-        self.__progress.tutorial_path = folder.tutorial_path
-        self.__progress.tutorial_name = folder.tutorial_name
+        self.__progress.folder_parent = folder.folder_parent
+        self.__progress.folder_name = folder.folder_name
         # QThread.msleep(100)
 
         self.progress_changed.emit(self.__progress)
@@ -343,14 +343,14 @@ class ScanWorker(QObject):
                     self.__update_folder_details(session, folder, disk)
 
             self.__progress.disk_name = disk.disk_name
-            self.__progress.tutorial_path = folder.tutorial_path
-            self.__progress.tutorial_name = folder.tutorial_name
+            self.__progress.folder_parent = folder.folder_parent
+            self.__progress.folder_name = folder.folder_name
             self.progress_changed.emit(self.__progress)
             self.__progress.folder_index += 1
             # QThread.msleep(100)
 
     def __update_folder_details(self, session, folder, disk):
-        path = Path(disk.disk_parent) / disk.disk_name / folder.tutorial_path / folder.tutorial_name
+        path = Path(disk.disk_parent) / disk.disk_name / folder.folder_parent / folder.folder_name
         folder.size = get_folder_size(path)
         session.commit()
 

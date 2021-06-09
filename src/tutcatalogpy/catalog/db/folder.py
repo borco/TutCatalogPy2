@@ -23,8 +23,8 @@ class Folder(Base):
 
     id_ = Column('id', Integer, primary_key=True)
     disk_id = Column(Integer, ForeignKey('disk.id'), nullable=False)
-    tutorial_path = Column(Text, unique=False, nullable=True)
-    tutorial_name = Column(Text, unique=False, nullable=True)
+    folder_parent = Column(Text, unique=False, nullable=True)
+    folder_name = Column(Text, unique=False, nullable=True)
     system_id = Column(Text, default='', nullable=False)
     status = Column(Integer, default=Status.UNKNOWN, nullable=False)
     created = Column(DateTime, default=datetime.today(), nullable=False)
@@ -34,6 +34,6 @@ class Folder(Base):
     disk = relationship('Disk', back_populates='folders')
 
     __table_args__ = (
-        UniqueConstraint('disk_id', 'tutorial_path', 'tutorial_name'),
+        UniqueConstraint('disk_id', 'folder_parent', 'folder_name'),
         UniqueConstraint('disk_id', 'system_id'),
     )

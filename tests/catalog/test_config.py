@@ -327,8 +327,8 @@ def test_remove_folders_on_deleted_disks(tmp_path):
     disk1 = session.query(Disk).filter(Disk.disk_name == PATH_NAME1).one()
     disk2 = session.query(Disk).filter(Disk.disk_name == PATH_NAME2).one()
 
-    session.add(Folder(disk=disk1, tutorial_path='.', tutorial_name='xxx', system_id='1'))
-    session.add(Folder(disk=disk2, tutorial_path='.', tutorial_name='xxx', system_id='1'))
+    session.add(Folder(disk=disk1, folder_parent='.', folder_name='xxx', system_id='1'))
+    session.add(Folder(disk=disk2, folder_parent='.', folder_name='xxx', system_id='1'))
     session.commit()
 
     config.load_stream(config_file, StringIO(CONFIG2))
