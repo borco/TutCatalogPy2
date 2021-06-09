@@ -30,7 +30,7 @@ class Disk(Base):
     location = Column(Enum(Location), default=Location.LOCAL, nullable=False)
     role = Column(Enum(Role), default=Role.DEFAULT, nullable=False)
     depth = Column(Integer, default=0, nullable=False)
-    enabled = Column(Boolean, default=True, nullable=False)
+    checked = Column(Boolean, default=True, nullable=False)
     online = Column(Boolean, default=False, nullable=False)
     status = Column(Integer, default=Status.OK, nullable=False)
 

@@ -19,7 +19,7 @@ class DisksModel(QAbstractTableModel):
     disk_enabled_changed = Signal(int)
 
     class Columns(TableColumnEnum):
-        ENABLED = (0, 'Enabled', 'enabled')
+        CHECKED = (0, 'Checked', 'checked')
         INDEX = (1, 'Index', 'index')
         NAME = (2, 'Name', 'disk_name')
         PATH = (3, 'Path', 'disk_parent')
@@ -39,7 +39,7 @@ class DisksModel(QAbstractTableModel):
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int) -> Optional[Any]:
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            if section in [DisksModel.Columns.ENABLED.value, DisksModel.Columns.INDEX.value]:
+            if section in [DisksModel.Columns.CHECKED.value, DisksModel.Columns.INDEX.value]:
                 return ''
             else:
                 return DisksModel.Columns(section).label
@@ -65,8 +65,8 @@ class DisksModel(QAbstractTableModel):
         column = index.column()
 
         if role == Qt.CheckStateRole:
-            if column == DisksModel.Columns.ENABLED.value:
-                return Qt.Checked if disk.enabled else Qt.Unchecked
+            if column == DisksModel.Columns.CHECKED.value:
+                return Qt.Checked if disk.checked else Qt.Unchecked
         elif role == Qt.ForegroundRole:
             if column == DisksModel.Columns.NAME.value and not disk.online:
                 return QBrush(Qt.red)
@@ -89,8 +89,8 @@ class DisksModel(QAbstractTableModel):
         column = index.column()
 
         if role == Qt.CheckStateRole:
-            if column == DisksModel.Columns.ENABLED.value:
-                disk.enabled = (value == Qt.Checked)
+            if column == DisksModel.Columns.CHECKED.value:
+                disk.checked = (value == Qt.Checked)
                 self.disk_enabled_changed.emit(row)
                 dal.session.commit()
                 return True
@@ -101,7 +101,7 @@ class DisksModel(QAbstractTableModel):
 
         flags = Qt.ItemIsSelectable | Qt.ItemIsEnabled | super().flags(index)
 
-        if column == DisksModel.Columns.ENABLED.value:
+        if column == DisksModel.Columns.CHECKED.value:
             flags |= Qt.ItemIsUserCheckable
 
         return flags

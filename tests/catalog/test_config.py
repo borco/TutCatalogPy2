@@ -279,7 +279,7 @@ def test_disk_enabled_by_default(tmp_path):
 
     disk = disks.one()
 
-    assert disk.enabled is True
+    assert disk.checked is True
 
 
 def test_disk_remembers_enabled_state(tmp_path):
@@ -292,13 +292,13 @@ def test_disk_remembers_enabled_state(tmp_path):
     config.load_stream(config_file, StringIO(CONFIG))
 
     disk = dal.session.query(Disk).one()
-    disk.enabled = False
+    disk.checked = False
     dal.session.commit()
 
     config.load_stream(config_file, StringIO(CONFIG))
 
     disk = dal.session.query(Disk).one()
-    assert disk.enabled is False
+    assert disk.checked is False
 
 
 def test_remove_folders_on_deleted_disks(tmp_path):
