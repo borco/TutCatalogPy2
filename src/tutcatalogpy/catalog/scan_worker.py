@@ -207,13 +207,9 @@ class ScanWorker(QObject):
         self.__scan_folders_on_path(mode, session, disk, disk.path(), disk.depth)
 
         # delete folders that still have their status set to UNKNOWN
-        (
-            session
-            .query(Folder)
-            .filter(Folder.disk_id == disk.id_)
-            .filter(Folder.status == Folder.Status.UNKNOWN)
-            .delete()
-        )
+        # we must use 'session.delete()' to make sqlachemy delete the associated data
+        for folder in session.query(Folder).filter(Folder.disk_id == disk.id_).filter(Folder.status == Folder.Status.UNKNOWN):
+            session.delete(folder)
 
         session.commit()
 
