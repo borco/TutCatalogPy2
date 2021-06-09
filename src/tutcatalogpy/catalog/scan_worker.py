@@ -124,8 +124,8 @@ class ScanWorker(QObject):
                         Disk)
                     .join(Disk)
                     .filter(
-                        Disk.path_parent == disk_parent,
-                        Disk.path_name == disk_name,
+                        Disk.disk_parent == disk_parent,
+                        Disk.disk_name == disk_name,
                         Folder.tutorial_path == tutorial_path,
                         Folder.tutorial_name == tutorial_name
                     )
@@ -172,19 +172,19 @@ class ScanWorker(QObject):
         self.__progress.folder_index = 0
         for disk in session.query(Disk):
             if not disk.online:
-                log.debug('Skipping offline %s', disk.path_name)
+                log.debug('Skipping offline %s', disk.disk_name)
                 continue
 
             if (disk.location == Disk.Location.LOCAL and not scan_config.can_scan(mode, ScanConfig.Option.LOCAL_DISKS)):
-                log.debug('Skipping local %s', disk.path_name)
+                log.debug('Skipping local %s', disk.disk_name)
                 continue
 
             if (disk.location == Disk.Location.REMOTE and not scan_config.can_scan(mode, ScanConfig.Option.REMOTE_DISKS)):
-                log.debug('Skipping remote %s', disk.path_name)
+                log.debug('Skipping remote %s', disk.disk_name)
                 continue
 
             if (not disk.enabled and not scan_config.can_scan(mode, ScanConfig.Option.UNCHECKED_DISKS)):
-                log.debug('Skipping unchecked %s', disk.path_name)
+                log.debug('Skipping unchecked %s', disk.disk_name)
                 continue
 
             self.__scan_folders_on_disk(mode, session, disk)
@@ -195,7 +195,7 @@ class ScanWorker(QObject):
         if self.__cancel:
             return
 
-        log.debug('Scanning %s', disk.path_name)
+        log.debug('Scanning %s', disk.disk_name)
 
         (
             session
@@ -221,7 +221,7 @@ class ScanWorker(QObject):
         if self.__cancel:
             return
 
-        self.__progress.disk_name = disk.path_name
+        self.__progress.disk_name = disk.disk_name
 
         for p in path.iterdir():
             if self.__cancel:
@@ -342,7 +342,7 @@ class ScanWorker(QObject):
                 if scan_config.can_scan(mode, ScanConfig.Option.FOLDER_DETAILS):
                     self.__update_folder_details(session, folder, disk)
 
-            self.__progress.disk_name = disk.path_name
+            self.__progress.disk_name = disk.disk_name
             self.__progress.tutorial_path = folder.tutorial_path
             self.__progress.tutorial_name = folder.tutorial_name
             self.progress_changed.emit(self.__progress)
@@ -350,7 +350,7 @@ class ScanWorker(QObject):
             # QThread.msleep(100)
 
     def __update_folder_details(self, session, folder, disk):
-        path = Path(disk.path_parent) / disk.path_name / folder.tutorial_path / folder.tutorial_name
+        path = Path(disk.disk_parent) / disk.disk_name / folder.tutorial_path / folder.tutorial_name
         folder.size = get_folder_size(path)
         session.commit()
 

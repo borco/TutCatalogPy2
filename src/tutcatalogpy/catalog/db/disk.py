@@ -25,8 +25,8 @@ class Disk(Base):
     __tablename__ = 'disk'
     id_ = Column('id', Integer, primary_key=True)
     index_ = Column('index', Integer, nullable=False)
-    path_parent = Column(Text, nullable=False)
-    path_name = Column(Text, nullable=False)
+    disk_parent = Column(Text, nullable=False)
+    disk_name = Column(Text, nullable=False)
     location = Column(Enum(Location), default=Location.LOCAL, nullable=False)
     role = Column(Enum(Role), default=Role.DEFAULT, nullable=False)
     depth = Column(Integer, default=0, nullable=False)
@@ -38,8 +38,8 @@ class Disk(Base):
     folders = relationship('Folder', back_populates='disk', cascade='all, delete')
 
     __table_args__ = (
-        UniqueConstraint('path_parent', 'path_name'),
+        UniqueConstraint('disk_parent', 'disk_name'),
     )
 
     def path(self) -> Path:
-        return Path(self.path_parent) / self.path_name
+        return Path(self.disk_parent) / self.disk_name

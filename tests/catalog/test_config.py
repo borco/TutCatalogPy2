@@ -73,8 +73,8 @@ def test_load_config_with_one_disk(tmp_path):
 
     disk = disks.one()
 
-    assert disk.path_parent == str(Path('~/Downloads/').expanduser().absolute())
-    assert disk.path_name == 'foo'
+    assert disk.disk_parent == str(Path('~/Downloads/').expanduser().absolute())
+    assert disk.disk_name == 'foo'
     assert disk.role == Disk.Role.UPLOADS
     assert disk.depth == 2
     assert disk.location == Disk.Location.LOCAL
@@ -103,8 +103,8 @@ def test_load_config_with_many_disk(tmp_path):
 
     disk = disks.offset(1).one()
 
-    assert disk.path_parent == str(Path('~/Downloads/').expanduser().absolute())
-    assert disk.path_name == 'bar'
+    assert disk.disk_parent == str(Path('~/Downloads/').expanduser().absolute())
+    assert disk.disk_name == 'bar'
     assert disk.role == Disk.Role.DEFAULT
     assert disk.depth == 2
     assert disk.location == Disk.Location.REMOTE
@@ -131,13 +131,13 @@ def test_reload_same_config_with_many_disk(tmp_path):
 
     disk = disks[0]
 
-    assert disk.path_name == 'foo'
+    assert disk.disk_name == 'foo'
     assert disk.id_ == 1
     assert disk.index_ == 0
 
     disk = disks[1]
 
-    assert disk.path_name == 'bar'
+    assert disk.disk_name == 'bar'
     assert disk.id_ == 2
     assert disk.index_ == 1
 
@@ -173,13 +173,13 @@ def test_reload_config_with_many_disk_updates_disk_index(tmp_path):
 
     disk = disks[0]
 
-    assert disk.path_name == 'bar'
+    assert disk.disk_name == 'bar'
     assert disk.index_ == 0
     assert disk.id_ == 2
 
     disk = disks[1]
 
-    assert disk.path_name == 'foo'
+    assert disk.disk_name == 'foo'
     assert disk.index_ == 1
     assert disk.id_ == 1
 
@@ -215,7 +215,7 @@ def test_disks_removed_from_cache_when_removed_from_config(tmp_path):
 
     disk = disks[0]
 
-    assert disk.path_name == 'bar'
+    assert disk.disk_name == 'bar'
     assert disk.index_ == 0
     assert disk.id_ == 2
 
@@ -253,13 +253,13 @@ def test_disks_remembers_old_db_index(tmp_path):
 
     disk = disks[0]
 
-    assert disk.path_name == 'foo'
+    assert disk.disk_name == 'foo'
     assert disk.index_ == 0
     assert disk.id_ == 3
 
     disk = disks[1]
 
-    assert disk.path_name == 'bar'
+    assert disk.disk_name == 'bar'
     assert disk.index_ == 1
     assert disk.id_ == 2
 
@@ -324,8 +324,8 @@ def test_remove_folders_on_deleted_disks(tmp_path):
 
     session = dal.session
 
-    disk1 = session.query(Disk).filter(Disk.path_name == PATH_NAME1).one()
-    disk2 = session.query(Disk).filter(Disk.path_name == PATH_NAME2).one()
+    disk1 = session.query(Disk).filter(Disk.disk_name == PATH_NAME1).one()
+    disk2 = session.query(Disk).filter(Disk.disk_name == PATH_NAME2).one()
 
     session.add(Folder(disk=disk1, tutorial_path='.', tutorial_name='xxx', system_id='1'))
     session.add(Folder(disk=disk2, tutorial_path='.', tutorial_name='xxx', system_id='1'))
@@ -339,4 +339,4 @@ def test_remove_folders_on_deleted_disks(tmp_path):
 
     folder = folders[0]
 
-    assert folder.disk.path_name == PATH_NAME2
+    assert folder.disk.disk_name == PATH_NAME2

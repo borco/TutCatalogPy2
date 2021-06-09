@@ -89,9 +89,9 @@ class Config(QObject):
             pp = str(path.parent)
             pn = path.name
 
-            disk = session.query(Disk).filter_by(path_parent=pp, path_name=pn).first()
+            disk = session.query(Disk).filter_by(disk_parent=pp, disk_name=pn).first()
             if disk is None:
-                disk = Disk(path_parent=pp, path_name=pn)
+                disk = Disk(disk_parent=pp, disk_name=pn)
                 session.add(disk)
 
             disk.index_ = index

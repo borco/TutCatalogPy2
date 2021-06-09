@@ -22,7 +22,7 @@ def test_scan_disks_for_offline_disks(tmp_path, session):
     PATH_NAME: Final[str] = 'foo'
     disk_path: Path = tmp_path / PATH_NAME
 
-    session.add(Disk(path_parent=PATH_PARENT, path_name=PATH_NAME, index_=0))
+    session.add(Disk(disk_parent=PATH_PARENT, disk_name=PATH_NAME, index_=0))
     session.commit()
 
     worker = ScanWorker()
@@ -37,7 +37,7 @@ def test_scan_disks_for_online_disks(tmp_path, session):
     PATH_NAME: Final[str] = 'foo'
     disk_path: Path = tmp_path / PATH_NAME
 
-    session.add(Disk(path_parent=PATH_PARENT, path_name=PATH_NAME, index_=0))
+    session.add(Disk(disk_parent=PATH_PARENT, disk_name=PATH_NAME, index_=0))
     session.commit()
 
     worker = ScanWorker()
@@ -52,7 +52,7 @@ def test_scan_disks_updates_online(tmp_path, session):
     PATH_NAME: Final[str] = 'foo'
     disk_path: Path = tmp_path / PATH_NAME
 
-    session.add(Disk(path_parent=PATH_PARENT, path_name=PATH_NAME, index_=0))
+    session.add(Disk(disk_parent=PATH_PARENT, disk_name=PATH_NAME, index_=0))
     session.commit()
 
     worker = ScanWorker()

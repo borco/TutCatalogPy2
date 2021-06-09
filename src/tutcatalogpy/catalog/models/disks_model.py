@@ -21,8 +21,8 @@ class DisksModel(QAbstractTableModel):
     class Columns(TableColumnEnum):
         ENABLED = (0, 'Enabled', 'enabled')
         INDEX = (1, 'Index', 'index')
-        NAME = (2, 'Name', 'path_name')
-        PATH = (3, 'Path', 'path_parent')
+        NAME = (2, 'Name', 'disk_name')
+        PATH = (3, 'Path', 'disk_parent')
         LOCATION = (4, 'Location', 'location')
         ROLE = (5, 'Role', 'role')
         DEPTH = (6, 'Depth', 'depth')
@@ -137,8 +137,8 @@ class DisksModel(QAbstractTableModel):
         column = Disk.__table__.columns[DisksModel.Columns(self.__sort_column).column]
         column = column.asc() if self.__sort_ascending else column.desc()
         query = query.order_by(column)
-        if column != Disk.path_name:
-            query = query.order_by(Disk.path_name.asc())
+        if column != Disk.disk_name:
+            query = query.order_by(Disk.disk_name.asc())
 
         return query.offset(row).limit(1).one()
 
