@@ -19,8 +19,8 @@ class Disk(Base):
         SCHEDULED = 'scheduled'
 
     class Status(enum.IntEnum):
+        UNKNOWN = -1
         OK = 0
-        UNKNOWN = enum.auto()
 
     __tablename__ = 'disk'
     id_ = Column('id', Integer, primary_key=True)
