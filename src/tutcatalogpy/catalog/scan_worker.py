@@ -350,6 +350,7 @@ class ScanWorker(QObject):
     def __update_folder_details(self, session, folder, disk):
         path = Path(disk.disk_parent) / disk.disk_name / folder.folder_parent / folder.folder_name
         folder.size = get_folder_size(path)
+        folder.status = Folder.Status.OK
         session.commit()
 
 
