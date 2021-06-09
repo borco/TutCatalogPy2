@@ -12,8 +12,8 @@ from tutcatalogpy.catalog.db.base import Base
 class Folder(Base):
 
     class Status(enum.IntEnum):
-        UNKNOWN = 0
-        UNCHANGED = enum.auto()
+        UNKNOWN = -1
+        OK = 0
         CHANGED = enum.auto()
         RENAMED = enum.auto()
         NEW = enum.auto()
@@ -26,7 +26,7 @@ class Folder(Base):
     folder_parent = Column(Text, unique=False, nullable=True)
     folder_name = Column(Text, unique=False, nullable=True)
     system_id = Column(Text, default='', nullable=False)
-    status = Column(Integer, default=Status.UNKNOWN, nullable=False)
+    status = Column(Integer, default=Status.OK, nullable=False)
     created = Column(DateTime, default=datetime.today(), nullable=False)
     modified = Column(DateTime, default=datetime.today(), nullable=False)
     size = Column(Integer, default=None, nullable=True)

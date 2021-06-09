@@ -201,7 +201,7 @@ class ScanWorker(QObject):
             session
             .query(Folder)
             .filter(Folder.disk_id == disk.id_)
-            .update({Folder.status: Folder.Status.UNKNOWN.value})
+            .update({Folder.status: Folder.Status.UNKNOWN})
         )
 
         self.__scan_folders_on_path(mode, session, disk, disk.path(), disk.depth)
@@ -211,7 +211,7 @@ class ScanWorker(QObject):
             session
             .query(Folder)
             .filter(Folder.disk_id == disk.id_)
-            .filter(Folder.status == Folder.Status.UNKNOWN.value)
+            .filter(Folder.status == Folder.Status.UNKNOWN)
             .delete()
         )
 
@@ -244,7 +244,7 @@ class ScanWorker(QObject):
         created = get_creation_datetime(stat)
         system_id = str(stat.st_ino)
 
-        folder = (
+        folder: Folder = (
             session
             .query(Folder)
             .filter(Folder.disk_id == disk.id_)
@@ -281,7 +281,7 @@ class ScanWorker(QObject):
                 folder.created = created
                 folder.modified = modified
         else:
-            folder.status = Folder.Status.UNCHANGED.value
+            folder.status = Folder.Status.OK.value
 
             if folder.modified != modified:
                 log.debug('Found updated folder: %s', path)
@@ -334,11 +334,13 @@ class ScanWorker(QObject):
 
         self.__progress.folder_count = folder_count
 
+        folder: Folder
+        disk: Disk
         for folder, disk in query:
             if self.__cancel:
                 break
 
-            if folder.status != Folder.Status.UNCHANGED.value or not folder.size:
+            if folder.status != Folder.Status.OK.value or not folder.size:
                 if scan_config.can_scan(mode, ScanConfig.Option.FOLDER_DETAILS):
                     self.__update_folder_details(session, folder, disk)
 
