@@ -86,6 +86,7 @@ class SearchDock(DockWidget):
         self.__search_edit.setText(settings.value(self.SETTINGS_SEARCH_TEXT, ''))
         self.__only_show_checked_disks.setChecked(settings.value(self.SETTINGS_ONLY_SHOW_CHECKED_DISKS, False, type=bool))
         settings.endGroup()
+        self.search.emit()
 
     def clear(self):
         pass
