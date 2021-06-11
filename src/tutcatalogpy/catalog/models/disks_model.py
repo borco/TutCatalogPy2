@@ -16,7 +16,7 @@ log.addHandler(logging.NullHandler())
 
 class DisksModel(QAbstractTableModel):
 
-    disk_enabled_changed = Signal(int)
+    disk_checked_changed = Signal(int)
 
     class Columns(DbTableColumnEnum):
         CHECKED = (0, 'Checked', 'checked', Disk.checked)
@@ -88,7 +88,7 @@ class DisksModel(QAbstractTableModel):
         if role == Qt.CheckStateRole:
             if column == DisksModel.Columns.CHECKED.value:
                 disk.checked = (value == Qt.Checked)
-                self.disk_enabled_changed.emit(row)
+                self.disk_checked_changed.emit(row)
                 dal.session.commit()
                 return True
         return False
