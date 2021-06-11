@@ -2,7 +2,7 @@ from typing import Final
 
 from PySide2.QtCore import QSettings
 from PySide2.QtGui import QIcon, QTextOption
-from PySide2.QtWidgets import QAction, QVBoxLayout, QWidget
+from PySide2.QtWidgets import QAction
 
 import tutcatalogpy.common.logging_config as logging_config
 from tutcatalogpy.common.files import relative_path
