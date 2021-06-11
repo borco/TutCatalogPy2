@@ -38,6 +38,14 @@ class SearchDock(DockWidget):
         self.__setup_widgets()
         self.__setup_actions()
 
+    @property
+    def text(self) -> str:
+        return self.__search_edit.text()
+
+    @property
+    def only_show_checked_disks(self) -> bool:
+        return self.__only_show_checked_disks.isChecked()
+
     def __setup_widgets(self) -> None:
         widget = QWidget()
         self.setWidget(widget)

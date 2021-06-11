@@ -59,6 +59,7 @@ class MainWindow(CommonMainWindow):
         self.__setup_controllers()
         self.__setup_dialogs()
         self.__setup_toolbars()
+        self.__setup_connections()
 
         self._persistent_objects += [
             self.__recent_files,
@@ -178,6 +179,9 @@ class MainWindow(CommonMainWindow):
         ])
 
         self._setup_docks_toolbar()
+
+    def __setup_connections(self) -> None:
+        self.__search_dock.search.connect(tutorials_model.search)
 
     def __cleanup_controllers(self) -> None:
         scan_controller.cleanup()

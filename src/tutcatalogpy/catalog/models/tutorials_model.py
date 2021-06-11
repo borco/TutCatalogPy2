@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict
 
-from PySide2.QtCore import QAbstractTableModel, QDateTime, Qt
+from PySide2.QtCore import QAbstractTableModel, QDateTime, Qt, Slot
 from humanize import naturalsize
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.schema import Column
@@ -9,6 +9,7 @@ from sqlalchemy.sql.schema import Column
 from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.db.disk import Disk
 from tutcatalogpy.catalog.db.folder import Folder
+from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.common.widgets.db_table_column_enum import DbTableColumnEnum
 
 
@@ -33,6 +34,11 @@ class TutorialsModel(QAbstractTableModel):
         self.__row_count: int = 0
         self.__sort_column: int = 0
         self.__sort_ascending: bool = True
+
+    @Slot()
+    def search(self) -> None:
+        dock: SearchDock = self.sender()
+        log.info(f"search: text: '{dock.text}', only show checked disks: {dock.only_show_checked_disks}")
 
     def columnCount(self, index) -> int:
         return len(TutorialsModel.Columns)
