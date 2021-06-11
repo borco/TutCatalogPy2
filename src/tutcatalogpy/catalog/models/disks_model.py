@@ -3,12 +3,12 @@ from typing import Any, Dict, Optional
 
 from PySide2.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal
 from PySide2.QtGui import QBrush
-
 from sqlalchemy.orm import Query
+from sqlalchemy.sql.schema import Column
 
 from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.db.disk import Disk
-from tutcatalogpy.common.table_column_enum import TableColumnEnum
+from tutcatalogpy.common.widgets.db_table_column_enum import DbTableColumnEnum
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -18,14 +18,14 @@ class DisksModel(QAbstractTableModel):
 
     disk_enabled_changed = Signal(int)
 
-    class Columns(TableColumnEnum):
-        CHECKED = (0, 'Checked', 'checked')
-        INDEX = (1, 'Index', 'index')
-        NAME = (2, 'Name', 'disk_name')
-        PATH = (3, 'Path', 'disk_parent')
-        LOCATION = (4, 'Location', 'location')
-        ROLE = (5, 'Role', 'role')
-        DEPTH = (6, 'Depth', 'depth')
+    class Columns(DbTableColumnEnum):
+        CHECKED = (0, 'Checked', 'checked', Disk.checked)
+        INDEX = (1, 'Index', 'index_', Disk.index_)
+        NAME = (2, 'Name', 'disk_name', Disk.disk_name)
+        PATH = (3, 'Path', 'disk_parent', Disk.disk_parent)
+        LOCATION = (4, 'Location', 'location', Disk.location)
+        ROLE = (5, 'Role', 'role', Disk.role)
+        DEPTH = (6, 'Depth', 'depth', Disk.depth)
 
     def __init__(self) -> None:
         super().__init__()
@@ -71,10 +71,7 @@ class DisksModel(QAbstractTableModel):
             if column == DisksModel.Columns.NAME.value and not disk.online:
                 return QBrush(Qt.red)
         elif role == Qt.DisplayRole:
-            if column == DisksModel.Columns.INDEX.value:
-                return disk.index_ + 1
-            else:
-                return getattr(disk, DisksModel.Columns(column).column)
+            return getattr(disk, DisksModel.Columns(column).attr)
         elif role == Qt.UserRole:
             return disk
 
@@ -134,7 +131,7 @@ class DisksModel(QAbstractTableModel):
     def __disk(self, row: int) -> Any:
         query = self.__query()
 
-        column = Disk.__table__.columns[DisksModel.Columns(self.__sort_column).column]
+        column: Column = DisksModel.Columns(self.__sort_column).column
         column = column.asc() if self.__sort_ascending else column.desc()
         query = query.order_by(column)
         if column != Disk.disk_name:

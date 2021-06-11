@@ -7,10 +7,12 @@ from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenu
 
 from tutcatalogpy.catalog.config import config
 from tutcatalogpy.catalog.models.disks_model import disks_model
+from tutcatalogpy.catalog.models.tutorials_model import tutorials_model
 from tutcatalogpy.catalog.scan_controller import scan_controller
 from tutcatalogpy.catalog.widgets.disks_dock import DisksDock
 from tutcatalogpy.catalog.widgets.scan_config_dock import ScanConfigDock
 from tutcatalogpy.catalog.widgets.scan_dialog import ScanDialog
+from tutcatalogpy.catalog.widgets.tutorials_dock import TutorialsDock
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
 from tutcatalogpy.common.widgets.logging_dock import LoggingDock
@@ -80,12 +82,16 @@ class MainWindow(CommonMainWindow):
         self.__disks_dock = DisksDock()
         self.__disks_dock.set_model(disks_model)
 
+        self.__tutorials_dock = TutorialsDock()
+        self.__tutorials_dock.set_model(tutorials_model)
+
         self.__log_dock = CatalogLoggingDock()
 
         self.__scan_config_dock = ScanConfigDock()
 
         self._docks = [
             self.__disks_dock,
+            self.__tutorials_dock,
             self.__log_dock,
             self.__scan_config_dock,
         ]
@@ -178,6 +184,10 @@ class MainWindow(CommonMainWindow):
         self.__scan_dialog.set_scan_worker(scan_controller.worker)
         self.__scan_dialog.finished.connect(self.__on_scan_dialog_finished)
 
+    def __refresh_models(self) -> None:
+        disks_model.refresh()
+        tutorials_model.refresh()
+
     def __on_scan_startup_action_triggered(self) -> None:
         scan_controller.scan_startup()
 
@@ -196,7 +206,7 @@ class MainWindow(CommonMainWindow):
         QTimer.singleShot(500, self.__check_scan_finished_too_quickly)
 
     def __on_scan_worker_scan_finished(self) -> None:
-        disks_model.refresh()
+        self.__refresh_models()
 
     def __check_scan_finished_too_quickly(self) -> None:
         if self.__scan_dialog and not scan_controller.worker.scanning:
@@ -230,7 +240,7 @@ class MainWindow(CommonMainWindow):
         else:
             self.setWindowTitle(self.WINDOW_TITLE)
 
-        disks_model.refresh()
+        self.__refresh_models()
 
     def show(self) -> None:
         super().show()
