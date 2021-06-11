@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-30,0)">
+        <rect id="search" x="30" y="0" width="24" height="24" style="fill:none;"/>
+        <g id="search1" serif:id="search">
+            <g transform="matrix(0.707107,0.707107,-0.707107,0.707107,18.2855,-25.1495)">
+                <path d="M39.5,3C43.087,3 46,5.913 46,9.5C46,13.087 43.087,16 39.5,16C35.913,16 33,13.087 33,9.5C33,5.913 35.913,3 39.5,3ZM39.5,3.833C42.628,3.833 45.167,6.372 45.167,9.5C45.167,12.628 42.628,15.167 39.5,15.167C36.372,15.167 33.833,12.628 33.833,9.5C33.833,6.372 36.372,3.833 39.5,3.833Z"/>
+                <g transform="matrix(1,0,0,1,5.38226,-9)">
+                    <path d="M42,17.998L41.48,18.518L40.095,18.518L40.095,19.477L41.48,19.477L42,19.998L48.618,19.998L48.618,17.998L42,17.998Z"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -12,6 +12,7 @@ from tutcatalogpy.catalog.scan_controller import scan_controller
 from tutcatalogpy.catalog.widgets.disks_dock import DisksDock
 from tutcatalogpy.catalog.widgets.scan_config_dock import ScanConfigDock
 from tutcatalogpy.catalog.widgets.scan_dialog import ScanDialog
+from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.catalog.widgets.tutorials_dock import TutorialsDock
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
@@ -79,6 +80,8 @@ class MainWindow(CommonMainWindow):
         class CatalogLoggingDock(LoggingDock):
             _show_sql = True
 
+        self.__search_dock = SearchDock()
+
         self.__disks_dock = DisksDock()
         self.__disks_dock.set_model(disks_model)
 
@@ -90,6 +93,7 @@ class MainWindow(CommonMainWindow):
         self.__scan_config_dock = ScanConfigDock()
 
         self._docks = [
+            self.__search_dock,
             self.__disks_dock,
             self.__tutorials_dock,
             self.__log_dock,
