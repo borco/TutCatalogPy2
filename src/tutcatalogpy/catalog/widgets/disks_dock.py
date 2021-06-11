@@ -15,7 +15,6 @@ log.addHandler(logging.NullHandler())
 class DisksDock(DockWidget):
     SETTINGS_GROUP: Final[str] = 'disk_dock'
     SETTINGS_HEADER_STATE: Final[str] = 'header_state'
-    SETTINGS_DETAILS_VISIBLE: Final[str] = 'details_visible'
 
     DOCK_TITLE: Final[str] = 'Disks'
     DOCK_OBJECT_NAME: Final[str] = 'disk_dock'
@@ -55,9 +54,9 @@ class DisksDock(DockWidget):
         horizontal_header.setStretchLastSection(True)
         horizontal_header.setSortIndicatorShown(True)
         horizontal_header.setContextMenuPolicy(Qt.CustomContextMenu)
-        horizontal_header.customContextMenuRequested.connect(self.__on_context_menu_requested)
+        horizontal_header.customContextMenuRequested.connect(self.__on_header_context_menu_requested)
 
-    def __setup_context_menu(self) -> None:
+    def __setup_header_context_menu(self) -> None:
         header = self.__disks_view.horizontalHeader()
         menu = QMenu(self)
         for section in range(len(DisksModel.Columns)):
@@ -66,14 +65,14 @@ class DisksDock(DockWidget):
             action.setData(section)
             action.setCheckable(True)
             action.setChecked(not header.isSectionHidden(section))
-            action.triggered.connect(self.__on_context_menu_triggered)
+            action.triggered.connect(self.__on_header_context_menu_triggered)
             menu.addAction(action)
         self.__context_menu = menu
 
-    def __on_context_menu_requested(self, pos):
+    def __on_header_context_menu_requested(self, pos):
         self.__context_menu.exec_(self.__disks_view.mapToGlobal(pos))
 
-    def __on_context_menu_triggered(self, checked):
+    def __on_header_context_menu_triggered(self, checked):
         header = self.__disks_view.horizontalHeader()
         header.setSectionHidden(self.sender().data(), not checked)
 
@@ -89,7 +88,7 @@ class DisksDock(DockWidget):
         settings.beginGroup(self.SETTINGS_GROUP)
         self.__disks_view.horizontalHeader().restoreState(QByteArray(settings.value(self.SETTINGS_HEADER_STATE, b'')))
         settings.endGroup()
-        self.__setup_context_menu()
+        self.__setup_header_context_menu()
 
     def clear(self):
         pass
