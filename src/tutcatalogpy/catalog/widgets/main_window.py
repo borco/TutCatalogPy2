@@ -181,7 +181,8 @@ class MainWindow(CommonMainWindow):
         self._setup_docks_toolbar()
 
     def __setup_connections(self) -> None:
-        self.__search_dock.search.connect(tutorials_model.search)
+        self.__search_dock.search.connect(lambda: tutorials_model.search(self.__search_dock))
+        disks_model.disk_checked_changed.connect(lambda: tutorials_model.search(self.__search_dock, True))
 
     def __cleanup_controllers(self) -> None:
         scan_controller.cleanup()

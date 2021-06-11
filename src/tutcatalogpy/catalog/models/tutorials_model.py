@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict
 
-from PySide2.QtCore import QAbstractTableModel, QDateTime, Qt, Slot
+from PySide2.QtCore import QAbstractTableModel, QDateTime, Qt
 from humanize import naturalsize
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.schema import Column
@@ -11,7 +11,6 @@ from tutcatalogpy.catalog.db.disk import Disk
 from tutcatalogpy.catalog.db.folder import Folder
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.common.widgets.db_table_column_enum import DbTableColumnEnum
-
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -34,11 +33,18 @@ class TutorialsModel(QAbstractTableModel):
         self.__row_count: int = 0
         self.__sort_column: int = 0
         self.__sort_ascending: bool = True
+        self.__search_text: str = ''
+        self.__only_show_checked_disks: bool = False
 
-    @Slot()
-    def search(self) -> None:
-        dock: SearchDock = self.sender()
-        log.info(f"search: text: '{dock.text}', only show checked disks: {dock.only_show_checked_disks}")
+    def search(self, search_dock: SearchDock, force: bool = False) -> None:
+        if search_dock.text == self.__search_text and search_dock.only_show_checked_disks == self.__only_show_checked_disks and not force:
+            return
+
+        self.__search_text: str = search_dock.text
+        self.__only_show_checked_disks: bool = search_dock.only_show_checked_disks
+
+        log.info("Search for: '%s' (only show checked disks: %s)", self.__search_text, self.__only_show_checked_disks)
+        self.refresh()
 
     def columnCount(self, index) -> int:
         return len(TutorialsModel.Columns)
@@ -79,6 +85,20 @@ class TutorialsModel(QAbstractTableModel):
             else:
                 return value
 
+    def __filtered(self, query: Query) -> Query:
+        if self.__only_show_checked_disks:
+            query = query.filter(Disk.checked == True)  # noqa: E712
+
+        if len(self.__search_text):
+            for key in self.__search_text.split():
+                query = (
+                    query
+                    .filter((Disk.disk_parent + '/' + Disk.disk_name + '/' + Folder.folder_parent + '/' + Folder.folder_name)
+                    .like(f'%{key}%'))
+                )
+
+        return query
+
     def __query(self) -> Query:
         query = (
             dal
@@ -99,7 +119,7 @@ class TutorialsModel(QAbstractTableModel):
             .join(Disk, Folder.disk_id == Disk.id_)
         )
 
-        return query
+        return self.__filtered(query)
 
     def tutorial(self, row: int) -> Any:
         if row < 0 or row >= self.__row_count:
