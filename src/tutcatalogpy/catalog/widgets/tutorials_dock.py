@@ -2,7 +2,7 @@ import logging
 from typing import Final
 
 from PySide2.QtCore import QByteArray, QSettings, Qt
-from PySide2.QtWidgets import QAction, QMenu, QTableView, QVBoxLayout, QWidget
+from PySide2.QtWidgets import QAction, QMenu, QTableView
 
 from tutcatalogpy.catalog.models.tutorials_model import TutorialsModel
 from tutcatalogpy.common.files import relative_path
