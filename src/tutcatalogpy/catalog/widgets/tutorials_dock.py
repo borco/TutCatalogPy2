@@ -1,7 +1,7 @@
 import logging
 from typing import Final
 
-from PySide2.QtCore import QByteArray, QSettings, Qt
+from PySide2.QtCore import QByteArray, QItemSelection, QModelIndex, QSettings, Qt, Signal
 from PySide2.QtWidgets import QAction, QMenu, QTableView
 
 from tutcatalogpy.catalog.models.tutorials_model import TutorialsModel
@@ -23,6 +23,8 @@ class TutorialsDock(DockWidget):
 
     _dock_icon: Final[str] = relative_path(__file__, '../../resources/icons/tutorials.svg')
     _dock_status_tip: Final[str] = 'Toggle tutorials dock'
+
+    selection_changed = Signal(list)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -68,6 +70,7 @@ class TutorialsDock(DockWidget):
 
     def set_model(self, model) -> None:
         self.__tutorials_view.setModel(model)
+        self.__tutorials_view.selectionModel().selectionChanged.connect(self.__on_tutorials_view_selection_changed)
 
     def save_settings(self, settings: QSettings):
         settings.beginGroup(self.SETTINGS_GROUP)
@@ -86,6 +89,23 @@ class TutorialsDock(DockWidget):
     def __on_header_custom_context_menu_triggered(self, checked):
         header = self.__tutorials_view.horizontalHeader()
         header.setSectionHidden(self.sender().data(), not checked)
+
+    def __on_tutorials_view_selection_changed(self, selected: QItemSelection, deselected: QItemSelection) -> None:
+        data_model: TutorialsModel = self.__tutorials_view.model()
+        if data_model is None or type(data_model) is not TutorialsModel:
+            return
+
+        selection_model = self.__tutorials_view.selectionModel()
+
+        tutorials = []
+        index: QModelIndex
+        for index in selection_model.selectedRows():
+            data = data_model.tutorial(index.row())
+            tutorials.append(data.id_)
+
+        # log.info('Selected tutorials: %s', tutorials)
+
+        self.selection_changed.emit(tutorials)
 
 
 if __name__ == '__main__':
