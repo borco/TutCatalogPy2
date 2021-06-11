@@ -31,17 +31,10 @@ class DisksDock(DockWidget):
         self.setObjectName(self.DOCK_OBJECT_NAME)
 
         self.__setup_widgets()
-        self._setup_dock_toolbar()
+        self.__setup_actions()
 
     def __setup_widgets(self) -> None:
-        widget = QWidget()
-        self.setWidget(widget)
-
-        layout = QVBoxLayout()
-        widget.setLayout(layout)
-
         self.__disks_view = QTableView()
-        layout.addWidget(self.__disks_view)
         self.__disks_view.setObjectName(self.DISKS_VIEW_OBJECT_NAME)
         self.__disks_view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self.__disks_view.setSortingEnabled(True)
@@ -55,6 +48,11 @@ class DisksDock(DockWidget):
         horizontal_header.setSortIndicatorShown(True)
         horizontal_header.setContextMenuPolicy(Qt.CustomContextMenu)
         horizontal_header.customContextMenuRequested.connect(self.__on_header_context_menu_requested)
+
+        self.setWidget(self.__disks_view)
+
+    def __setup_actions(self) -> None:
+        self._setup_dock_toolbar()
 
     def __setup_header_context_menu(self) -> None:
         header = self.__disks_view.horizontalHeader()

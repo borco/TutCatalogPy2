@@ -45,15 +45,10 @@ class LoggingDock(DockWidget):
         self.__setup_actions()
 
     def __setup_widgets(self) -> None:
-        widget = QWidget()
-        self.setWidget(widget)
-
-        layout = QVBoxLayout()
-        widget.setLayout(layout)
-
         self.__logging_browser = LoggingBrowser()
-        layout.addWidget(self.__logging_browser)
         self.__logging_browser.setup(logging_config.gui_handler)
+
+        self.setWidget(self.__logging_browser)
 
     def __setup_actions(self) -> None:
         self.__toggle_verbose = QAction()
