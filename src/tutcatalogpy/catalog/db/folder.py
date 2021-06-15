@@ -1,9 +1,8 @@
 from datetime import datetime
 import enum
 
-from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import relationship
-from sqlalchemy.schema import Column, ForeignKey
+from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.sql.sqltypes import DateTime, Integer, Text
 
 from tutcatalogpy.catalog.db.base import Base
@@ -32,6 +31,7 @@ class Folder(Base):
     size = Column(Integer, default=None, nullable=True)
 
     disk = relationship('Disk', back_populates='folders')
+    cover = relationship('Cover', back_populates='folder', cascade='all, delete')
 
     __table_args__ = (
         UniqueConstraint('disk_id', 'folder_parent', 'folder_name'),

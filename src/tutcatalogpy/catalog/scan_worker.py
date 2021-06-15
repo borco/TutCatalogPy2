@@ -1,11 +1,13 @@
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from time import perf_counter_ns
-from typing import List, Tuple
+from typing import Final, List, NamedTuple, Tuple, Optional
 
 from humanize import precisedelta
 from PySide2.QtCore import QObject, QThread, Signal
+from sqlalchemy.orm.session import Session
+from tutcatalogpy.catalog.db.cover import Cover
 
 from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.db.disk import Disk
@@ -18,6 +20,22 @@ log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
 
+class PathStats(NamedTuple):
+    modified: datetime
+    created: datetime
+    id: str
+    size: int
+
+
+def get_path_stats(path: Path) -> PathStats:
+    stat = path.stat()
+    modified = get_modification_datetime(stat)
+    created = get_creation_datetime(stat)
+    id = str(stat.st_ino)
+    size = stat.st_size
+    return PathStats(modified, created, id, size)
+
+
 class ScanWorker(QObject):
     class Progress:
         disk_name: str = ''
@@ -26,6 +44,8 @@ class ScanWorker(QObject):
         folder_name: str = ''
         folder_count: int = 0
         folder_index: int = 0
+
+    COVER_NAMES: Final[List[str]] = ['cover.jpg', 'cover.png']
 
     scan_started = Signal()
     scan_finished = Signal()
@@ -104,7 +124,7 @@ class ScanWorker(QObject):
         progress.step_name = 'Updating Folder Details'
         progress.folder_count = len(folders)
 
-        session = None
+        session: Optional[Session] = None
 
         try:
             session = dal.Session()
@@ -152,12 +172,12 @@ class ScanWorker(QObject):
 
         self.scan_finished.emit()
 
-    def __scan(self, session, mode: ScanConfig.Mode) -> None:
+    def __scan(self, session: Session, mode: ScanConfig.Mode) -> None:
         self.__scan_disks(session)
         self.__scan_folders(session, mode)
         self.__scan_folders_details(session, mode)
 
-    def __scan_disks(self, session) -> None:
+    def __scan_disks(self, session: Session) -> None:
         session.query(Disk).update({Disk.online: False})
         session.commit()
 
@@ -166,7 +186,7 @@ class ScanWorker(QObject):
 
         session.commit()
 
-    def __scan_folders(self, session, mode: ScanConfig.Mode) -> None:
+    def __scan_folders(self, session: Session, mode: ScanConfig.Mode) -> None:
         self.__progress.step_name = 'Folders'
 
         self.__progress.folder_index = 0
@@ -191,7 +211,7 @@ class ScanWorker(QObject):
 
         log.info('Scanned %s folders for basic info in %s.', self.__progress.folder_index, self.elapsed_time_str)
 
-    def __scan_folders_on_disk(self, mode, session, disk) -> None:
+    def __scan_folders_on_disk(self, mode: ScanConfig.Mode, session: Session, disk: Disk) -> None:
         if self.__cancel:
             return
 
@@ -213,7 +233,7 @@ class ScanWorker(QObject):
 
         session.commit()
 
-    def __scan_folders_on_path(self, mode, session, disk: Disk, path: Path, depth: int) -> None:
+    def __scan_folders_on_path(self, mode: ScanConfig.Mode, session: Session, disk: Disk, path: Path, depth: int) -> None:
         if self.__cancel:
             return
 
@@ -231,14 +251,12 @@ class ScanWorker(QObject):
                     #     print(f'publisher: {item.name}')
                     self.__scan_folders_on_path(mode, session, disk, p, depth - 1)
 
-    def __update_folder(self, mode, session, disk: Disk, path: Path) -> None:
+    def __update_folder(self, mode: ScanConfig.Mode, session: Session, disk: Disk, path: Path) -> None:
         relative_path = path.relative_to(disk.path())
         folder_parent = str(relative_path.parent)
         folder_name = str(relative_path.name)
-        stat = path.stat()
-        modified = get_modification_datetime(stat)
-        created = get_creation_datetime(stat)
-        system_id = str(stat.st_ino)
+
+        modified, created, system_id, _ = get_path_stats(path)
 
         folder: Folder = (
             session
@@ -300,7 +318,7 @@ class ScanWorker(QObject):
         self.progress_changed.emit(self.__progress)
         self.__progress.folder_index += 1
 
-    def __scan_folders_details(self, session, mode: ScanConfig.Mode) -> None:
+    def __scan_folders_details(self, session: Session, mode: ScanConfig.Mode) -> None:
         if not scan_config.can_scan(mode, ScanConfig.Option.FOLDER_DETAILS):
             log.info('Skipping folder details.')
             return
@@ -336,7 +354,7 @@ class ScanWorker(QObject):
             if self.__cancel:
                 break
 
-            if folder.status != Folder.Status.OK.value or not folder.size:
+            if folder.status != Folder.Status.DELETED.value or not folder.size:
                 if scan_config.can_scan(mode, ScanConfig.Option.FOLDER_DETAILS):
                     self.__update_folder_details(session, folder, disk)
 
@@ -347,10 +365,59 @@ class ScanWorker(QObject):
             self.__progress.folder_index += 1
             # QThread.msleep(100)
 
-    def __update_folder_details(self, session, folder, disk):
+    def __update_folder_details(self, session: Session, folder: Folder, disk: Disk):
         path = Path(disk.disk_parent) / disk.disk_name / folder.folder_parent / folder.folder_name
         folder.size = get_folder_size(path)
         folder.status = Folder.Status.OK
+        self.__update_cover(session, folder)
+        session.commit()
+
+    def __update_cover(self, session: Session, folder: Folder) -> None:
+        disk: Disk = folder.disk
+
+        has_cover: bool = False
+
+        cover: Optional[Cover] = session.query(Cover).filter(Cover.folder_id == folder.id_).first()
+        if cover is None:
+            cover = Cover(folder_id=folder.id_)
+            session.add(cover)
+
+        for name in self.COVER_NAMES:
+            path: Path = Path(disk.disk_parent) / disk.disk_name / folder.folder_parent / folder.folder_name / name
+            if path.exists():
+                modified, created, system_id, size = get_path_stats(path)
+
+                if (
+                    cover.size == size
+                    and cover.modified == modified
+                    and cover.created == created
+                    and cover.system_id == system_id):
+                    return
+
+                log.info('Found cover: %s', path)
+
+                data = None
+                with open(path, mode='rb') as f:
+                    data = f.read()
+
+                cover.system_id = system_id
+                cover.created = created
+                cover.modified = modified
+                cover.size = size
+                cover.data = data
+
+                has_cover = True
+
+                break
+
+        if not has_cover:
+
+            cover.system_id = None
+            cover.created = None
+            cover.modified = None
+            cover.size = None
+            cover.data = None
+
         session.commit()
 
 
