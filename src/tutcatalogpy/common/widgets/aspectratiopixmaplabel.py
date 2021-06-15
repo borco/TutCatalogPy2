@@ -23,14 +23,21 @@ class AspectRatioPixmapLabel(QLabel):
         return self.height() if self.__pixmap is None else int(self.__pixmap.height() * width / self.__pixmap.width())
 
     def sizeHint(self) -> QSize:
-        width = self.width()
-        return QSize(width, self.heightForWidth(width))
+        if self.__pixmap is None:
+            return self.size()
+
+        width = min(self.width(), self.__pixmap.width())
+        height = self.heightForWidth(width)
+        if height > self.height():
+            height = self.height()
+            width = int(self.__pixmap.width() * height / self.__pixmap.height())
+        return QSize(width, height)
 
     def __scaled_pixmap(self) -> QPixmap:
         if self.__pixmap is None:
             return QPixmap()
         else:
-            return self.__pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            return self.__pixmap.scaled(self.sizeHint(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         if self.__pixmap is not None:
@@ -38,5 +45,5 @@ class AspectRatioPixmapLabel(QLabel):
 
 
 if __name__ == '__main__':
-    from tutcatalogpy.catalog.main import run
+    from tutcatalogpy.catalog.widgets.cover_dock import run
     run()

@@ -79,6 +79,24 @@ class CoverDock(DockWidget):
         self.__offline.setVisible(not online)
 
 
+def run() -> None:
+    import sys
+    from PySide2.QtWidgets import QApplication, QMainWindow
+
+    app = QApplication(sys.argv)
+
+    pixmap = QPixmap(relative_path(__file__, '../../resources/icons/cover.png'))
+    window = QMainWindow()
+    cover = CoverDock()
+    cover.set_cover(pixmap)
+    window.setCentralWidget(cover)
+    window.show()
+
+    success = app.exec_()
+    sys.exit(success)
+
+
 if __name__ == '__main__':
-    from tutcatalogpy.catalog.main import run
+    # from tutcatalogpy.catalog.main import run
+    # run()
     run()
