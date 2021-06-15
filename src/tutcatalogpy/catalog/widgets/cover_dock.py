@@ -1,7 +1,7 @@
 import logging
 from typing import Final, Optional
 
-from PySide2.QtCore import Qt
+from PySide2.QtCore import QMargins, Qt
 from PySide2.QtGui import QPixmap
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QWidget
 from PySide2.QtSvg import QSvgWidget
@@ -47,6 +47,7 @@ class CoverDock(DockWidget):
         self.setWidget(widget)
 
         layout = QGridLayout()
+        layout.setMargin(0)
         widget.setLayout(layout)
 
         self.__cover = AspectRatioPixmapLabel()
@@ -54,6 +55,7 @@ class CoverDock(DockWidget):
         layout.addWidget(self.__cover, 0, 0)
 
         info_layout = QHBoxLayout()
+        info_layout.setContentsMargins(QMargins(8, 8, 8, 8))
         layout.addLayout(info_layout, 0, 0, 1, 1, Qt.AlignRight | Qt.AlignTop)
 
         self.__size_label = QLabel()
