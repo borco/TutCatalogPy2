@@ -53,6 +53,8 @@ class MainWindow(CommonMainWindow):
         self.setWindowTitle(self.WINDOW_TITLE)
 
         disks_model.setParent(self)
+        tutorials_model.setParent(self)
+        tutorials_model.init_icons()
 
         self.__recent_files = RecentFiles(self)
 

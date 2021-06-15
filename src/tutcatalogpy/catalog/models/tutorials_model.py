@@ -1,7 +1,8 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from PySide2.QtCore import QAbstractTableModel, QDateTime, Qt
+from PySide2.QtGui import QIcon
 from humanize import naturalsize
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.schema import Column
@@ -11,6 +12,7 @@ from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.db.disk import Disk
 from tutcatalogpy.catalog.db.folder import Folder
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
+from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.db_table_column_enum import DbTableColumnEnum
 
 log = logging.getLogger(__name__)
@@ -29,6 +31,8 @@ class TutorialsModel(QAbstractTableModel):
         CREATED = (6, 'Created', 'created', Folder.created)
         MODIFIED = (7, 'Modified', 'modified', Folder.modified)
 
+    NO_COVER_ICON = relative_path(__file__, '../../resources/icons/no_cover.svg')
+
     def __init__(self):
         super().__init__()
         self.__cache: Dict[int, Any] = {}
@@ -37,6 +41,10 @@ class TutorialsModel(QAbstractTableModel):
         self.__sort_ascending: bool = True
         self.__search_text: str = ''
         self.__only_show_checked_disks: bool = False
+        self.__no_cover_icon: Optional[QIcon] = None
+
+    def init_icons(self) -> None:
+        self.__no_cover_icon = QIcon(self.NO_COVER_ICON)
 
     def search(self, search_dock: SearchDock, force: bool = False) -> None:
         if search_dock.text == self.__search_text and search_dock.only_show_checked_disks == self.__only_show_checked_disks and not force:
@@ -78,12 +86,16 @@ class TutorialsModel(QAbstractTableModel):
 
         column = index.column()
 
-        if role == Qt.DisplayRole:
+        if role == Qt.DecorationRole:
+            if column == TutorialsModel.Columns.COVER_SIZE.value:
+                value = getattr(tutorial, TutorialsModel.Columns(column).attr)
+                return None if value else self.__no_cover_icon
+        elif role == Qt.DisplayRole:
             value = getattr(tutorial, TutorialsModel.Columns(column).attr)
             if column == TutorialsModel.Columns.SIZE.value:
                 return naturalsize(value) if value else ''
             elif column == TutorialsModel.Columns.COVER_SIZE.value:
-                return 'Y' if value else ''
+                return None
             elif column in [TutorialsModel.Columns.CREATED.value, TutorialsModel.Columns.MODIFIED.value]:
                 return QDateTime.fromSecsSinceEpoch(value.timestamp())
             else:
