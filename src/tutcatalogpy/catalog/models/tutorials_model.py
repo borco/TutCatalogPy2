@@ -26,7 +26,7 @@ class TutorialsModel(QAbstractTableModel):
         DISK_NAME = (1, 'Disk', 'disk_name', Disk.disk_name)
         FOLDER_PARENT = (2, 'Folder Parent', 'folder_parent', Folder.folder_parent)
         FOLDER_NAME = (3, 'Folder Name', 'folder_name', Folder.folder_name)
-        COVER_SIZE = (4, 'Cover', 'cover_size', Cover.size)
+        HAS_COVER = (4, 'Cover', 'has_cover', (Cover.size != None))
         SIZE = (5, 'Size', 'size', Folder.size)
         CREATED = (6, 'Created', 'created', Folder.created)
         MODIFIED = (7, 'Modified', 'modified', Folder.modified)
@@ -87,14 +87,14 @@ class TutorialsModel(QAbstractTableModel):
         column = index.column()
 
         if role == Qt.DecorationRole:
-            if column == TutorialsModel.Columns.COVER_SIZE.value:
+            if column == TutorialsModel.Columns.HAS_COVER.value:
                 value = getattr(tutorial, TutorialsModel.Columns(column).attr)
                 return None if value else self.__no_cover_icon
         elif role == Qt.DisplayRole:
             value = getattr(tutorial, TutorialsModel.Columns(column).attr)
             if column == TutorialsModel.Columns.SIZE.value:
                 return naturalsize(value) if value else ''
-            elif column == TutorialsModel.Columns.COVER_SIZE.value:
+            elif column == TutorialsModel.Columns.HAS_COVER.value:
                 return None
             elif column in [TutorialsModel.Columns.CREATED.value, TutorialsModel.Columns.MODIFIED.value]:
                 return QDateTime.fromSecsSinceEpoch(value.timestamp())
@@ -131,7 +131,7 @@ class TutorialsModel(QAbstractTableModel):
                 Disk.disk_parent,
                 Disk.disk_name,
                 Disk.checked,
-                Cover.size.label('cover_size'),
+                (Cover.size != None).label('has_cover'),
             )
             .join(Disk, Folder.disk_id == Disk.id_)
             .join(Cover, Cover.folder_id == Folder.id_)
@@ -161,7 +161,7 @@ class TutorialsModel(QAbstractTableModel):
         column: Column = TutorialsModel.Columns(self.__sort_column).column
         column = column.asc() if self.__sort_ascending else column.desc()
         query = query.order_by(column)
-        if column != Folder.folder_name and Folder.id_:
+        if column not in [Folder.folder_name, Folder.id_]:
             query = query.order_by(Folder.folder_name.asc())
 
         return query.offset(row).limit(1).first()
