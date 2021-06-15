@@ -40,7 +40,8 @@ class CoverDock(DockWidget):
         self.__setup_actions()
 
         self.set_cover(None)
-        self.set_online(False)
+        self.__no_cover.setVisible(False)
+        self.__offline.setVisible(False)
 
     def __setup_widgets(self) -> None:
         widget = QWidget()
@@ -78,11 +79,13 @@ class CoverDock(DockWidget):
 
     def set_cover(self, pixmap: Optional[QPixmap]) -> None:
         self.__cover.setPixmap(pixmap)
-        self.__no_cover.setVisible(pixmap is None)
         if pixmap is None:
             self.__size_label.setText('')
         else:
             self.__size_label.setText(f'{pixmap.width()} x {pixmap.height()}')
+
+    def set_has_cover(self, has_cover: bool) -> None:
+        self.__no_cover.setVisible(not has_cover)
 
     def set_online(self, online: bool) -> None:
         self.__offline.setVisible(not online)

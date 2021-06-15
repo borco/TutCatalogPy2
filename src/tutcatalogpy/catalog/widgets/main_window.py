@@ -46,6 +46,7 @@ class MainWindow(CommonMainWindow):
     FILE_QUIT_SHORTCUT: Final[QKeySequence] = QKeySequence.Quit
 
     __current_folder_id: Optional[int] = None
+    __selected_one_folder: bool = False
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -207,7 +208,7 @@ class MainWindow(CommonMainWindow):
     def __refresh_models(self) -> None:
         disks_model.refresh()
         tutorials_model.refresh()
-        self.__update_cover_dock(self.__current_folder_id)
+        self.__update_cover_dock(self.__current_folder_id, self.__selected_one_folder)
 
     def __on_scan_startup_action_triggered(self) -> None:
         scan_controller.scan_startup()
@@ -264,14 +265,11 @@ class MainWindow(CommonMainWindow):
         self.__refresh_models()
 
     def __on_tutorials_dock_selection_changed(self, tutorials: List[int]) -> None:
-        if len(tutorials) == 1:
-            self.__current_folder_id = tutorials[0]
-        else:
-            self.__current_folder_id = None
+        self.__selected_one_folder = (len(tutorials) == 1)
+        self.__current_folder_id = tutorials[0] if self.__selected_one_folder else None
+        self.__update_cover_dock(self.__current_folder_id, self.__selected_one_folder)
 
-        self.__update_cover_dock(self.__current_folder_id)
-
-    def __update_cover_dock(self, folder_id: Optional[int]) -> None:
+    def __update_cover_dock(self, folder_id: Optional[int], single_selection: bool) -> None:
         session = dal.session
         pixmap: Optional[QPixmap] = None
         online = False
@@ -284,7 +282,8 @@ class MainWindow(CommonMainWindow):
                 online = query.folder.disk.online
 
         self.__cover_dock.set_cover(pixmap)
-        self.__cover_dock.set_online(online)
+        self.__cover_dock.set_has_cover(pixmap is not None or not single_selection)
+        self.__cover_dock.set_online(online or not single_selection)
 
     def show(self) -> None:
         super().show()
