@@ -3,7 +3,7 @@ from typing import Final, Optional
 
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QPixmap
-from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QWidget
+from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QWidget
 from PySide2.QtSvg import QSvgWidget
 
 
@@ -53,8 +53,11 @@ class CoverDock(DockWidget):
 
         layout.addWidget(self.__cover, 0, 0)
 
-        icons_layout = QHBoxLayout()
-        layout.addLayout(icons_layout, 0, 0, 1, 1, Qt.AlignRight | Qt.AlignTop)
+        info_layout = QHBoxLayout()
+        layout.addLayout(info_layout, 0, 0, 1, 1, Qt.AlignRight | Qt.AlignTop)
+
+        self.__size_label = QLabel()
+        info_layout.addWidget(self.__size_label)
 
         self.__no_cover = QSvgWidget(self.NO_COVER_SVG)
         self.__no_cover.setStatusTip(self.NO_COVER_TIP)
@@ -66,7 +69,7 @@ class CoverDock(DockWidget):
         for icon in icons:
             icon.setFixedSize(self.SVG_ICON_SIZE, self.SVG_ICON_SIZE)
             icon.setVisible(False)
-            icons_layout.addWidget(icon)
+            info_layout.addWidget(icon)
 
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
@@ -74,29 +77,33 @@ class CoverDock(DockWidget):
     def set_cover(self, pixmap: Optional[QPixmap]) -> None:
         self.__cover.setPixmap(pixmap)
         self.__no_cover.setVisible(pixmap is None)
+        if pixmap is None:
+            self.__size_label.setText('')
+        else:
+            self.__size_label.setText(f'{pixmap.width()} x {pixmap.height()}')
 
     def set_online(self, online: bool) -> None:
         self.__offline.setVisible(not online)
 
 
 def run() -> None:
-    import sys
-    from PySide2.QtWidgets import QApplication, QMainWindow
+    from tutcatalogpy.catalog.main import run
+    run()
+    # import sys
+    # from PySide2.QtWidgets import QApplication, QMainWindow
 
-    app = QApplication(sys.argv)
+    # app = QApplication(sys.argv)
 
-    pixmap = QPixmap(relative_path(__file__, '../../resources/icons/cover.png'))
-    window = QMainWindow()
-    cover = CoverDock()
-    cover.set_cover(pixmap)
-    window.setCentralWidget(cover)
-    window.show()
+    # pixmap = QPixmap(relative_path(__file__, '../../resources/icons/cover.png'))
+    # window = QMainWindow()
+    # cover = CoverDock()
+    # cover.set_cover(pixmap)
+    # window.setCentralWidget(cover)
+    # window.show()
 
-    success = app.exec_()
-    sys.exit(success)
+    # success = app.exec_()
+    # sys.exit(success)
 
 
 if __name__ == '__main__':
-    # from tutcatalogpy.catalog.main import run
-    # run()
     run()
