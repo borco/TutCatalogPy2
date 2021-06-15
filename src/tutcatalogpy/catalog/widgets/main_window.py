@@ -2,10 +2,12 @@ import logging
 from typing import Final, List, Optional
 
 from PySide2.QtCore import QSize, QTimer, Qt
-from PySide2.QtGui import QCloseEvent, QIcon, QKeySequence
+from PySide2.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
 from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenuBar, QToolBar
 
 from tutcatalogpy.catalog.config import config
+from tutcatalogpy.catalog.db.cover import Cover
+from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.models.disks_model import disks_model
 from tutcatalogpy.catalog.models.tutorials_model import tutorials_model
 from tutcatalogpy.catalog.scan_controller import scan_controller
@@ -43,12 +45,17 @@ class MainWindow(CommonMainWindow):
     FILE_QUIT_MENU: Final[str] = 'Quit'
     FILE_QUIT_SHORTCUT: Final[QKeySequence] = QKeySequence.Quit
 
+    __current_folder_id: Optional[int] = None
+    __selected_one_folder: bool = False
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.setWindowTitle(self.WINDOW_TITLE)
 
         disks_model.setParent(self)
+        tutorials_model.setParent(self)
+        tutorials_model.init_icons()
 
         self.__recent_files = RecentFiles(self)
 
@@ -187,6 +194,7 @@ class MainWindow(CommonMainWindow):
     def __setup_connections(self) -> None:
         self.__search_dock.search.connect(lambda: tutorials_model.search(self.__search_dock))
         disks_model.disk_checked_changed.connect(lambda: tutorials_model.search(self.__search_dock, True))
+        self.__tutorials_dock.selection_changed.connect(self.__on_tutorials_dock_selection_changed)
 
     def __cleanup_controllers(self) -> None:
         scan_controller.cleanup()
@@ -200,6 +208,7 @@ class MainWindow(CommonMainWindow):
     def __refresh_models(self) -> None:
         disks_model.refresh()
         tutorials_model.refresh()
+        self.__update_cover_dock(self.__current_folder_id, self.__selected_one_folder)
 
     def __on_scan_startup_action_triggered(self) -> None:
         scan_controller.scan_startup()
@@ -254,6 +263,27 @@ class MainWindow(CommonMainWindow):
             self.setWindowTitle(self.WINDOW_TITLE)
 
         self.__refresh_models()
+
+    def __on_tutorials_dock_selection_changed(self, tutorials: List[int]) -> None:
+        self.__selected_one_folder = (len(tutorials) == 1)
+        self.__current_folder_id = tutorials[0] if self.__selected_one_folder else None
+        self.__update_cover_dock(self.__current_folder_id, self.__selected_one_folder)
+
+    def __update_cover_dock(self, folder_id: Optional[int], single_selection: bool) -> None:
+        session = dal.session
+        pixmap: Optional[QPixmap] = None
+        online = False
+        if session is not None and self.__current_folder_id:
+            query = session.query(Cover).filter(Cover.folder_id == folder_id).first()
+            if query is not None:
+                if query.data is not None:
+                    pixmap = QPixmap()
+                    pixmap.loadFromData(query.data)
+                online = query.folder.disk.online
+
+        self.__cover_dock.set_cover(pixmap)
+        self.__cover_dock.set_has_cover(pixmap is not None or not single_selection)
+        self.__cover_dock.set_online(online or not single_selection)
 
     def show(self) -> None:
         super().show()

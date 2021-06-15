@@ -1,15 +1,18 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from PySide2.QtCore import QAbstractTableModel, QDateTime, Qt
+from PySide2.QtGui import QIcon
 from humanize import naturalsize
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.schema import Column
 
+from tutcatalogpy.catalog.db.cover import Cover
 from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.db.disk import Disk
 from tutcatalogpy.catalog.db.folder import Folder
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
+from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.db_table_column_enum import DbTableColumnEnum
 
 log = logging.getLogger(__name__)
@@ -23,9 +26,12 @@ class TutorialsModel(QAbstractTableModel):
         DISK_NAME = (1, 'Disk', 'disk_name', Disk.disk_name)
         FOLDER_PARENT = (2, 'Folder Parent', 'folder_parent', Folder.folder_parent)
         FOLDER_NAME = (3, 'Folder Name', 'folder_name', Folder.folder_name)
-        SIZE = (4, 'Size', 'size', Folder.size)
-        CREATED = (5, 'Created', 'created', Folder.created)
-        MODIFIED = (6, 'Modified', 'modified', Folder.modified)
+        HAS_COVER = (4, 'Cover', 'has_cover', (Cover.size != None))
+        SIZE = (5, 'Size', 'size', Folder.size)
+        CREATED = (6, 'Created', 'created', Folder.created)
+        MODIFIED = (7, 'Modified', 'modified', Folder.modified)
+
+    NO_COVER_ICON = relative_path(__file__, '../../resources/icons/no_cover.svg')
 
     def __init__(self):
         super().__init__()
@@ -35,6 +41,10 @@ class TutorialsModel(QAbstractTableModel):
         self.__sort_ascending: bool = True
         self.__search_text: str = ''
         self.__only_show_checked_disks: bool = False
+        self.__no_cover_icon: Optional[QIcon] = None
+
+    def init_icons(self) -> None:
+        self.__no_cover_icon = QIcon(self.NO_COVER_ICON)
 
     def search(self, search_dock: SearchDock, force: bool = False) -> None:
         if search_dock.text == self.__search_text and search_dock.only_show_checked_disks == self.__only_show_checked_disks and not force:
@@ -76,10 +86,16 @@ class TutorialsModel(QAbstractTableModel):
 
         column = index.column()
 
-        if role == Qt.DisplayRole:
+        if role == Qt.DecorationRole:
+            if column == TutorialsModel.Columns.HAS_COVER.value:
+                value = getattr(tutorial, TutorialsModel.Columns(column).attr)
+                return None if value else self.__no_cover_icon
+        elif role == Qt.DisplayRole:
             value = getattr(tutorial, TutorialsModel.Columns(column).attr)
             if column == TutorialsModel.Columns.SIZE.value:
                 return naturalsize(value) if value else ''
+            elif column == TutorialsModel.Columns.HAS_COVER.value:
+                return None
             elif column in [TutorialsModel.Columns.CREATED.value, TutorialsModel.Columns.MODIFIED.value]:
                 return QDateTime.fromSecsSinceEpoch(value.timestamp())
             else:
@@ -115,8 +131,10 @@ class TutorialsModel(QAbstractTableModel):
                 Disk.disk_parent,
                 Disk.disk_name,
                 Disk.checked,
+                (Cover.size != None).label('has_cover'),
             )
             .join(Disk, Folder.disk_id == Disk.id_)
+            .join(Cover, Cover.folder_id == Folder.id_)
         )
 
         return self.__filtered(query)
@@ -143,7 +161,7 @@ class TutorialsModel(QAbstractTableModel):
         column: Column = TutorialsModel.Columns(self.__sort_column).column
         column = column.asc() if self.__sort_ascending else column.desc()
         query = query.order_by(column)
-        if column != Folder.folder_name and Folder.id_:
+        if column not in [Folder.folder_name, Folder.id_]:
             query = query.order_by(Folder.folder_name.asc())
 
         return query.offset(row).limit(1).first()
