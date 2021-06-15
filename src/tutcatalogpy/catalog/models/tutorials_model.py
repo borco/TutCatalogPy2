@@ -6,6 +6,7 @@ from humanize import naturalsize
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.schema import Column
 
+from tutcatalogpy.catalog.db.cover import Cover
 from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.db.disk import Disk
 from tutcatalogpy.catalog.db.folder import Folder
@@ -23,9 +24,10 @@ class TutorialsModel(QAbstractTableModel):
         DISK_NAME = (1, 'Disk', 'disk_name', Disk.disk_name)
         FOLDER_PARENT = (2, 'Folder Parent', 'folder_parent', Folder.folder_parent)
         FOLDER_NAME = (3, 'Folder Name', 'folder_name', Folder.folder_name)
-        SIZE = (4, 'Size', 'size', Folder.size)
-        CREATED = (5, 'Created', 'created', Folder.created)
-        MODIFIED = (6, 'Modified', 'modified', Folder.modified)
+        COVER_SIZE = (4, 'Cover', 'cover_size', Cover.size)
+        SIZE = (5, 'Size', 'size', Folder.size)
+        CREATED = (6, 'Created', 'created', Folder.created)
+        MODIFIED = (7, 'Modified', 'modified', Folder.modified)
 
     def __init__(self):
         super().__init__()
@@ -80,6 +82,8 @@ class TutorialsModel(QAbstractTableModel):
             value = getattr(tutorial, TutorialsModel.Columns(column).attr)
             if column == TutorialsModel.Columns.SIZE.value:
                 return naturalsize(value) if value else ''
+            elif column == TutorialsModel.Columns.COVER_SIZE.value:
+                return 'Y' if value else ''
             elif column in [TutorialsModel.Columns.CREATED.value, TutorialsModel.Columns.MODIFIED.value]:
                 return QDateTime.fromSecsSinceEpoch(value.timestamp())
             else:
@@ -115,8 +119,10 @@ class TutorialsModel(QAbstractTableModel):
                 Disk.disk_parent,
                 Disk.disk_name,
                 Disk.checked,
+                Cover.size.label('cover_size'),
             )
             .join(Disk, Folder.disk_id == Disk.id_)
+            .join(Cover, Cover.folder_id == Folder.id_)
         )
 
         return self.__filtered(query)
