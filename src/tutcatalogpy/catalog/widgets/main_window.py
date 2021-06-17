@@ -62,8 +62,8 @@ class MainWindow(CommonMainWindow):
 
     OPEN_FOLDER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_folder.svg')
     OPEN_FOLDER_TIP: Final[str] = 'Open folder in external file browser'
-    OPEN_NFO_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_nfo.svg')
-    OPEN_NFO_TIP: Final[str] = 'Open .nfo in external viewer'
+    OPEN_TC_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_tc.svg')
+    OPEN_TC_TIP: Final[str] = 'Open info.tc in external viewer'
 
     __current_folder_id: Optional[int] = None
 
@@ -157,10 +157,10 @@ class MainWindow(CommonMainWindow):
         self.__open_folder_action.setStatusTip(self.OPEN_FOLDER_TIP)
         self.__open_folder_action.triggered.connect(self.__on_open_folder_triggered)
 
-        self.__open_nfo_action = QAction()
-        self.__open_nfo_action.setIcon(QIcon(self.OPEN_NFO_ICON))
-        self.__open_nfo_action.setStatusTip(self.OPEN_NFO_TIP)
-        self.__open_nfo_action.triggered.connect(self.__on_open_nfo_triggered)
+        self.__open_tc_action = QAction()
+        self.__open_tc_action.setIcon(QIcon(self.OPEN_TC_ICON))
+        self.__open_tc_action.setStatusTip(self.OPEN_TC_TIP)
+        self.__open_tc_action.triggered.connect(self.__on_open_tc_triggered)
 
         self.__scan_actions = [
             self.__scan_startup_action,
@@ -170,7 +170,7 @@ class MainWindow(CommonMainWindow):
 
         self.__folder_actions = [
             self.__open_folder_action,
-            self.__open_nfo_action,
+            self.__open_tc_action,
         ]
 
     def __setup_menus(self) -> None:
@@ -315,15 +315,15 @@ class MainWindow(CommonMainWindow):
             if path.exists():
                 QDesktopServices.openUrl(QUrl(f'file://{path}', QUrl.TolerantMode))
 
-    def __on_open_nfo_triggered(self) -> None:
+    def __on_open_tc_triggered(self) -> None:
         folder: Optional[Folder] = self.__get_current_folder(self.__current_folder_id)
         if folder is not None:
             path = folder.path()
             if path.exists():
-                info_path = path / 'info.tc'
-                if not info_path.exists():
-                    info_path.touch()
-                QDesktopServices.openUrl(QUrl(f'file://{info_path}', QUrl.TolerantMode))
+                tc_path = path / 'info.tc'
+                if not tc_path.exists():
+                    tc_path.touch()
+                QDesktopServices.openUrl(QUrl(f'file://{tc_path}', QUrl.TolerantMode))
 
     def __update_ui_with_current_folder(self) -> None:
         folder_id = self.__current_folder_id
@@ -331,7 +331,7 @@ class MainWindow(CommonMainWindow):
         self.__update_file_browser_dock(folder_id)
         selected_one_folder = (folder_id is not None)
         self.__open_folder_action.setEnabled(selected_one_folder)
-        self.__open_nfo_action.setEnabled(selected_one_folder)
+        self.__open_tc_action.setEnabled(selected_one_folder)
 
     def __get_current_folder(self, folder_id: Optional[int]) -> Optional[Folder]:
         session = dal.session
