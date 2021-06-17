@@ -22,10 +22,10 @@ class CoverDock(DockWidget):
     DOCK_TITLE: Final[str] = 'Cover'
     DOCK_OBJECT_NAME: Final[str] = 'cover_dock'
 
-    NO_COVER_SVG: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
-    NO_COVER_TIP: Final[str] = 'No cover'
     OFFLINE_SVG: Final[str] = relative_path(__file__, '../../resources/icons/offline.svg')
     OFFLINE_TIP: Final[str] = 'Offline'
+    NO_COVER_SVG: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
+    NO_COVER_TIP: Final[str] = 'No cover'
     JPG_COVER_SVG: Final[str] = relative_path(__file__, '../../resources/icons/jpg_file.svg')
     JPG_COVER_TIP: Final[str] = '.JPG'
     PNG_COVER_SVG: Final[str] = relative_path(__file__, '../../resources/icons/png_file.svg')
