@@ -7,8 +7,8 @@ from typing import Final, List, NamedTuple, Tuple, Optional
 from humanize import precisedelta
 from PySide2.QtCore import QObject, QThread, Signal
 from sqlalchemy.orm.session import Session
-from tutcatalogpy.catalog.db.cover import Cover
 
+from tutcatalogpy.catalog.db.cover import Cover
 from tutcatalogpy.catalog.db.dal import dal
 from tutcatalogpy.catalog.db.disk import Disk
 from tutcatalogpy.catalog.db.folder import Folder
@@ -45,7 +45,7 @@ class ScanWorker(QObject):
         folder_count: int = 0
         folder_index: int = 0
 
-    COVER_NAMES: Final[List[str]] = ['cover.jpg', 'cover.png']
+    COVER_NAMES: Final[List[Cover.FileFormat]] = [Cover.FileFormat.JPG, Cover.FileFormat.PNG]
 
     scan_started = Signal()
     scan_finished = Signal()
@@ -354,7 +354,7 @@ class ScanWorker(QObject):
             if self.__cancel:
                 break
 
-            if folder.status not in [Folder.Status.DELETED.value, Folder.Status.OK.value] or not folder.size:
+            if folder.status not in [Folder.Status.DELETED.value] or not folder.size:
                 if scan_config.can_scan(mode, ScanConfig.Option.FOLDER_DETAILS):
                     self.__update_folder_details(session, folder, disk)
 
@@ -382,8 +382,8 @@ class ScanWorker(QObject):
             cover = Cover(folder_id=folder.id_)
             session.add(cover)
 
-        for name in self.COVER_NAMES:
-            path: Path = Path(disk.disk_parent) / disk.disk_name / folder.folder_parent / folder.folder_name / name
+        for file_format in self.COVER_NAMES:
+            path: Path = Path(disk.disk_parent) / disk.disk_name / folder.folder_parent / folder.folder_name / file_format.file_name
             if path.exists():
                 modified, created, system_id, size = get_path_stats(path)
 
@@ -400,6 +400,7 @@ class ScanWorker(QObject):
                 with open(path, mode='rb') as f:
                     data = f.read()
 
+                cover.file_format = file_format.value
                 cover.system_id = system_id
                 cover.created = created
                 cover.modified = modified
@@ -412,6 +413,7 @@ class ScanWorker(QObject):
 
         if not has_cover:
 
+            cover.file_format = Cover.FileFormat.NONE.value
             cover.system_id = None
             cover.created = None
             cover.modified = None

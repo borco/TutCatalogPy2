@@ -273,16 +273,19 @@ class MainWindow(CommonMainWindow):
         session = dal.session
         pixmap: Optional[QPixmap] = None
         online = False
+        file_format: Cover.FileFormat = Cover.FileFormat.NONE
         if session is not None and self.__current_folder_id:
-            query = session.query(Cover).filter(Cover.folder_id == folder_id).first()
-            if query is not None:
-                if query.data is not None:
+            cover = session.query(Cover).filter(Cover.folder_id == folder_id).first()
+            if cover is not None:
+                if cover.data is not None:
                     pixmap = QPixmap()
-                    pixmap.loadFromData(query.data)
-                online = query.folder.disk.online
+                    pixmap.loadFromData(cover.data)
+                    file_format = Cover.FileFormat(cover.file_format)
+                online = cover.folder.disk.online
 
         self.__cover_dock.set_cover(pixmap)
         self.__cover_dock.set_has_cover(pixmap is not None or not single_selection)
+        self.__cover_dock.set_cover_format(file_format)
         self.__cover_dock.set_online(online or not single_selection)
 
     def show(self) -> None:
