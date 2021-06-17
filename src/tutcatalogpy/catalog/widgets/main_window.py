@@ -2,8 +2,8 @@ import logging
 from pathlib import Path
 from typing import Final, List, Optional
 
-from PySide2.QtCore import QSize, QTimer, Qt
-from PySide2.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
+from PySide2.QtCore import QSize, QTimer, QUrl, Qt
+from PySide2.QtGui import QCloseEvent, QDesktopServices, QIcon, QKeySequence, QPixmap
 from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenuBar, QToolBar
 
 from tutcatalogpy.catalog.config import config
@@ -48,6 +48,22 @@ class MainWindow(CommonMainWindow):
 
     FILE_QUIT_MENU: Final[str] = 'Quit'
     FILE_QUIT_SHORTCUT: Final[QKeySequence] = QKeySequence.Quit
+
+    SCAN_TOOLBAR_OBJECT_NAME: Final[str] = 'scan_toolbar'
+
+    SCAN_STARTUP_ICON: Final[str] = relative_path(__file__, '../../resources/icons/scan_startup.svg')
+    SCAN_STARTUP_TIP: Final[str] = 'Startup scan'
+    SCAN_NORMAL_ICON: Final[str] = relative_path(__file__, '../../resources/icons/scan.svg')
+    SCAN_NORMAL_TIP: Final[str] = 'Normal scan'
+    SCAN_EXTENDED_ICON: Final[str] = relative_path(__file__, '../../resources/icons/scan_more.svg')
+    SCAN_EXTENDED_TIP: Final[str] = 'Extended scan'
+
+    FOLDER_TOOLBAR_OBJECT_NAME: Final[str] = 'folder_toolbar'
+
+    OPEN_FOLDER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_folder.svg')
+    OPEN_FOLDER_TIP: Final[str] = 'Open folder in external file browser'
+    OPEN_NFO_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_nfo.svg')
+    OPEN_NFO_TIP: Final[str] = 'Open .nfo in external viewer'
 
     __current_folder_id: Optional[int] = None
 
@@ -122,24 +138,39 @@ class MainWindow(CommonMainWindow):
 
     def __setup_actions(self) -> None:
         self.__scan_startup_action = QAction()
-        self.__scan_startup_action.setStatusTip('Startup scan')
-        self.__scan_startup_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan_startup.svg')))
+        self.__scan_startup_action.setStatusTip(self.SCAN_STARTUP_TIP)
+        self.__scan_startup_action.setIcon(QIcon(self.SCAN_STARTUP_ICON))
         self.__scan_startup_action.triggered.connect(self.__on_scan_startup_action_triggered)
 
         self.__scan_normal_action = QAction()
-        self.__scan_normal_action.setStatusTip('Normal scan')
-        self.__scan_normal_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan.svg')))
+        self.__scan_normal_action.setStatusTip(self.SCAN_NORMAL_TIP)
+        self.__scan_normal_action.setIcon(QIcon(self.SCAN_NORMAL_ICON))
         self.__scan_normal_action.triggered.connect(self.__on_scan_normal_action_triggered)
 
         self.__scan_extended_action = QAction()
-        self.__scan_extended_action.setStatusTip('Extended scan')
-        self.__scan_extended_action.setIcon(QIcon(relative_path(__file__, '../../resources/icons/scan_more.svg')))
+        self.__scan_extended_action.setStatusTip(self.SCAN_EXTENDED_TIP)
+        self.__scan_extended_action.setIcon(QIcon(self.SCAN_EXTENDED_ICON))
         self.__scan_extended_action.triggered.connect(self.__on_scan_extended_action_triggered)
+
+        self.__open_folder_action = QAction()
+        self.__open_folder_action.setIcon(QIcon(self.OPEN_FOLDER_ICON))
+        self.__open_folder_action.setStatusTip(self.OPEN_FOLDER_TIP)
+        self.__open_folder_action.triggered.connect(self.__on_open_folder_triggered)
+
+        self.__open_nfo_action = QAction()
+        self.__open_nfo_action.setIcon(QIcon(self.OPEN_NFO_ICON))
+        self.__open_nfo_action.setStatusTip(self.OPEN_NFO_TIP)
+        self.__open_nfo_action.triggered.connect(self.__on_open_nfo_triggered)
 
         self.__scan_actions = [
             self.__scan_startup_action,
             self.__scan_normal_action,
             self.__scan_extended_action,
+        ]
+
+        self.__folder_actions = [
+            self.__open_folder_action,
+            self.__open_nfo_action,
         ]
 
     def __setup_menus(self) -> None:
@@ -184,16 +215,18 @@ class MainWindow(CommonMainWindow):
         scan_worker.scan_finished.connect(self.__on_scan_worker_scan_finished)
 
     def __setup_toolbars(self) -> None:
-        self.__toolbar = QToolBar()
-        self.__toolbar.setObjectName('main_toolbar')
-        self.__toolbar.setIconSize(QSize(self.DOCK_ICON_SIZE, self.DOCK_ICON_SIZE))
-        self.addToolBar(self.__toolbar)
+        self.__scan_toolbar = QToolBar()
+        self.__scan_toolbar.setObjectName(self.SCAN_TOOLBAR_OBJECT_NAME)
+        self.__scan_toolbar.setIconSize(QSize(self.DOCK_ICON_SIZE, self.DOCK_ICON_SIZE))
+        self.addToolBar(self.__scan_toolbar)
 
-        self.__toolbar.addActions([
-            self.__scan_startup_action,
-            self.__scan_normal_action,
-            self.__scan_extended_action
-        ])
+        self.__folder_toolbar = QToolBar()
+        self.__folder_toolbar.setObjectName(self.FOLDER_TOOLBAR_OBJECT_NAME)
+        self.__folder_toolbar.setIconSize(QSize(self.DOCK_ICON_SIZE, self.DOCK_ICON_SIZE))
+        self.addToolBar(self.__folder_toolbar)
+
+        self.__scan_toolbar.addActions(self.__scan_actions)
+        self.__folder_toolbar.addActions(self.__folder_actions)
 
         self._setup_docks_toolbar()
 
@@ -214,7 +247,7 @@ class MainWindow(CommonMainWindow):
     def __refresh_models(self) -> None:
         disks_model.refresh()
         tutorials_model.refresh()
-        self.__update_docks_with_current_folder()
+        self.__update_ui_with_current_folder()
 
     def __on_scan_startup_action_triggered(self) -> None:
         scan_controller.scan_startup()
@@ -273,23 +306,47 @@ class MainWindow(CommonMainWindow):
     def __on_tutorials_dock_selection_changed(self, tutorials: List[int]) -> None:
         self.__selected_one_folder = (len(tutorials) == 1)
         self.__current_folder_id = tutorials[0] if self.__selected_one_folder else None
-        self.__update_docks_with_current_folder()
+        self.__update_ui_with_current_folder()
 
-    def __update_docks_with_current_folder(self) -> None:
+    def __on_open_folder_triggered(self) -> None:
+        folder: Optional[Folder] = self.__get_current_folder(self.__current_folder_id)
+        if folder is not None:
+            path = folder.path()
+            if path.exists():
+                QDesktopServices.openUrl(QUrl(f'file://{path}', QUrl.TolerantMode))
+
+    def __on_open_nfo_triggered(self) -> None:
+        folder: Optional[Folder] = self.__get_current_folder(self.__current_folder_id)
+        if folder is not None:
+            path = folder.path()
+            if path.exists():
+                info_path = path / 'info.tc'
+                if not info_path.exists():
+                    info_path.touch()
+                QDesktopServices.openUrl(QUrl(f'file://{info_path}', QUrl.TolerantMode))
+
+    def __update_ui_with_current_folder(self) -> None:
         folder_id = self.__current_folder_id
         self.__update_cover_dock(folder_id)
         self.__update_file_browser_dock(folder_id)
+        selected_one_folder = (folder_id is not None)
+        self.__open_folder_action.setEnabled(selected_one_folder)
+        self.__open_nfo_action.setEnabled(selected_one_folder)
+
+    def __get_current_folder(self, folder_id: Optional[int]) -> Optional[Folder]:
+        session = dal.session
+        if session is not None and folder_id is not None:
+            return session.query(Folder).filter(Folder.id_ == folder_id).first()
+        return None
 
     def __update_file_browser_dock(self, folder_id: Optional[int]) -> None:
-        session = dal.session
         path: Optional[Path] = None
         offline = False
-        if session is not None and folder_id is not None:
-            folder: Optional[Folder] = session.query(Folder).filter(Folder.id_ == folder_id).first()
-            if folder is not None:
-                disk: Disk = folder.disk
-                offline = not disk.online
-                path = Path(disk.disk_parent) / disk.disk_name / folder.folder_parent / folder.folder_name
+        folder: Optional[Folder] = self.__get_current_folder(folder_id)
+        if folder is not None:
+            disk: Disk = folder.disk
+            offline = not disk.online
+            path = folder.path()
 
         self.__file_browser_dock.set_path(path)
         self.__file_browser_dock.set_offline(offline and path is not None)
