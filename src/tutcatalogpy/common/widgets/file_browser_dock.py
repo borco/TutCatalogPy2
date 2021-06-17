@@ -53,6 +53,7 @@ class FileBrowserDock(DockWidget):
 
         self.__view.setSortingEnabled(True)
         self.__view.setAlternatingRowColors(True)
+        self.__view.setVisible(False)
 
         self.__header_state: Optional[QByteArray] = None
 
