@@ -50,7 +50,6 @@ class MainWindow(CommonMainWindow):
     FILE_QUIT_SHORTCUT: Final[QKeySequence] = QKeySequence.Quit
 
     __current_folder_id: Optional[int] = None
-    __selected_one_folder: bool = False
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -278,8 +277,7 @@ class MainWindow(CommonMainWindow):
 
     def __update_docks_with_current_folder(self) -> None:
         folder_id = self.__current_folder_id
-        single_selection = self.__selected_one_folder
-        self.__update_cover_dock(folder_id, single_selection)
+        self.__update_cover_dock(folder_id)
         self.__update_file_browser_dock(folder_id)
 
     def __update_file_browser_dock(self, folder_id: Optional[int]) -> None:
@@ -296,24 +294,24 @@ class MainWindow(CommonMainWindow):
         self.__file_browser_dock.set_path(path)
         self.__file_browser_dock.set_offline(offline and path is not None)
 
-    def __update_cover_dock(self, folder_id: Optional[int], single_selection: bool) -> None:
+    def __update_cover_dock(self, folder_id: Optional[int]) -> None:
         session = dal.session
         pixmap: Optional[QPixmap] = None
-        online = False
+        offline = False
         file_format: Cover.FileFormat = Cover.FileFormat.NONE
-        if session is not None and folder_id:
+        if session is not None and folder_id is not None:
             cover = session.query(Cover).filter(Cover.folder_id == folder_id).first()
             if cover is not None:
                 if cover.data is not None:
                     pixmap = QPixmap()
                     pixmap.loadFromData(cover.data)
                     file_format = Cover.FileFormat(cover.file_format)
-                online = cover.folder.disk.online
+                offline = not cover.folder.disk.online
 
         self.__cover_dock.set_cover(pixmap)
-        self.__cover_dock.set_has_cover(pixmap is not None or not single_selection)
+        self.__cover_dock.set_has_cover(pixmap is not None and folder_id is not None)
         self.__cover_dock.set_cover_format(file_format)
-        self.__cover_dock.set_online(online or not single_selection)
+        self.__cover_dock.set_offline(offline and folder_id is not None)
 
     def show(self) -> None:
         super().show()

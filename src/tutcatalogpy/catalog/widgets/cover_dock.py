@@ -32,6 +32,8 @@ class CoverDock(DockWidget):
     PNG_COVER_TIP: Final[str] = '.PNG'
     SVG_ICON_SIZE: Final[int] = 20
 
+    MAX_COVER_WIDTH: Final[int] = 300
+
     _dock_icon: Final[str] = relative_path(__file__, '../../resources/icons/cover.svg')
     _dock_status_tip: Final[str] = 'Toggle cover dock'
 
@@ -93,13 +95,16 @@ class CoverDock(DockWidget):
         if pixmap is None:
             self.__size_label.setText('')
         else:
-            self.__size_label.setText(f'{pixmap.width()} x {pixmap.height()}')
+            text = f'{pixmap.width()} x {pixmap.height()}'
+            if pixmap.width() > self.MAX_COVER_WIDTH:
+                text = '<p style="color:red;">' + text + '</p>'
+            self.__size_label.setText(text)
 
     def set_has_cover(self, has_cover: bool) -> None:
         self.__no_cover.setVisible(not has_cover)
 
-    def set_online(self, online: bool) -> None:
-        self.__offline.setVisible(not online)
+    def set_offline(self, offline: bool) -> None:
+        self.__offline.setVisible(offline)
 
     def set_cover_format(self, file_format: Cover.FileFormat) -> None:
         self.__jpg_cover.setVisible(file_format == Cover.FileFormat.JPG)
