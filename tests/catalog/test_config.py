@@ -79,7 +79,7 @@ def test_load_config_with_one_disk(tmp_path):
     assert disk.depth == 2
     assert disk.location == Disk.Location.LOCAL
     assert disk.id_ == 1
-    assert disk.index_ == 0
+    assert disk.index_ == 1
 
 
 def test_load_config_with_many_disk(tmp_path):
@@ -109,7 +109,7 @@ def test_load_config_with_many_disk(tmp_path):
     assert disk.depth == 2
     assert disk.location == Disk.Location.REMOTE
     assert disk.id_ == 2
-    assert disk.index_ == 1
+    assert disk.index_ == 2
 
 
 def test_reload_same_config_with_many_disk(tmp_path):
@@ -133,13 +133,13 @@ def test_reload_same_config_with_many_disk(tmp_path):
 
     assert disk.disk_name == 'foo'
     assert disk.id_ == 1
-    assert disk.index_ == 0
+    assert disk.index_ == 1
 
     disk = disks[1]
 
     assert disk.disk_name == 'bar'
     assert disk.id_ == 2
-    assert disk.index_ == 1
+    assert disk.index_ == 2
 
 
 def test_reload_config_with_many_disk_updates_disk_index(tmp_path):
@@ -174,13 +174,13 @@ def test_reload_config_with_many_disk_updates_disk_index(tmp_path):
     disk = disks[0]
 
     assert disk.disk_name == 'bar'
-    assert disk.index_ == 0
+    assert disk.index_ == 1
     assert disk.id_ == 2
 
     disk = disks[1]
 
     assert disk.disk_name == 'foo'
-    assert disk.index_ == 1
+    assert disk.index_ == 2
     assert disk.id_ == 1
 
 
@@ -216,7 +216,7 @@ def test_disks_removed_from_cache_when_removed_from_config(tmp_path):
     disk = disks[0]
 
     assert disk.disk_name == 'bar'
-    assert disk.index_ == 0
+    assert disk.index_ == 1
     assert disk.id_ == 2
 
 
@@ -254,13 +254,13 @@ def test_disks_remembers_old_db_index(tmp_path):
     disk = disks[0]
 
     assert disk.disk_name == 'foo'
-    assert disk.index_ == 0
+    assert disk.index_ == 1
     assert disk.id_ == 3
 
     disk = disks[1]
 
     assert disk.disk_name == 'bar'
-    assert disk.index_ == 1
+    assert disk.index_ == 2
     assert disk.id_ == 2
 
 
