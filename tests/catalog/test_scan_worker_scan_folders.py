@@ -22,59 +22,6 @@ def session() -> Session:
     dal.disconnect()
 
 
-def test_scan_disks_for_offline_disks(tmp_path: Path, session: Session):
-    DISK_PARENT: Final[str] = str(tmp_path)
-    DISK_NAME: Final[str] = 'foo'
-
-    session.add(Disk(disk_parent=DISK_PARENT, disk_name=DISK_NAME, index_=0))
-    session.commit()
-
-    mode = ScanConfig.Mode.STARTUP
-    worker = ScanWorker()
-    worker.scan(mode)
-    assert session.query(Disk).one().online is False
-
-
-def test_scan_disks_for_online_disks(tmp_path: Path, session: Session):
-    DISK_PARENT: Final[str] = str(tmp_path)
-    DISK_NAME: Final[str] = 'foo'
-    disk_path: Path = tmp_path / DISK_NAME
-
-    session.add(Disk(disk_parent=DISK_PARENT, disk_name=DISK_NAME, index_=0))
-    session.commit()
-
-    disk_path.mkdir()
-
-    mode = ScanConfig.Mode.STARTUP
-    worker = ScanWorker()
-    worker.scan(mode)
-    assert session.query(Disk).one().online is True
-
-
-def test_scan_disks_updates_online(tmp_path: Path, session: Session):
-    DISK_PARENT: Final[str] = str(tmp_path)
-    DISK_NAME: Final[str] = 'foo'
-    disk_path: Path = tmp_path / DISK_NAME
-
-    session.add(Disk(disk_parent=DISK_PARENT, disk_name=DISK_NAME, index_=0))
-    session.commit()
-
-    mode = ScanConfig.Mode.STARTUP
-    worker = ScanWorker()
-
-    disk_path.mkdir()
-    worker.scan(mode)
-    assert session.query(Disk).one().online is True
-
-    shutil.rmtree(disk_path, ignore_errors=True)
-    worker.scan(mode)
-    assert session.query(Disk).one().online is False
-
-    disk_path.mkdir()
-    worker.scan(mode)
-    assert session.query(Disk).one().online is True
-
-
 @mark.parametrize(
     'folder_names',
     [
