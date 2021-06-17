@@ -6,5 +6,6 @@
         "noqa",
         "pytest",
         "tutcatalogpy"
-    ]
+    ],
+    "python.pythonPath": ".venv/bin/python"
 }
