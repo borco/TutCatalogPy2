@@ -327,11 +327,14 @@ class MainWindow(CommonMainWindow):
 
     def __update_ui_with_current_folder(self) -> None:
         folder_id = self.__current_folder_id
+        folder = self.__get_current_folder(folder_id)
+        online = (folder is not None and folder.disk.online)
+
         self.__update_cover_dock(folder_id)
         self.__update_file_browser_dock(folder_id)
         selected_one_folder = (folder_id is not None)
-        self.__open_folder_action.setEnabled(selected_one_folder)
-        self.__open_tc_action.setEnabled(selected_one_folder)
+        self.__open_folder_action.setEnabled(selected_one_folder and online)
+        self.__open_tc_action.setEnabled(selected_one_folder and online)
 
     def __get_current_folder(self, folder_id: Optional[int]) -> Optional[Folder]:
         session = dal.session
