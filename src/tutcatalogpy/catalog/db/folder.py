@@ -1,5 +1,6 @@
-from datetime import datetime
 import enum
+from datetime import datetime
+from pathlib import Path
 
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
@@ -38,3 +39,6 @@ class Folder(Base):
         UniqueConstraint('disk_id', 'folder_parent', 'folder_name'),
         UniqueConstraint('disk_id', 'system_id'),
     )
+
+    def path(self) -> Path:
+        return self.disk.path() / self.folder_parent / self.folder_name
