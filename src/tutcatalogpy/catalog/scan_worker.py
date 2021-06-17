@@ -366,7 +366,7 @@ class ScanWorker(QObject):
             # QThread.msleep(100)
 
     def __update_folder_details(self, session: Session, folder: Folder, disk: Disk):
-        path = Path(disk.disk_parent) / disk.disk_name / folder.folder_parent / folder.folder_name
+        path = folder.path()
         folder.size = get_folder_size(path)
         folder.status = Folder.Status.OK
         self.__update_cover(session, folder)
@@ -383,7 +383,7 @@ class ScanWorker(QObject):
             session.add(cover)
 
         for file_format in self.COVER_NAMES:
-            path: Path = Path(disk.disk_parent) / disk.disk_name / folder.folder_parent / folder.folder_name / file_format.file_name
+            path: Path = folder.path() / file_format.file_name
             if path.exists():
                 modified, created, system_id, size = get_path_stats(path)
 
