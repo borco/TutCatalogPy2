@@ -354,7 +354,7 @@ class ScanWorker(QObject):
             if self.__cancel:
                 break
 
-            if folder.status != Folder.Status.DELETED.value or not folder.size:
+            if folder.status not in [Folder.Status.DELETED.value, Folder.Status.OK.value] or not folder.size:
                 if scan_config.can_scan(mode, ScanConfig.Option.FOLDER_DETAILS):
                     self.__update_folder_details(session, folder, disk)
 
