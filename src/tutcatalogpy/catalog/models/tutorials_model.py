@@ -24,15 +24,17 @@ class TutorialsModel(QAbstractTableModel):
     class Columns(DbTableColumnEnum):
         CHECKED = (0, 'Checked', 'folder_checked', Folder.checked)
         INDEX = (1, 'Index', 'id_', Folder.id_)
-        HAS_COVER = (2, 'Cover', 'has_cover', (Cover.size != None))
-        DISK_NAME = (3, 'Disk', 'disk_name', Disk.disk_name)
-        FOLDER_PARENT = (4, 'Folder Parent', 'folder_parent', Folder.folder_parent)
-        FOLDER_NAME = (5, 'Folder Name', 'folder_name', Folder.folder_name)
-        SIZE = (6, 'Size', 'size', Folder.size)
-        CREATED = (7, 'Created', 'created', Folder.created)
-        MODIFIED = (8, 'Modified', 'modified', Folder.modified)
+        ONLINE = (2, 'Online', 'online', Disk.online)
+        HAS_COVER = (3, 'Cover', 'has_cover', (Cover.size != None))
+        DISK_NAME = (4, 'Disk', 'disk_name', Disk.disk_name)
+        FOLDER_PARENT = (5, 'Folder Parent', 'folder_parent', Folder.folder_parent)
+        FOLDER_NAME = (6, 'Folder Name', 'folder_name', Folder.folder_name)
+        SIZE = (7, 'Size', 'size', Folder.size)
+        CREATED = (8, 'Created', 'created', Folder.created)
+        MODIFIED = (9, 'Modified', 'modified', Folder.modified)
 
     NO_COVER_ICON = relative_path(__file__, '../../resources/icons/no_cover.svg')
+    OFFLINE_ICON = relative_path(__file__, '../../resources/icons/offline.svg')
 
     def __init__(self):
         super().__init__()
@@ -46,6 +48,7 @@ class TutorialsModel(QAbstractTableModel):
 
     def init_icons(self) -> None:
         self.__no_cover_icon = QIcon(self.NO_COVER_ICON)
+        self.__offline_icon = QIcon(self.OFFLINE_ICON)
 
     def search(self, search_dock: SearchDock, force: bool = False) -> None:
         if search_dock.text == self.__search_text and search_dock.only_show_checked_disks == self.__only_show_checked_disks and not force:
@@ -62,7 +65,10 @@ class TutorialsModel(QAbstractTableModel):
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int) -> Any:
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            if section in [TutorialsModel.Columns.INDEX.value, TutorialsModel.Columns.CHECKED.value]:
+            if section in [
+                TutorialsModel.Columns.INDEX.value,
+                TutorialsModel.Columns.CHECKED.value,
+            ]:
                 return ''
             else:
                 return TutorialsModel.Columns(section).label
@@ -91,13 +97,19 @@ class TutorialsModel(QAbstractTableModel):
         if role == Qt.DecorationRole:
             if column == TutorialsModel.Columns.HAS_COVER.value:
                 return None if value else self.__no_cover_icon
+            elif column == TutorialsModel.Columns.ONLINE.value:
+                return None if value else self.__offline_icon
         if role == Qt.CheckStateRole:
             if column == TutorialsModel.Columns.CHECKED.value:
                 return Qt.Checked if value else Qt.Unchecked
         elif role == Qt.DisplayRole:
             if column == TutorialsModel.Columns.SIZE.value:
                 return naturalsize(value) if value else ''
-            elif column in [TutorialsModel.Columns.HAS_COVER.value, TutorialsModel.Columns.CHECKED.value]:
+            elif column in [
+                TutorialsModel.Columns.HAS_COVER.value,
+                TutorialsModel.Columns.CHECKED.value,
+                TutorialsModel.Columns.ONLINE.value,
+            ]:
                 return None
             elif column in [TutorialsModel.Columns.CREATED.value, TutorialsModel.Columns.MODIFIED.value]:
                 return QDateTime.fromSecsSinceEpoch(value.timestamp())
@@ -163,6 +175,7 @@ class TutorialsModel(QAbstractTableModel):
                 Folder.created,
                 Folder.modified,
                 Folder.size,
+                Disk.online,
                 Disk.disk_parent,
                 Disk.disk_name,
                 Disk.checked,
