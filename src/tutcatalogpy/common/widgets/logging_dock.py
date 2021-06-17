@@ -21,13 +21,13 @@ class LoggingDock(DockWidget):
     DOCK_OBJECT_NAME: Final[str] = 'log_dock'  # used to identify this dock
 
     CLEAR_ICON: Final[str] = relative_path(__file__, '../../resources/icons/clear.svg')
-    CLEAR_TIP: Final[str] = 'Clear logs.'
+    CLEAR_TIP: Final[str] = 'Clear logs'
     TOGGLE_DEBUG_TEXT: Final[str] = 'Debug'
-    TOGGLE_DEBUG_TIP: Final[str] = 'Toggle debug logging.'
+    TOGGLE_DEBUG_TIP: Final[str] = 'Toggle debug logging'
     TOGGLE_SQL_TEXT: Final[str] = 'SQL'
-    TOGGLE_SQL_TIP: Final[str] = 'Toggle SQL logging.'
+    TOGGLE_SQL_TIP: Final[str] = 'Toggle SQL logging'
     TOGGLE_VERBOSE_TEXT: Final[str] = 'Verbose'
-    TOGGLE_VERBOSE_TIP: Final[str] = 'Toggle verbose logging.'
+    TOGGLE_VERBOSE_TIP: Final[str] = 'Toggle verbose logging'
     TOGGLE_WRAP_ICON: Final[str] = relative_path(__file__, '../../resources/icons/wrap_line.svg')
     TOGGLE_WRAP_TIP: Final[str] = 'Wrap log lines.'
 
