@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Final, List, Optional
 
 from PySide2.QtCore import QSize, QTimer, Qt
@@ -8,6 +9,8 @@ from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenu
 from tutcatalogpy.catalog.config import config
 from tutcatalogpy.catalog.db.cover import Cover
 from tutcatalogpy.catalog.db.dal import dal
+from tutcatalogpy.catalog.db.disk import Disk
+from tutcatalogpy.catalog.db.folder import Folder
 from tutcatalogpy.catalog.models.disks_model import disks_model
 from tutcatalogpy.catalog.models.tutorials_model import tutorials_model
 from tutcatalogpy.catalog.scan_controller import scan_controller
@@ -19,6 +22,7 @@ from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.catalog.widgets.tutorials_dock import TutorialsDock
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
+from tutcatalogpy.common.widgets.file_browser_dock import FileBrowserDock
 from tutcatalogpy.common.widgets.logging_dock import LoggingDock
 from tutcatalogpy.common.widgets.main_window import CommonMainWindow
 
@@ -99,6 +103,8 @@ class MainWindow(CommonMainWindow):
 
         self.__cover_dock = CoverDock()
 
+        self.__file_browser_dock = FileBrowserDock()
+
         self.__log_dock = CatalogLoggingDock()
 
         self.__scan_config_dock = ScanConfigDock()
@@ -108,6 +114,7 @@ class MainWindow(CommonMainWindow):
             self.__disks_dock,
             self.__tutorials_dock,
             self.__cover_dock,
+            self.__file_browser_dock,
             self.__log_dock,
             self.__scan_config_dock,
         ]
@@ -208,7 +215,7 @@ class MainWindow(CommonMainWindow):
     def __refresh_models(self) -> None:
         disks_model.refresh()
         tutorials_model.refresh()
-        self.__update_cover_dock(self.__current_folder_id, self.__selected_one_folder)
+        self.__update_docks_with_current_folder()
 
     def __on_scan_startup_action_triggered(self) -> None:
         scan_controller.scan_startup()
@@ -267,14 +274,31 @@ class MainWindow(CommonMainWindow):
     def __on_tutorials_dock_selection_changed(self, tutorials: List[int]) -> None:
         self.__selected_one_folder = (len(tutorials) == 1)
         self.__current_folder_id = tutorials[0] if self.__selected_one_folder else None
-        self.__update_cover_dock(self.__current_folder_id, self.__selected_one_folder)
+        self.__update_docks_with_current_folder()
+
+    def __update_docks_with_current_folder(self) -> None:
+        folder_id = self.__current_folder_id
+        single_selection = self.__selected_one_folder
+        self.__update_cover_dock(folder_id, single_selection)
+        self.__update_file_browser_dock(folder_id, single_selection)
+
+    def __update_file_browser_dock(self, folder_id: Optional[int], single_selection: bool) -> None:
+        session = dal.session
+        path: Optional[Path] = None
+        if session is not None and folder_id:
+            folder: Optional[Folder] = session.query(Folder).filter(Folder.id_ == folder_id).first()
+            if folder is not None:
+                disk: Disk = folder.disk
+                path = Path(disk.disk_parent) / disk.disk_name / folder.folder_parent / folder.folder_name
+
+        self.__file_browser_dock.set_path(path)
 
     def __update_cover_dock(self, folder_id: Optional[int], single_selection: bool) -> None:
         session = dal.session
         pixmap: Optional[QPixmap] = None
         online = False
         file_format: Cover.FileFormat = Cover.FileFormat.NONE
-        if session is not None and self.__current_folder_id:
+        if session is not None and folder_id:
             cover = session.query(Cover).filter(Cover.folder_id == folder_id).first()
             if cover is not None:
                 if cover.data is not None:
