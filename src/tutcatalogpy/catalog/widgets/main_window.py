@@ -280,13 +280,13 @@ class MainWindow(CommonMainWindow):
         folder_id = self.__current_folder_id
         single_selection = self.__selected_one_folder
         self.__update_cover_dock(folder_id, single_selection)
-        self.__update_file_browser_dock(folder_id, single_selection)
+        self.__update_file_browser_dock(folder_id)
 
-    def __update_file_browser_dock(self, folder_id: Optional[int], single_selection: bool) -> None:
+    def __update_file_browser_dock(self, folder_id: Optional[int]) -> None:
         session = dal.session
         path: Optional[Path] = None
         offline = False
-        if session is not None and folder_id and single_selection:
+        if session is not None and folder_id is not None:
             folder: Optional[Folder] = session.query(Folder).filter(Folder.id_ == folder_id).first()
             if folder is not None:
                 disk: Disk = folder.disk
