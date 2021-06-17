@@ -285,13 +285,16 @@ class MainWindow(CommonMainWindow):
     def __update_file_browser_dock(self, folder_id: Optional[int], single_selection: bool) -> None:
         session = dal.session
         path: Optional[Path] = None
-        if session is not None and folder_id:
+        offline = False
+        if session is not None and folder_id and single_selection:
             folder: Optional[Folder] = session.query(Folder).filter(Folder.id_ == folder_id).first()
             if folder is not None:
                 disk: Disk = folder.disk
+                offline = not disk.online
                 path = Path(disk.disk_parent) / disk.disk_name / folder.folder_parent / folder.folder_name
 
         self.__file_browser_dock.set_path(path)
+        self.__file_browser_dock.set_offline(offline and path is not None)
 
     def __update_cover_dock(self, folder_id: Optional[int], single_selection: bool) -> None:
         session = dal.session
