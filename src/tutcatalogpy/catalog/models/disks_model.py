@@ -71,7 +71,7 @@ class DisksModel(QAbstractTableModel):
             if column == DisksModel.Columns.NAME.value and not disk.online:
                 return QBrush(Qt.red)
         elif role == Qt.DisplayRole:
-            return getattr(disk, DisksModel.Columns(column).attr)
+            return getattr(disk, DisksModel.Columns(column).alias)
         elif role == Qt.UserRole:
             return disk
 

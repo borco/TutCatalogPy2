@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict, Optional
 
-from PySide2.QtCore import QAbstractTableModel, QDateTime, Qt
+from PySide2.QtCore import QAbstractTableModel, QDateTime, QModelIndex, Qt
 from PySide2.QtGui import QIcon
 from humanize import naturalsize
 from sqlalchemy.orm import Query
@@ -22,14 +22,15 @@ log.addHandler(logging.NullHandler())
 class TutorialsModel(QAbstractTableModel):
 
     class Columns(DbTableColumnEnum):
-        INDEX = (0, 'Index', 'id_', Folder.id_)
-        DISK_NAME = (1, 'Disk', 'disk_name', Disk.disk_name)
-        FOLDER_PARENT = (2, 'Folder Parent', 'folder_parent', Folder.folder_parent)
-        FOLDER_NAME = (3, 'Folder Name', 'folder_name', Folder.folder_name)
-        HAS_COVER = (4, 'Cover', 'has_cover', (Cover.size != None))
-        SIZE = (5, 'Size', 'size', Folder.size)
-        CREATED = (6, 'Created', 'created', Folder.created)
-        MODIFIED = (7, 'Modified', 'modified', Folder.modified)
+        CHECKED = (0, 'Checked', 'folder_checked', Folder.checked)
+        INDEX = (1, 'Index', 'id_', Folder.id_)
+        HAS_COVER = (2, 'Cover', 'has_cover', (Cover.size != None))
+        DISK_NAME = (3, 'Disk', 'disk_name', Disk.disk_name)
+        FOLDER_PARENT = (4, 'Folder Parent', 'folder_parent', Folder.folder_parent)
+        FOLDER_NAME = (5, 'Folder Name', 'folder_name', Folder.folder_name)
+        SIZE = (6, 'Size', 'size', Folder.size)
+        CREATED = (7, 'Created', 'created', Folder.created)
+        MODIFIED = (8, 'Modified', 'modified', Folder.modified)
 
     NO_COVER_ICON = relative_path(__file__, '../../resources/icons/no_cover.svg')
 
@@ -61,7 +62,7 @@ class TutorialsModel(QAbstractTableModel):
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int) -> Any:
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            if section in [TutorialsModel.Columns.INDEX.value]:
+            if section in [TutorialsModel.Columns.INDEX.value, TutorialsModel.Columns.CHECKED.value]:
                 return ''
             else:
                 return TutorialsModel.Columns(section).label
@@ -86,20 +87,53 @@ class TutorialsModel(QAbstractTableModel):
 
         column = index.column()
 
+        value = getattr(tutorial, TutorialsModel.Columns(column).alias)
         if role == Qt.DecorationRole:
             if column == TutorialsModel.Columns.HAS_COVER.value:
-                value = getattr(tutorial, TutorialsModel.Columns(column).attr)
                 return None if value else self.__no_cover_icon
+        if role == Qt.CheckStateRole:
+            if column == TutorialsModel.Columns.CHECKED.value:
+                return Qt.Checked if value else Qt.Unchecked
         elif role == Qt.DisplayRole:
-            value = getattr(tutorial, TutorialsModel.Columns(column).attr)
             if column == TutorialsModel.Columns.SIZE.value:
                 return naturalsize(value) if value else ''
-            elif column == TutorialsModel.Columns.HAS_COVER.value:
+            elif column in [TutorialsModel.Columns.HAS_COVER.value, TutorialsModel.Columns.CHECKED.value]:
                 return None
             elif column in [TutorialsModel.Columns.CREATED.value, TutorialsModel.Columns.MODIFIED.value]:
                 return QDateTime.fromSecsSinceEpoch(value.timestamp())
             else:
                 return value
+
+    def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
+        row = index.row()
+
+        tutorial = self.tutorial(row)
+
+        if tutorial is None:
+            return False
+
+        column = index.column()
+
+        if role == Qt.CheckStateRole:
+            if column == TutorialsModel.Columns.CHECKED.value:
+                # couldn't set directly the Folder.check value using the cached row
+                # so we set it directly in the folder
+                t = dal.session.query(Folder).where(Folder.id_ == tutorial.id_).one()
+                t.checked = (value == Qt.Checked)
+                dal.session.commit()
+                del self.__cache[row]
+                return True
+        return False
+
+    def flags(self, index: QModelIndex) -> Any:
+        column = index.column()
+
+        flags = Qt.ItemIsSelectable | Qt.ItemIsEnabled | super().flags(index)
+
+        if column == TutorialsModel.Columns.CHECKED.value:
+            flags |= Qt.ItemIsUserCheckable
+
+        return flags
 
     def __filtered(self, query: Query) -> Query:
         if self.__only_show_checked_disks:
@@ -120,6 +154,7 @@ class TutorialsModel(QAbstractTableModel):
             dal
             .session
             .query(
+                TutorialsModel.Columns.CHECKED.column.label(TutorialsModel.Columns.CHECKED.alias),
                 Folder.id_,
                 Folder.folder_parent,
                 Folder.folder_name,
@@ -131,7 +166,7 @@ class TutorialsModel(QAbstractTableModel):
                 Disk.disk_parent,
                 Disk.disk_name,
                 Disk.checked,
-                (Cover.size != None).label('has_cover'),
+                TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
             )
             .join(Disk, Folder.disk_id == Disk.id_)
             .join(Cover, Cover.folder_id == Folder.id_)

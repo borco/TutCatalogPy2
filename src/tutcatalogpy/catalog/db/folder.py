@@ -3,7 +3,7 @@ import enum
 
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
-from sqlalchemy.sql.sqltypes import DateTime, Integer, Text
+from sqlalchemy.sql.sqltypes import Boolean, DateTime, Integer, Text
 
 from tutcatalogpy.catalog.db.base import Base
 
@@ -29,6 +29,7 @@ class Folder(Base):
     created = Column(DateTime, default=datetime.today(), nullable=False)
     modified = Column(DateTime, default=datetime.today(), nullable=False)
     size = Column(Integer, default=None, nullable=True)
+    checked = Column(Boolean, default=False, nullable=False)
 
     disk = relationship('Disk', back_populates='folders')
     cover = relationship('Cover', back_populates='folder', cascade='all, delete')
