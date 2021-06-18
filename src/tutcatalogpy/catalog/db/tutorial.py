@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Column
 from sqlalchemy.sql.sqltypes import Integer, Text
@@ -16,6 +15,18 @@ class Tutorial(Base):
     authors = relationship(
         'Author',
         secondary='tutorial_author',
+        backref='tutorials'
+    )
+
+    extra_tags = relationship(
+        'ExtraTag',
+        secondary='tutorial_extra_tag',
+        backref='tutorials'
+    )
+
+    tags = relationship(
+        'Tag',
+        secondary='tutorial_tag',
         backref='tutorials'
     )
 

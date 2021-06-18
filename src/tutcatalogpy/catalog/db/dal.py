@@ -21,6 +21,20 @@ tutorial_author_table = Table(
     Column('author_id', Integer, ForeignKey('author.id')),
 )
 
+tutorial_extra_tag_table = Table(
+    'tutorial_extra_tag',
+    Base.metadata,
+    Column('tutorial_id', Integer, ForeignKey('tutorial.id')),
+    Column('extra_tag_id', Integer, ForeignKey('extra_tag.id')),
+)
+
+tutorial_tag_table = Table(
+    'tutorial_tag',
+    Base.metadata,
+    Column('tutorial_id', Integer, ForeignKey('tutorial.id')),
+    Column('tag_id', Integer, ForeignKey('tag.id')),
+)
+
 
 class DataAccessLayer:
 
