@@ -373,8 +373,6 @@ class ScanWorker(QObject):
         session.commit()
 
     def __update_cover(self, session: Session, folder: Folder) -> None:
-        disk: Disk = folder.disk
-
         has_cover: bool = False
 
         cover: Optional[Cover] = session.query(Cover).filter(Cover.folder_id == folder.id_).first()
