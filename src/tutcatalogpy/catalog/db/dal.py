@@ -5,11 +5,21 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
+from sqlalchemy.schema import Column, ForeignKey, Table
+from sqlalchemy.sql.sqltypes import Integer
 
 from tutcatalogpy.catalog.db.base import Base
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
+
+
+tutorial_author_table = Table(
+    'tutorial_author',
+    Base.metadata,
+    Column('tutorial_id', Integer, ForeignKey('tutorial.id')),
+    Column('author_id', Integer, ForeignKey('author.id')),
+)
 
 
 class DataAccessLayer:
@@ -27,6 +37,7 @@ class DataAccessLayer:
         from tutcatalogpy.catalog.db.learning_path import LearningPath  # noqa: F401
         from tutcatalogpy.catalog.db.publisher import Publisher  # noqa: F401
         from tutcatalogpy.catalog.db.tag import Tag  # noqa: F401
+        from tutcatalogpy.catalog.db.tutorial import Tutorial  # noqa: F401
 
         self.disconnect()
 
