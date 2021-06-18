@@ -52,6 +52,7 @@ class DataAccessLayer:
         from tutcatalogpy.catalog.db.publisher import Publisher  # noqa: F401
         from tutcatalogpy.catalog.db.tag import Tag  # noqa: F401
         from tutcatalogpy.catalog.db.tutorial import Tutorial  # noqa: F401
+        from tutcatalogpy.catalog.db.tutorial_learning_path import TutorialLearningPath  # noqa: F401
 
         self.disconnect()
 
