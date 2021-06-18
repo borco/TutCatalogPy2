@@ -23,13 +23,13 @@ class Folder(Base):
 
     id_ = Column('id', Integer, primary_key=True)
     disk_id = Column(Integer, ForeignKey('disk.id'), nullable=False)
-    folder_parent = Column(Text, unique=False, nullable=True)
-    folder_name = Column(Text, unique=False, nullable=True)
+    folder_parent = Column(Text)
+    folder_name = Column(Text)
     system_id = Column(Text, default='', nullable=False)
     status = Column(Integer, default=Status.OK, nullable=False)
     created = Column(DateTime, default=datetime.today(), nullable=False)
     modified = Column(DateTime, default=datetime.today(), nullable=False)
-    size = Column(Integer, default=None, nullable=True)
+    size = Column(Integer)
     checked = Column(Boolean, default=False, nullable=False)
 
     disk = relationship('Disk', back_populates='folders')
