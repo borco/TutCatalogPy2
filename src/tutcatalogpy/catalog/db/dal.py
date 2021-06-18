@@ -19,9 +19,14 @@ class DataAccessLayer:
         self.session: Optional[Session] = None
 
     def connect(self, connection: str):
+        from tutcatalogpy.catalog.db.author import Author  # noqa: F401
         from tutcatalogpy.catalog.db.cover import Cover  # noqa: F401
         from tutcatalogpy.catalog.db.disk import Disk  # noqa: F401
+        from tutcatalogpy.catalog.db.extra_tag import ExtraTag  # noqa: F401
         from tutcatalogpy.catalog.db.folder import Folder  # noqa: F401
+        from tutcatalogpy.catalog.db.learning_path import LearningPath  # noqa: F401
+        from tutcatalogpy.catalog.db.publisher import Publisher  # noqa: F401
+        from tutcatalogpy.catalog.db.tag import Tag  # noqa: F401
 
         self.disconnect()
 
