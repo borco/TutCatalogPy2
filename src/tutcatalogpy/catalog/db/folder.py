@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref, relationship
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.sql.sqltypes import Boolean, DateTime, Integer, Text
 
@@ -23,6 +23,7 @@ class Folder(Base):
 
     id_ = Column('id', Integer, primary_key=True)
     disk_id = Column(Integer, ForeignKey('disk.id'), nullable=False)
+    cover_id = Column(Integer, ForeignKey('cover.id'))
     folder_parent = Column(Text)
     folder_name = Column(Text)
     system_id = Column(Text, default='', nullable=False)
@@ -33,7 +34,7 @@ class Folder(Base):
     checked = Column(Boolean, default=False, nullable=False)
 
     disk = relationship('Disk', back_populates='folders')
-    cover = relationship('Cover', back_populates='folder', cascade='all, delete')
+    cover = relationship('Cover', backref=backref('folder', uselist=False), cascade='all, delete')
 
     __table_args__ = (
         UniqueConstraint('disk_id', 'folder_parent', 'folder_name'),

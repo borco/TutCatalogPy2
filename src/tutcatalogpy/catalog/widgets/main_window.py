@@ -360,7 +360,7 @@ class MainWindow(CommonMainWindow):
         offline = False
         file_format: Cover.FileFormat = Cover.FileFormat.NONE
         if session is not None and folder_id is not None:
-            cover = session.query(Cover).filter(Cover.folder_id == folder_id).first()
+            cover = session.query(Cover).join(Folder, Folder.cover_id == Cover.id_).filter(Folder.id_ == folder_id).first()
             if cover is not None:
                 if cover.data is not None:
                     pixmap = QPixmap()

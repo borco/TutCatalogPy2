@@ -25,7 +25,7 @@ class TutorialsModel(QAbstractTableModel):
         CHECKED = (0, 'Checked', 'folder_checked', Folder.checked)
         INDEX = (1, 'Index', 'id_', Folder.id_)
         ONLINE = (2, 'Online', 'online', Disk.online)
-        HAS_COVER = (3, 'Cover', 'has_cover', (Cover.size != None))
+        HAS_COVER = (3, 'Cover', 'has_cover', (Folder.cover_id != None))
         DISK_NAME = (4, 'Disk', 'disk_name', Disk.disk_name)
         FOLDER_PARENT = (5, 'Folder Parent', 'folder_parent', Folder.folder_parent)
         FOLDER_NAME = (6, 'Folder Name', 'folder_name', Folder.folder_name)
@@ -182,7 +182,6 @@ class TutorialsModel(QAbstractTableModel):
                 TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
             )
             .join(Disk, Folder.disk_id == Disk.id_)
-            .join(Cover, Cover.folder_id == Folder.id_)
         )
 
         return self.__filtered(query)
