@@ -62,6 +62,13 @@ class DataAccessLayer:
 
         self.Session = sessionmaker(bind=self.__engine)
 
+        self.session = self.Session()
+
+    def renew_session(self) -> None:
+        if self.session is not None:
+            self.session.close()
+        self.session = self.Session()
+
     def disconnect(self) -> None:
         if self.session is not None:
             log.debug('Closing GUI session.')

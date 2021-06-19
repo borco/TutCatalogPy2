@@ -66,7 +66,6 @@ class Config(QObject):
             raise RuntimeError(f'cache not supported: {cache_type}')
 
         dal.connect(connection_string)
-        dal.session = dal.Session()
 
     def __config_disks(self, data) -> None:
         session = dal.session
