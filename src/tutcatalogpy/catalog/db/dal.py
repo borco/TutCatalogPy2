@@ -87,5 +87,24 @@ class DataAccessLayer:
     def url(self) -> str:
         return str(self.__engine.url) if self.__engine is not None else ''
 
+    def remove_authors_without_tutorials(self) -> None:
+        from tutcatalogpy.catalog.db.author import Author
+
+        session = self.session
+        if session is None:
+            return
+
+        authors_with_tutorials = (
+            session
+            .query(Author.id_)
+            .filter(Author.id_ == tutorial_author_table.c.author_id)
+            .distinct()
+        )
+
+        for author in session.query(Author).filter(Author.id_.not_in(authors_with_tutorials)):
+            session.delete(author)
+
+        session.commit()
+
 
 dal = DataAccessLayer()
