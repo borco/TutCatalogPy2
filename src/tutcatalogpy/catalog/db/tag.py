@@ -9,7 +9,7 @@ class Tag(Base):
     __tablename__ = 'tag'
 
     id_ = Column('id', Integer, primary_key=True)
-    tag = Column(Text, nullable=False, unique=True)
+    name = Column(Text, nullable=False, unique=True)
 
 
 if __name__ == '__main__':

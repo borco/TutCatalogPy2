@@ -11,12 +11,12 @@ class LearningPath(Base):
 
     id_ = Column('id', Integer, primary_key=True)
     publisher_id = Column(Integer, ForeignKey('publisher.id'))
-    learning_path = Column(Text, nullable=False)
+    title = Column(Text, nullable=False)
 
     publisher = relationship('Publisher', backref='learning_paths')
 
     __table_args__ = (
-        UniqueConstraint('publisher_id', 'learning_path'),
+        UniqueConstraint('publisher_id', 'title'),
     )
 
 

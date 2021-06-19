@@ -9,7 +9,7 @@ class Publisher(Base):
     __tablename__ = 'publisher'
 
     id_ = Column('id', Integer, primary_key=True)
-    publisher = Column(Text, nullable=False, unique=True)
+    name = Column(Text, nullable=False, unique=True)
 
 
 if __name__ == '__main__':
