@@ -2,7 +2,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.sql.sqltypes import Integer, Text
 
-from tutcatalogpy.common.db.base import Base
+from tutcatalogpy.common.db.base import Base, Search
 
 
 class LearningPath(Base):
@@ -12,6 +12,7 @@ class LearningPath(Base):
     id_ = Column('id', Integer, primary_key=True)
     publisher_id = Column(Integer, ForeignKey('publisher.id'))
     title = Column(Text, nullable=False)
+    search = Column(Integer, default=Search.IGNORED)
 
     publisher = relationship('Publisher', backref='learning_paths')
 

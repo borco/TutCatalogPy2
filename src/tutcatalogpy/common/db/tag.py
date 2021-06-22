@@ -3,7 +3,7 @@ import enum
 from sqlalchemy.schema import Column, UniqueConstraint
 from sqlalchemy.sql.sqltypes import Integer, Text
 
-from tutcatalogpy.common.db.base import Base
+from tutcatalogpy.common.db.base import Base, Search
 
 
 class Tag(Base):
@@ -11,11 +11,6 @@ class Tag(Base):
     class Source(enum.IntEnum):
         PUBLISHER = 0
         EXTRA = 1
-
-    class Search(enum.IntEnum):
-        WITHOUT = -1
-        IGNORED = 0
-        WITH = 1
 
     __tablename__ = 'tag'
 
