@@ -1,4 +1,4 @@
-# TutCatalogPy (WIP)
+# TutCatalogPy2 (WIP)
 
 ## About
 
