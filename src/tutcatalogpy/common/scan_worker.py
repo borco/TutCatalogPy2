@@ -15,6 +15,7 @@ from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import get_creation_datetime, get_modification_datetime, get_folder_size
 from tutcatalogpy.common.scan_config import ScanConfig, scan_config
+from tutcatalogpy.common.tutorial_data import TutorialData
 
 
 log = logging.getLogger(__name__)
@@ -444,9 +445,9 @@ class ScanWorker(QObject):
             tutorial.size = size
 
             with open(path, mode='r', encoding='utf-8') as f:
-                data = f.read()
+                text = f.read()
                 try:
-                    ScanWorker.update_tutorial_from_data(session, tutorial, data)
+                    TutorialData.load_from_string(session, tutorial, text)
                 except Exception as ex:
                     folder.tutorial = None
                     log.error("Couldn't parse %s: %s", path, str(ex))
@@ -454,10 +455,6 @@ class ScanWorker(QObject):
             folder.tutorial = None
 
         session.commit()
-
-    @staticmethod
-    def update_tutorial_from_data(session: Session, tutorial: Tutorial, data: str) -> None:
-        raise Exception("not implemented")
 
 
 if __name__ == '__main__':

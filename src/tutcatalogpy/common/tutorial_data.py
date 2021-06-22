@@ -1,0 +1,48 @@
+import logging
+from dataclasses import dataclass
+from typing import Final
+
+import yaml
+from sqlalchemy.orm.session import Session
+
+from tutcatalogpy.common.db.tutorial import Tutorial
+
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
+
+
+@dataclass
+class TutorialData:
+    FILE_NAME: Final[str] = 'info.tc'
+
+    PUBLISHER_KEY: Final[str] = 'publisher'
+    TITLE_KEY: Final[str] = 'title'
+    AUTHORS_KEY: Final[str] = 'author'
+    RELEASED_KEY: Final[str] = 'released'
+    DURATION_KEY: Final[str] = 'duration'
+    LEVEL_KEY: Final[str] = 'level'
+    RATING_KEY: Final[str] = 'rating'
+    URL_KEY: Final[str] = 'url'
+    COMPLETE_KEY: Final[str] = 'complete'
+    VIEWED_KEY: Final[str] = 'viewed'
+    STARTED_KEY: Final[str] = 'started'
+    FINISHED_KEY: Final[str] = 'finished'
+    TODO_KEY: Final[str] = 'todo'
+    ONLINE_KEY: Final[str] = 'online'
+    TAGS_KEY: Final[str] = 'tags'
+    MY_TAGS_KEY: Final[str] = 'extraTags'
+    LEARNING_PATHS_KEY: Final[str] = 'learning_paths'
+    MY_LEARNING_PATHS_KEY: Final[str] = 'my_learning_paths'
+    DESCRIPTION_KEY: Final[str] = 'description'
+
+    @staticmethod
+    def load_from_string(session: Session, tutorial: Tutorial, text: str) -> None:
+        if len(text) == 0:
+            return
+
+        data = yaml.load(text, Loader=yaml.FullLoader)
+
+        if data is None:
+            raise Exception('Could not parse .tc file')
+
+        tutorial.title = str(data.get(TutorialData.TITLE_KEY, ''))
