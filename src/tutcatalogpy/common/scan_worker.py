@@ -12,6 +12,7 @@ from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
+from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import get_creation_datetime, get_modification_datetime, get_folder_size
 from tutcatalogpy.common.scan_config import ScanConfig, scan_config
 
@@ -46,6 +47,7 @@ class ScanWorker(QObject):
         folder_index: int = 0
 
     COVER_NAMES: Final[List[Cover.FileFormat]] = [Cover.FileFormat.JPG, Cover.FileFormat.PNG]
+    INFO_TC_NAME: Final[str] = 'info.tc'
 
     scan_started = Signal()
     scan_finished = Signal()
@@ -369,15 +371,17 @@ class ScanWorker(QObject):
         path = folder.path()
         folder.size = get_folder_size(path)
         folder.status = Folder.Status.OK
-        self.__update_cover(session, folder)
+        ScanWorker.update_folder_cover(session, folder)
+        ScanWorker.update_folder_tutorial(session, folder)
         session.commit()
 
-    def __update_cover(self, session: Session, folder: Folder) -> None:
+    @staticmethod
+    def update_folder_cover(session: Session, folder: Folder) -> None:
         has_cover: bool = False
 
         query = session.query(Cover).join(Folder, Folder.cover_id == Cover.id_).filter(Folder.id_ == folder.id_)
 
-        for file_format in self.COVER_NAMES:
+        for file_format in ScanWorker.COVER_NAMES:
             path: Path = folder.path() / file_format.file_name
             if path.exists():
                 modified, created, system_id, size = get_path_stats(path)
@@ -418,6 +422,42 @@ class ScanWorker(QObject):
                 session.delete(cover)
 
         session.commit()
+
+    @staticmethod
+    def update_folder_tutorial(session: Session, folder: Folder) -> None:
+        path: Path = folder.path() / ScanWorker.INFO_TC_NAME
+        if path.exists():
+            modified, created, system_id, size = get_path_stats(path)
+            tutorial: Tutorial = folder.tutorial
+            if tutorial is None:
+                tutorial = Tutorial()
+                folder.tutorial = tutorial
+            elif (
+                tutorial.size == size
+                and tutorial.modified == modified
+                and tutorial.created == created
+                and tutorial.system_id == system_id):
+                return
+            tutorial.system_id = system_id
+            tutorial.created = created
+            tutorial.modified = modified
+            tutorial.size = size
+
+            with open(path, mode='r', encoding='utf-8') as f:
+                data = f.read()
+                try:
+                    ScanWorker.update_tutorial_from_data(session, tutorial, data)
+                except Exception as ex:
+                    folder.tutorial = None
+                    log.error("Couldn't parse %s: %s", path, str(ex))
+        else:
+            folder.tutorial = None
+
+        session.commit()
+
+    @staticmethod
+    def update_tutorial_from_data(session: Session, tutorial: Tutorial, data: str) -> None:
+        raise Exception("not implemented")
 
 
 if __name__ == '__main__':

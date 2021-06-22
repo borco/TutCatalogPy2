@@ -36,7 +36,7 @@ class Folder(Base):
 
     disk = relationship('Disk', back_populates='folders')
     cover = relationship('Cover', backref=backref('folder', uselist=False), cascade='all, delete')
-    tutorial = relationship('Tutorial', backref='folders')
+    tutorial = relationship('Tutorial', backref=backref('folder', uselist=False), cascade='all, delete')
 
     __table_args__ = (
         UniqueConstraint('disk_id', 'folder_parent', 'folder_name'),
