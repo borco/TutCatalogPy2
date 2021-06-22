@@ -30,6 +30,7 @@ def test_create_tutorial(dal_: DataAccessLayer) -> None:
 
     dal_.renew_session()
     session = dal_.session
-    tutorial = session.query(Tutorial).one()
+    tutorials = session.query(Tutorial).all()
 
-    assert tutorial.id_ == id_
+    assert len(tutorials) == 1
+    assert tutorials[0].id_ == id_
