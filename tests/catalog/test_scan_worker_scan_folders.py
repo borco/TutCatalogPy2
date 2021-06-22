@@ -5,8 +5,8 @@ from typing import Final, List
 from pytest import fixture, mark
 from sqlalchemy.orm.session import Session
 
-from tutcatalogpy.catalog.scan_config import ScanConfig
-from tutcatalogpy.catalog.scan_worker import ScanWorker
+from tutcatalogpy.common.scan_config import ScanConfig
+from tutcatalogpy.common.scan_worker import ScanWorker
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder

@@ -2,8 +2,8 @@ from typing import List, Tuple
 
 from PySide2.QtCore import QObject, QThread, Signal
 
-from tutcatalogpy.catalog.scan_config import ScanConfig
-from tutcatalogpy.catalog.scan_worker import ScanWorker
+from tutcatalogpy.common.scan_config import ScanConfig
+from tutcatalogpy.common.scan_worker import ScanWorker
 
 
 class ScanController(QObject):

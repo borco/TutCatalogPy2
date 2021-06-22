@@ -5,8 +5,8 @@ from PySide2.QtCore import Qt
 from PySide2.QtGui import QPixmap
 from PySide2.QtWidgets import QCheckBox, QGridLayout, QLabel, QVBoxLayout, QWidget
 
-from tutcatalogpy.catalog.scan_config import ScanConfig, scan_config
 from tutcatalogpy.common.files import relative_path
+from tutcatalogpy.common.scan_config import ScanConfig, scan_config
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
 
 log = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ from typing import Final
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QDialog, QDialogButtonBox, QGridLayout, QLabel, QProgressBar, QVBoxLayout
 
-from tutcatalogpy.catalog.scan_worker import ScanWorker
+from tutcatalogpy.common.scan_worker import ScanWorker
 from tutcatalogpy.common.widgets.elided_label import ElidedLabel
 
 log = logging.getLogger(__name__)

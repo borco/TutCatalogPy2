@@ -12,8 +12,8 @@ from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
-from tutcatalogpy.catalog.scan_config import ScanConfig, scan_config
 from tutcatalogpy.common.files import get_creation_datetime, get_modification_datetime, get_folder_size
+from tutcatalogpy.common.scan_config import ScanConfig, scan_config
 
 
 log = logging.getLogger(__name__)

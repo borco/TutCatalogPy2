@@ -5,8 +5,8 @@ from typing import Final
 from pytest import fixture
 from sqlalchemy.orm.session import Session
 
-from tutcatalogpy.catalog.scan_config import ScanConfig
-from tutcatalogpy.catalog.scan_worker import ScanWorker
+from tutcatalogpy.common.scan_config import ScanConfig
+from tutcatalogpy.common.scan_worker import ScanWorker
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 import tutcatalogpy.common.logging_config  # noqa: F401
