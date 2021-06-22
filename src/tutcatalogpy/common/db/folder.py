@@ -22,8 +22,9 @@ class Folder(Base):
     __tablename__ = 'folder'
 
     id_ = Column('id', Integer, primary_key=True)
-    disk_id = Column(Integer, ForeignKey('disk.id'), nullable=False)
+    disk_id = Column(Integer, ForeignKey('disk.id'))
     cover_id = Column(Integer, ForeignKey('cover.id'))
+    tutorial_id = Column(Integer, ForeignKey('tutorial.id'))
     folder_parent = Column(Text)
     folder_name = Column(Text)
     system_id = Column(Text, default='', nullable=False)
@@ -35,6 +36,7 @@ class Folder(Base):
 
     disk = relationship('Disk', back_populates='folders')
     cover = relationship('Cover', backref=backref('folder', uselist=False), cascade='all, delete')
+    tutorial = relationship('Tutorial', backref='folders')
 
     __table_args__ = (
         UniqueConstraint('disk_id', 'folder_parent', 'folder_name'),
@@ -42,4 +44,7 @@ class Folder(Base):
     )
 
     def path(self) -> Path:
-        return self.disk.path() / self.folder_parent / self.folder_name
+        if self.disk is not None:
+            return self.disk.path() / self.folder_parent / self.folder_name
+        else:
+            return Path(self.folder_parent) / self.folder_name
