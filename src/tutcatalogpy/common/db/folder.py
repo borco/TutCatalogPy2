@@ -6,7 +6,7 @@ from sqlalchemy.orm import backref, relationship
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.sql.sqltypes import Boolean, DateTime, Integer, Text
 
-from tutcatalogpy.catalog.db.base import Base
+from tutcatalogpy.common.db.base import Base
 
 
 class Folder(Base):

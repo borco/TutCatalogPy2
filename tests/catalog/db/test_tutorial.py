@@ -3,8 +3,8 @@ from typing import Optional
 from pytest import fixture
 from sqlalchemy.orm.session import Session
 
-from tutcatalogpy.catalog.db.dal import DataAccessLayer, dal
-from tutcatalogpy.catalog.db.tutorial import Tutorial
+from tutcatalogpy.common.db.dal import DataAccessLayer, dal
+from tutcatalogpy.common.db.tutorial import Tutorial
 import tutcatalogpy.common.logging_config  # noqa: F401
 
 

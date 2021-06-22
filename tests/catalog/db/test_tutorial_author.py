@@ -1,8 +1,8 @@
 from pytest import fixture
 
-from tutcatalogpy.catalog.db.author import Author
-from tutcatalogpy.catalog.db.dal import DataAccessLayer, dal
-from tutcatalogpy.catalog.db.tutorial import Tutorial
+from tutcatalogpy.common.db.author import Author
+from tutcatalogpy.common.db.dal import DataAccessLayer, dal
+from tutcatalogpy.common.db.tutorial import Tutorial
 import tutcatalogpy.common.logging_config  # noqa: F401
 
 

@@ -7,10 +7,10 @@ from humanize import naturalsize
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.schema import Column
 
-from tutcatalogpy.catalog.db.cover import Cover
-from tutcatalogpy.catalog.db.dal import dal
-from tutcatalogpy.catalog.db.disk import Disk
-from tutcatalogpy.catalog.db.folder import Folder
+from tutcatalogpy.common.db.cover import Cover
+from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.disk import Disk
+from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.db_table_column_enum import DbTableColumnEnum

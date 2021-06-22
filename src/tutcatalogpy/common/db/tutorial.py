@@ -3,7 +3,7 @@ from sqlalchemy.schema import Column
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import Integer, Text
 
-from tutcatalogpy.catalog.db.base import Base
+from tutcatalogpy.common.db.base import Base
 
 
 class Tutorial(Base):
@@ -15,7 +15,6 @@ class Tutorial(Base):
     title = Column(Text, nullable=False)
 
     authors = relationship('Author', secondary='tutorial_author', backref='tutorials')
-    extra_tags = relationship('ExtraTag', secondary='tutorial_extra_tag', backref='tutorials')
     tags = relationship('Tag', secondary='tutorial_tag', backref='tutorials')
 
     publisher = relationship('Publisher', backref=backref('tutorials'))

@@ -7,10 +7,10 @@ from PySide2.QtGui import QCloseEvent, QDesktopServices, QIcon, QKeySequence, QP
 from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenuBar, QToolBar
 
 from tutcatalogpy.catalog.config import config
-from tutcatalogpy.catalog.db.cover import Cover
-from tutcatalogpy.catalog.db.dal import dal
-from tutcatalogpy.catalog.db.disk import Disk
-from tutcatalogpy.catalog.db.folder import Folder
+from tutcatalogpy.common.db.cover import Cover
+from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.disk import Disk
+from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.catalog.models.disks_model import disks_model
 from tutcatalogpy.catalog.models.tutorials_model import tutorials_model
 from tutcatalogpy.catalog.scan_controller import scan_controller

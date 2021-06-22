@@ -6,8 +6,8 @@ from PySide2.QtGui import QBrush
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.schema import Column
 
-from tutcatalogpy.catalog.db.dal import dal
-from tutcatalogpy.catalog.db.disk import Disk
+from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.widgets.db_table_column_enum import DbTableColumnEnum
 
 log = logging.getLogger(__name__)

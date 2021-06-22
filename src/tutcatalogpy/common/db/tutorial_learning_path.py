@@ -2,7 +2,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import Integer
 
-from tutcatalogpy.catalog.db.base import Base
+from tutcatalogpy.common.db.base import Base
 
 
 class TutorialLearningPath(Base):

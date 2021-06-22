@@ -5,9 +5,9 @@ from typing import Final
 import pytest
 
 from tutcatalogpy.catalog.config import config
-from tutcatalogpy.catalog.db.dal import dal
-from tutcatalogpy.catalog.db.disk import Disk
-from tutcatalogpy.catalog.db.folder import Folder
+from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.disk import Disk
+from tutcatalogpy.common.db.folder import Folder
 
 
 def test_empty_config_raises():

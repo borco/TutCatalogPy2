@@ -8,7 +8,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.schema import Column, ForeignKey, Table
 from sqlalchemy.sql.sqltypes import Integer
 
-from tutcatalogpy.catalog.db.base import Base
+from tutcatalogpy.common.db.base import Base
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -19,13 +19,6 @@ tutorial_author_table = Table(
     Base.metadata,
     Column('tutorial_id', Integer, ForeignKey('tutorial.id')),
     Column('author_id', Integer, ForeignKey('author.id')),
-)
-
-tutorial_extra_tag_table = Table(
-    'tutorial_extra_tag',
-    Base.metadata,
-    Column('tutorial_id', Integer, ForeignKey('tutorial.id')),
-    Column('extra_tag_id', Integer, ForeignKey('extra_tag.id')),
 )
 
 tutorial_tag_table = Table(
@@ -43,16 +36,15 @@ class DataAccessLayer:
         self.session: Optional[Session] = None
 
     def connect(self, connection: str):
-        from tutcatalogpy.catalog.db.author import Author  # noqa: F401
-        from tutcatalogpy.catalog.db.cover import Cover  # noqa: F401
-        from tutcatalogpy.catalog.db.disk import Disk  # noqa: F401
-        from tutcatalogpy.catalog.db.extra_tag import ExtraTag  # noqa: F401
-        from tutcatalogpy.catalog.db.folder import Folder  # noqa: F401
-        from tutcatalogpy.catalog.db.learning_path import LearningPath  # noqa: F401
-        from tutcatalogpy.catalog.db.publisher import Publisher  # noqa: F401
-        from tutcatalogpy.catalog.db.tag import Tag  # noqa: F401
-        from tutcatalogpy.catalog.db.tutorial import Tutorial  # noqa: F401
-        from tutcatalogpy.catalog.db.tutorial_learning_path import TutorialLearningPath  # noqa: F401
+        from tutcatalogpy.common.db.author import Author  # noqa: F401
+        from tutcatalogpy.common.db.cover import Cover  # noqa: F401
+        from tutcatalogpy.common.db.disk import Disk  # noqa: F401
+        from tutcatalogpy.common.db.folder import Folder  # noqa: F401
+        from tutcatalogpy.common.db.learning_path import LearningPath  # noqa: F401
+        from tutcatalogpy.common.db.publisher import Publisher  # noqa: F401
+        from tutcatalogpy.common.db.tag import Tag  # noqa: F401
+        from tutcatalogpy.common.db.tutorial import Tutorial  # noqa: F401
+        from tutcatalogpy.common.db.tutorial_learning_path import TutorialLearningPath  # noqa: F401
 
         self.disconnect()
 
@@ -88,7 +80,7 @@ class DataAccessLayer:
         return str(self.__engine.url) if self.__engine is not None else ''
 
     def remove_authors_without_tutorials(self) -> None:
-        from tutcatalogpy.catalog.db.author import Author
+        from tutcatalogpy.common.db.author import Author
 
         session = self.session
         if session is None:

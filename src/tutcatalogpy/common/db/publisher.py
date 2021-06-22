@@ -1,12 +1,12 @@
 from sqlalchemy.schema import Column
 from sqlalchemy.sql.sqltypes import Integer, Text
 
-from tutcatalogpy.catalog.db.base import Base
+from tutcatalogpy.common.db.base import Base
 
 
-class ExtraTag(Base):
+class Publisher(Base):
 
-    __tablename__ = 'extra_tag'
+    __tablename__ = 'publisher'
 
     id_ = Column('id', Integer, primary_key=True)
     name = Column(Text, nullable=False, unique=True)

@@ -6,8 +6,8 @@ from typing import Optional, TextIO
 import yaml
 from PySide2.QtCore import QObject, Signal
 
-from tutcatalogpy.catalog.db.dal import dal
-from tutcatalogpy.catalog.db.disk import Disk
+from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.disk import Disk
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())

@@ -8,10 +8,10 @@ from humanize import precisedelta
 from PySide2.QtCore import QObject, QThread, Signal
 from sqlalchemy.orm.session import Session
 
-from tutcatalogpy.catalog.db.cover import Cover
-from tutcatalogpy.catalog.db.dal import dal
-from tutcatalogpy.catalog.db.disk import Disk
-from tutcatalogpy.catalog.db.folder import Folder
+from tutcatalogpy.common.db.cover import Cover
+from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.disk import Disk
+from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.catalog.scan_config import ScanConfig, scan_config
 from tutcatalogpy.common.files import get_creation_datetime, get_modification_datetime, get_folder_size
 

@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy.schema import Column
 from sqlalchemy.sql.sqltypes import DateTime, Integer, LargeBinary, Text
 
-from tutcatalogpy.catalog.db.base import Base
+from tutcatalogpy.common.db.base import Base
 
 
 class Cover(Base):
