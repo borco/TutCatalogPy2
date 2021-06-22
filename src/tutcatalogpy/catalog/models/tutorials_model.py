@@ -11,6 +11,7 @@ from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
+from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.db_table_column_enum import DbTableColumnEnum
 
@@ -28,9 +29,10 @@ class TutorialsModel(QAbstractTableModel):
         DISK_NAME = (4, 'Disk', 'disk_name', Disk.disk_name)
         FOLDER_PARENT = (5, 'Folder Parent', 'folder_parent', Folder.folder_parent)
         FOLDER_NAME = (6, 'Folder Name', 'folder_name', Folder.folder_name)
-        SIZE = (7, 'Size', 'size', Folder.size)
-        CREATED = (8, 'Created', 'created', Folder.created)
-        MODIFIED = (9, 'Modified', 'modified', Folder.modified)
+        TITLE = (7, 'Title', 'tutorial_title', Tutorial.title)
+        SIZE = (8, 'Size', 'size', Folder.size)
+        CREATED = (9, 'Created', 'created', Folder.created)
+        MODIFIED = (10, 'Modified', 'modified', Folder.modified)
 
     NO_COVER_ICON = relative_path(__file__, '../../resources/icons/no_cover.svg')
     OFFLINE_ICON = relative_path(__file__, '../../resources/icons/offline.svg')
@@ -165,7 +167,6 @@ class TutorialsModel(QAbstractTableModel):
             dal
             .session
             .query(
-                TutorialsModel.Columns.CHECKED.column.label(TutorialsModel.Columns.CHECKED.alias),
                 Folder.id_,
                 Folder.folder_parent,
                 Folder.folder_name,
@@ -178,9 +179,12 @@ class TutorialsModel(QAbstractTableModel):
                 Disk.disk_parent,
                 Disk.disk_name,
                 Disk.checked,
+                TutorialsModel.Columns.CHECKED.column.label(TutorialsModel.Columns.CHECKED.alias),
                 TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
+                TutorialsModel.Columns.TITLE.column.label(TutorialsModel.Columns.TITLE.alias)
             )
             .join(Disk, Folder.disk_id == Disk.id_)
+            .outerjoin(Tutorial, Folder.tutorial_id == Tutorial.id_)
         )
 
         return self.__filtered(query)
@@ -205,6 +209,8 @@ class TutorialsModel(QAbstractTableModel):
         query = self.__query()
 
         column: Column = TutorialsModel.Columns(self.__sort_column).column
+        if column == TutorialsModel.Columns.TITLE.column:
+            query = query.order_by(column.is_(None), column.is_(''))
         column = column.asc() if self.__sort_ascending else column.desc()
         query = query.order_by(column)
         if column not in [Folder.folder_name, Folder.id_]:
