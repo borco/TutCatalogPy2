@@ -15,6 +15,7 @@ from tutcatalogpy.catalog.widgets.disks_dock import DisksDock
 from tutcatalogpy.catalog.widgets.scan_config_dock import ScanConfigDock
 from tutcatalogpy.catalog.widgets.scan_dialog import ScanDialog
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
+from tutcatalogpy.catalog.widgets.tags_dock import TagsDock
 from tutcatalogpy.catalog.widgets.tutorials_dock import TutorialsDock
 from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.db.dal import dal
@@ -116,6 +117,8 @@ class MainWindow(CommonMainWindow):
         self.__tutorials_dock = TutorialsDock()
         self.__tutorials_dock.set_model(tutorials_model)
 
+        self.__tags_dock = TagsDock()
+
         self.__cover_dock = CoverDock()
 
         self.__file_browser_dock = FileBrowserDock()
@@ -127,6 +130,7 @@ class MainWindow(CommonMainWindow):
         self._docks = [
             self.__search_dock,
             self.__disks_dock,
+            self.__tags_dock,
             self.__tutorials_dock,
             self.__cover_dock,
             self.__file_browser_dock,
