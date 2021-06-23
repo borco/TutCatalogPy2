@@ -8,6 +8,7 @@ from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenu
 
 from tutcatalogpy.catalog.config import config
 from tutcatalogpy.catalog.models.disks_model import disks_model
+from tutcatalogpy.catalog.models.tags_model import tags_model
 from tutcatalogpy.catalog.models.tutorials_model import tutorials_model
 from tutcatalogpy.catalog.scan_controller import scan_controller
 from tutcatalogpy.catalog.widgets.cover_dock import CoverDock
@@ -118,6 +119,7 @@ class MainWindow(CommonMainWindow):
         self.__tutorials_dock.set_model(tutorials_model)
 
         self.__tags_dock = TagsDock()
+        self.__tags_dock.set_model(tags_model)
 
         self.__cover_dock = CoverDock()
 

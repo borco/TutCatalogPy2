@@ -1,9 +1,7 @@
 import logging
 from typing import Final
 
-from PySide2.QtCore import QSettings, Signal
-from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QToolButton, QVBoxLayout, QWidget
+from PySide2.QtWidgets import QTreeView
 
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
@@ -31,7 +29,17 @@ class TagsDock(DockWidget):
         self.__setup_actions()
 
     def __setup_widgets(self) -> None:
-        pass
+        self.__tags_view = QTreeView()
+        self.setWidget(self.__tags_view)
+        self.__tags_view.setHeaderHidden(True)
 
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
+
+    def set_model(self, model) -> None:
+        self.__tags_view.setModel(model)
+
+
+if __name__ == '__main__':
+    from tutcatalogpy.catalog.main import run
+    run()
