@@ -118,10 +118,10 @@ class MainWindow(CommonMainWindow):
         self.__tutorials_dock = TutorialsDock()
         self.__tutorials_dock.set_model(tutorials_model)
 
+        self.__cover_dock = CoverDock()
+
         self.__tags_dock = TagsDock()
         self.__tags_dock.set_model(tags_model)
-
-        self.__cover_dock = CoverDock()
 
         self.__file_browser_dock = FileBrowserDock()
 
@@ -132,9 +132,9 @@ class MainWindow(CommonMainWindow):
         self._docks = [
             self.__search_dock,
             self.__disks_dock,
-            self.__tags_dock,
             self.__tutorials_dock,
             self.__cover_dock,
+            self.__tags_dock,
             self.__file_browser_dock,
             self.__log_dock,
             self.__scan_config_dock,
