@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Final, List, Optional
 
-from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from sqlalchemy.orm.query import Query
 from sqlalchemy.sql.functions import func
 
@@ -94,6 +94,8 @@ class PublishersItem(TagsGroupItem):
 
 class TagsModel(QAbstractItemModel):
 
+    search_changed = Signal()
+
     def __init__(self):
         super().__init__()
         self.__root_item = TagsItem('root')
@@ -167,6 +169,7 @@ class TagsModel(QAbstractItemModel):
         item.data.search = ((item.data.search + 2) % 3 - 1)
         dal.session.commit()
         self.dataChanged.emit(index, index)
+        self.search_changed.emit()
 
 
 tags_model = TagsModel()
