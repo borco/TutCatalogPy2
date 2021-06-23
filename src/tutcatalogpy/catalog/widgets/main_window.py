@@ -253,6 +253,8 @@ class MainWindow(CommonMainWindow):
     def __refresh_models(self) -> None:
         disks_model.refresh()
         tutorials_model.refresh()
+        tags_model.refresh()
+        self.__tags_dock.expand_all()
         self.__update_ui_with_current_folder()
 
     def __on_scan_startup_action_triggered(self) -> None:
