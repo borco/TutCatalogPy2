@@ -3,7 +3,7 @@ from typing import Final
 
 from PySide2.QtCore import QSettings, Signal
 from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QToolButton, QVBoxLayout, QWidget
+from PySide2.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QSizePolicy, QToolButton, QVBoxLayout, QWidget
 
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
@@ -71,6 +71,11 @@ class SearchDock(DockWidget):
         self.__only_show_checked_disks = QCheckBox(self.ONLY_SHOW_CHECKED_DISKS_TEXT)
         layout.addWidget(self.__only_show_checked_disks)
         self.__only_show_checked_disks.toggled.connect(self.search)
+
+        layout.addStretch(1)
+
+        policy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        widget.setSizePolicy(policy)
 
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
