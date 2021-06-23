@@ -39,6 +39,9 @@ class TagsDock(DockWidget):
     def set_model(self, model) -> None:
         self.__tags_view.setModel(model)
 
+    def expand_all(self) -> None:
+        self.__tags_view.expandAll()
+
 
 if __name__ == '__main__':
     from tutcatalogpy.catalog.main import run
