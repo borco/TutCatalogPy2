@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg width="100%" height="100%" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <g transform="matrix(1,0,0,1,-210,-240)">
-        <g id="clear" transform="matrix(1,0,0,1,120,205)">
-            <rect x="90" y="35" width="24" height="24" style="fill:none;"/>
-            <g transform="matrix(1,0,0,1,60,-83.625)">
-                <g id="path4165" transform="matrix(0.53125,0,0,0.6875,36,-580.499)">
-                    <rect x="0" y="1023.07" width="32" height="4" style="fill-rule:nonzero;"/>
-                </g>
-                <g id="path41651" serif:id="path4165" transform="matrix(0.53125,0,0,0.6875,33.5,-574.113)">
-                    <rect x="0" y="1023.07" width="32" height="4" style="fill-rule:nonzero;"/>
-                </g>
-                <g id="path41652" serif:id="path4165" transform="matrix(0.53125,0,0,0.6875,31,-567.726)">
-                    <rect x="0" y="1023.07" width="32" height="4" style="fill-rule:nonzero;"/>
-                </g>
+    <g transform="matrix(1,0,0,1,-270,-240)">
+        <g id="clear" transform="matrix(1,0,0,1,44,216)">
+            <rect x="226" y="24" width="24" height="24" style="fill:none;"/>
+            <g transform="matrix(1.05997,0,0,1,-188.109,-36)">
+                <path d="M409,66L395,66L395,83L409,83L409,66ZM407.624,67.458L407.624,81.542C407.624,81.542 396.376,81.542 396.376,81.542C396.376,81.542 396.376,67.458 396.376,67.458L407.624,67.458Z"/>
+            </g>
+            <g transform="matrix(1.22222,0,0,1.22222,223.333,21.3333)">
+                <path d="M15.5,4L14.5,3L9.5,3L8.5,4L5,4L5,6L19,6L19,4L15.5,4Z" style="fill-rule:nonzero;"/>
+            </g>
+            <g transform="matrix(0.707107,-0.707107,0.707107,0.707107,43.5456,179.214)">
+                <path d="M238,37L238,33L236,33L236,37L232,37L232,39L236,39L236,43L238,43L238,39L242,39L242,37L238,37ZM237,38L241,38L237,38Z"/>
             </g>
         </g>
     </g>
