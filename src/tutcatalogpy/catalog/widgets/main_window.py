@@ -80,7 +80,6 @@ class MainWindow(CommonMainWindow):
 
         self.__recent_files = RecentFiles(self)
 
-        self.__connect_objects()
         self._setup_statusbar()
         self._setup_docks()
         self.__setup_actions()
@@ -94,9 +93,6 @@ class MainWindow(CommonMainWindow):
             self.__recent_files,
         ]
         self._persistent_objects += self._docks
-
-    def __connect_objects(self) -> None:
-        config.loaded.connect(self.__on_config_loaded)
 
     def _setup_statusbar(self) -> None:
         super()._setup_statusbar()
@@ -195,7 +191,6 @@ class MainWindow(CommonMainWindow):
         action.triggered.connect(self.__open_config)
         menu.addAction(action)
 
-        self.__recent_files.triggered.connect(self.__load_config)
         menu.addMenu(self.__recent_files.menu)
 
         action = QAction(self.FILE_QUIT_MENU, self)
@@ -217,9 +212,6 @@ class MainWindow(CommonMainWindow):
     def __setup_controllers(self) -> None:
         scan_controller.setParent(self)
         scan_controller.setup()
-        scan_worker = scan_controller.worker
-        scan_worker.scan_started.connect(self.__on_scan_worker_scan_started)
-        scan_worker.scan_finished.connect(self.__on_scan_worker_scan_finished)
 
     def __setup_toolbars(self) -> None:
         self.__scan_toolbar = QToolBar()
@@ -240,7 +232,17 @@ class MainWindow(CommonMainWindow):
     def __setup_connections(self) -> None:
         self.__search_dock.search.connect(lambda: tutorials_model.search(self.__search_dock))
         disks_model.disk_checked_changed.connect(lambda: tutorials_model.search(self.__search_dock, True))
+        tags_model.search_changed.connect(lambda: tutorials_model.search(self.__search_dock, True))
+
         self.__tutorials_dock.selection_changed.connect(self.__on_tutorials_dock_selection_changed)
+        self.__recent_files.triggered.connect(self.__load_config)
+        self.__scan_dialog.finished.connect(self.__on_scan_dialog_finished)
+
+        config.loaded.connect(self.__on_config_loaded)
+
+        scan_worker = scan_controller.worker
+        scan_worker.scan_started.connect(self.__on_scan_worker_scan_started)
+        scan_worker.scan_finished.connect(self.__on_scan_worker_scan_finished)
 
     def __cleanup_controllers(self) -> None:
         scan_controller.cleanup()
@@ -249,7 +251,6 @@ class MainWindow(CommonMainWindow):
         self.__scan_dialog: Optional[ScanDialog] = None
         self.__scan_dialog = ScanDialog(parent=self)
         self.__scan_dialog.set_scan_worker(scan_controller.worker)
-        self.__scan_dialog.finished.connect(self.__on_scan_dialog_finished)
 
     def __refresh_models(self) -> None:
         disks_model.refresh()
