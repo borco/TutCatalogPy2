@@ -11,6 +11,7 @@ from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
+from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.db_table_column_enum import DbTableColumnEnum
@@ -160,6 +161,12 @@ class TutorialsModel(QAbstractTableModel):
                     .like(f'%{key}%'))
                 )
 
+        for publisher in dal.session.query(Publisher).filter(Publisher.search == 1):
+            query = query.filter(Publisher.id_ == publisher.id_)
+
+        for publisher in dal.session.query(Publisher).filter(Publisher.search == -1):
+            query = query.filter(Publisher.id_ != publisher.id_)
+
         return query
 
     def __query(self) -> Query:
@@ -185,6 +192,7 @@ class TutorialsModel(QAbstractTableModel):
             )
             .join(Disk, Folder.disk_id == Disk.id_)
             .outerjoin(Tutorial, Folder.tutorial_id == Tutorial.id_)
+            .outerjoin(Publisher, Tutorial.publisher_id == Publisher.id_)
         )
 
         return self.__filtered(query)
