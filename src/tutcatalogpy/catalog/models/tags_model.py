@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Final, List, Optional
+from typing import Any, Dict, Final, List, Optional
 
 from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt
 from sqlalchemy.orm.query import Query
@@ -20,15 +20,18 @@ PUBLISHERS_LABEL: Final[str] = 'publishers'
 CUSTOM_TAGS_LABEL: Final[str] = 'tags (custom)'
 PUBLISHER_TAGS_LABEL: Final[str] = 'tags (publishes)'
 
+SEARCH_TO_TEXT: Final[Dict[int, str]] = {-1: '- ', 0: '', 1: '+ '}
+
 
 class TagsItem:
     _label: str = ''
 
-    def __init__(self, label: Optional[str] = None) -> None:
+    def __init__(self, label: Optional[str] = None, data: Optional[Any] = None) -> None:
         self._parent: Optional['TagsItem'] = None
         if label is not None:
             self._label = label
         self._children: List[TagsItem] = []
+        self.data = data
 
     @property
     def rows(self) -> int:
@@ -63,8 +66,8 @@ class TagsGroupItem(TagsItem, ABC):
     def refresh(self) -> None:
         self._children.clear()
 
-        for name, count in self._query():
-            self.append(TagsItem(f'{name} ({count})'))
+        for publisher, count in self._query():
+            self.append(TagsItem(f'{publisher.name} ({count})', publisher))
 
     @abstractmethod
     def _query(self) -> Query:
@@ -80,7 +83,7 @@ class PublishersItem(TagsGroupItem):
         return (
             dal
             .session
-            .query(Publisher.name, func.count(Tutorial.title))
+            .query(Publisher, func.count(Tutorial.title))
             .outerjoin(Tutorial)
             .group_by(Publisher.id_)
             .order_by(Publisher.name.asc())
@@ -148,19 +151,22 @@ class TagsModel(QAbstractItemModel):
             return None
 
         item: TagsItem = index.internalPointer()
+        if item.data is not None:
+            return SEARCH_TO_TEXT[item.data.search] + item.label
+        else:
+            return item.label
 
-        return item.label
-
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+    def cycle_search_flag(self, index: QModelIndex) -> None:
         if not index.isValid():
-            return Qt.NoItemFlags
+            return
 
-        return super().flags(index)
+        item: TagsItem = index.internalPointer()
+        if item.data is None:
+            return
 
-    def headerData(self, section: int, orientation: Qt.Orientation, role: int) -> Any:
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return self.__root_item.label
-        return None
+        item.data.search = ((item.data.search + 2) % 3 - 1)
+        dal.session.commit()
+        self.dataChanged.emit(index, index)
 
 
 tags_model = TagsModel()

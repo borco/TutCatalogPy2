@@ -28,6 +28,10 @@ class TagsDock(DockWidget):
         self.__setup_widgets()
         self.__setup_actions()
 
+    @property
+    def view(self) -> QTreeView:
+        return self.__tags_view
+
     def __setup_widgets(self) -> None:
         self.__tags_view = QTreeView()
         self.setWidget(self.__tags_view)
@@ -38,9 +42,6 @@ class TagsDock(DockWidget):
 
     def set_model(self, model) -> None:
         self.__tags_view.setModel(model)
-
-    def expand_all(self) -> None:
-        self.__tags_view.expandAll()
 
 
 if __name__ == '__main__':

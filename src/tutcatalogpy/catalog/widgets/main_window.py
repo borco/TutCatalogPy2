@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Final, List, Optional
 
-from PySide2.QtCore import QSize, QTimer, QUrl, Qt
+from PySide2.QtCore import QModelIndex, QSize, QTimer, QUrl, Qt
 from PySide2.QtGui import QCloseEvent, QDesktopServices, QIcon, QKeySequence, QPixmap
 from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenuBar, QToolBar
 
@@ -122,6 +122,7 @@ class MainWindow(CommonMainWindow):
 
         self.__tags_dock = TagsDock()
         self.__tags_dock.set_model(tags_model)
+        self.__tags_dock.view.activated.connect(self.__on_tags_dock_view_activated)
 
         self.__file_browser_dock = FileBrowserDock()
 
@@ -254,7 +255,7 @@ class MainWindow(CommonMainWindow):
         disks_model.refresh()
         tutorials_model.refresh()
         tags_model.refresh()
-        self.__tags_dock.expand_all()
+        self.__tags_dock.view.expandAll()
         self.__update_ui_with_current_folder()
 
     def __on_scan_startup_action_triggered(self) -> None:
@@ -388,6 +389,9 @@ class MainWindow(CommonMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         self.__cleanup_controllers()
         super().closeEvent(event)
+
+    def __on_tags_dock_view_activated(self, index: QModelIndex) -> None:
+        tags_model.cycle_search_flag(index)
 
 
 if __name__ == '__main__':
