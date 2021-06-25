@@ -78,6 +78,8 @@ class TutorialsModel(QAbstractTableModel):
             else:
                 return TutorialsModel.Columns(section).label
 
+        return super().headerData(section, orientation, role)
+
     def rowCount(self, index) -> int:
         return self.__row_count
 
