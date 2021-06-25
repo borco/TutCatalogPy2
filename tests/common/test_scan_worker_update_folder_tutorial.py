@@ -32,7 +32,9 @@ def test_update_folder_tutorial_without_info_tc(tmp_path: Path, dal_: DataAccess
     folder = dal_.session.query(Folder).one()
     ScanWorker.update_folder_tutorial(dal_.session, folder)
 
-    assert folder.tutorial is None
+    assert folder.tutorial is not None
+    assert folder.tutorial.title == ''
+    assert folder.tutorial.size is None
 
 
 def test_update_folder_tutorial_after_removing_info_tc(tmp_path: Path, dal_: DataAccessLayer) -> None:
@@ -46,7 +48,9 @@ def test_update_folder_tutorial_after_removing_info_tc(tmp_path: Path, dal_: Dat
     folder = dal_.session.query(Folder).one()
     ScanWorker.update_folder_tutorial(dal_.session, folder)
 
-    assert folder.tutorial is None
+    assert folder.tutorial is not None
+    assert folder.tutorial.title == ''
+    assert folder.tutorial.size is None
 
 
 def test_update_folder_tutorial_from_empty_info_tc(tmp_path: Path, dal_: DataAccessLayer) -> None:
@@ -69,7 +73,7 @@ def test_update_folder_tutorial_from_empty_info_tc(tmp_path: Path, dal_: DataAcc
 def test_update_folder_tutorial_from_invalid_info_tc(tmp_path: Path, dal_: DataAccessLayer) -> None:
     info_tc = tmp_path / TutorialData.FILE_NAME
     with open(info_tc, 'w') as f:
-        f.write('invalid yaml')
+        f.write('test invalid yaml')
 
     folder = Folder(folder_parent=str(tmp_path.parent), folder_name=str(tmp_path.name))
     dal_.session.add(folder)
@@ -79,4 +83,6 @@ def test_update_folder_tutorial_from_invalid_info_tc(tmp_path: Path, dal_: DataA
     folder = dal_.session.query(Folder).one()
     ScanWorker.update_folder_tutorial(dal_.session, folder)
 
-    assert folder.tutorial is None
+    assert folder.tutorial is not None
+    assert folder.tutorial.title == ''
+    assert folder.tutorial.size is None

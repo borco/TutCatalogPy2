@@ -1,6 +1,7 @@
 import logging
-from typing import Final
+from typing import Any, Dict, Final
 
+import fastjsonschema
 import yaml
 from sqlalchemy.orm.session import Session
 
@@ -34,19 +35,31 @@ class TutorialData:
     MY_LEARNING_PATHS_KEY: Final[str] = 'my_learning_paths'
     DESCRIPTION_KEY: Final[str] = 'description'
 
+    VALIDATION_SCHEMA: Final[Dict[str, Any]] = {
+        'type': 'object',
+        'properties': {
+            'title': {'type': 'string', 'default': ''},
+            'publisher': {'type': 'string', 'default': ''},
+        }
+    }
+
+    validate = fastjsonschema.compile(VALIDATION_SCHEMA)
+
     @staticmethod
     def load_from_string(session: Session, tutorial: Tutorial, text: str) -> None:
         if len(text) == 0:
-            data = {}
+            data = TutorialData.validate({})
         else:
             data = yaml.load(text, Loader=yaml.FullLoader)
             if data is None:
-                data = {}
+                data = TutorialData.validate(data)
                 log.warning('Could not parse .tc file')
+            else:
+                data = TutorialData.validate(data)
 
-        tutorial.title = str(data.get(TutorialData.TITLE_KEY, ''))
+        tutorial.title = str(data.get(TutorialData.TITLE_KEY))
 
-        publisher_name = str(data.get(TutorialData.PUBLISHER_KEY, ''))
+        publisher_name = str(data.get(TutorialData.PUBLISHER_KEY))
         publisher = session.query(Publisher).filter_by(name=publisher_name).first()
         if publisher is None:
             publisher = Publisher(name=publisher_name)
