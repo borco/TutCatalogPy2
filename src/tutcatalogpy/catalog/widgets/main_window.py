@@ -381,7 +381,7 @@ class MainWindow(CommonMainWindow):
                 offline = not cover.folder.disk.online
 
         self.__cover_dock.set_cover(pixmap)
-        self.__cover_dock.set_has_cover(pixmap is not None and folder_id is not None)
+        self.__cover_dock.set_has_cover(pixmap is not None or folder_id is None)
         self.__cover_dock.set_cover_format(file_format)
         self.__cover_dock.set_offline(offline and folder_id is not None)
 
