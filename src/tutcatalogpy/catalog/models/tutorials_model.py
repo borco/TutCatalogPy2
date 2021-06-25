@@ -9,7 +9,9 @@ from sqlalchemy.sql.functions import func
 from sqlalchemy.sql.schema import Column
 
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
-from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.author import Author
+from tutcatalogpy.common.db.base import Search
+from tutcatalogpy.common.db.dal import dal, tutorial_author_table
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.publisher import Publisher
@@ -171,20 +173,37 @@ class TutorialsModel(QAbstractTableModel):
                     .like(f'%{key}%'))
                 )
 
-        for publisher in dal.session.query(Publisher).filter(Publisher.search == 1):
+        for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITH):
             query = query.filter(Publisher.id_ == publisher.id_)
 
-        for publisher in dal.session.query(Publisher).filter(Publisher.search == -1):
+        for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITHOUT):
             query = query.filter(Publisher.id_ != publisher.id_)
+
+        for author in dal.session.query(Author).filter(Author.search == Search.WITH):
+            query = query.filter(Author.id_ == author.id_)
+
+        for author in dal.session.query(Author).filter(Author.search == Search.WITHOUT):
+            tutorials_with_author = dal.session.query(tutorial_author_table.c.tutorial_id).filter(tutorial_author_table.c.author_id == author.id_)
+            query = query.filter(Tutorial.id_.not_in(tutorials_with_author))
 
         return query
 
     def __joined(self, query: Query) -> Query:
         return (
             query
-            .join(Disk, Folder.disk_id == Disk.id_)
-            .outerjoin(Tutorial, Folder.tutorial_id == Tutorial.id_)
-            .outerjoin(Publisher, Tutorial.publisher_id == Publisher.id_)
+            .join(Disk)
+            .join(Tutorial)
+            .join(Publisher)
+            .join(tutorial_author_table)
+            .join(Author)
+            .filter(
+                Folder.disk_id == Disk.id_,
+                Folder.tutorial_id == Tutorial.id_,
+                Tutorial.publisher_id == Publisher.id_,
+                tutorial_author_table.c.tutorial_id == Tutorial.id_,
+                tutorial_author_table.c.author_id == Author.id_
+            )
+            .group_by(Tutorial.id_)
         )
 
     def __query(self) -> Query:
@@ -253,13 +272,23 @@ class TutorialsModel(QAbstractTableModel):
         if dal.session is None:
             return 0
 
-        query = (
+        folders_shown = self.__filtered(
+            self.__joined(
+                (
+                    dal
+                    .session
+                    .query(Folder.id_)
+                )
+            )
+        )
+
+        total_size = (
             dal
             .session
             .query(func.sum(Folder.size))
-        )
+            .where(Folder.id_.in_(folders_shown))
+        ).scalar()
 
-        total_size = self.__filtered(self.__joined(query)).scalar()
         return total_size if total_size is not None else 0
 
 
