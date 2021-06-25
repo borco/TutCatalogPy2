@@ -1,10 +1,11 @@
 import logging
 from typing import Any, Dict, Optional
 
-from PySide2.QtCore import QAbstractTableModel, QDateTime, QModelIndex, Qt
-from PySide2.QtGui import QIcon
 from humanize import naturalsize
+from PySide2.QtCore import QAbstractTableModel, QDateTime, QModelIndex, Qt, Signal
+from PySide2.QtGui import QIcon
 from sqlalchemy.orm import Query
+from sqlalchemy.sql.functions import func
 from sqlalchemy.sql.schema import Column
 
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
@@ -37,6 +38,8 @@ class TutorialsModel(QAbstractTableModel):
 
     NO_COVER_ICON = relative_path(__file__, '../../resources/icons/no_cover.svg')
     OFFLINE_ICON = relative_path(__file__, '../../resources/icons/offline.svg')
+
+    summary_changed = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -84,6 +87,10 @@ class TutorialsModel(QAbstractTableModel):
         self.__cache.clear()
         self.endResetModel()
         log.debug('Folder model updated row count: %s.', self.__row_count)
+
+        total_size = self.total_size()
+        total_size = naturalsize(total_size) if total_size > 0 else '0'
+        self.summary_changed.emit(f'F: {self.__row_count} ({total_size})')
 
     def data(self, index, role) -> Any:
         row = index.row()
@@ -169,6 +176,14 @@ class TutorialsModel(QAbstractTableModel):
 
         return query
 
+    def __joined(self, query: Query) -> Query:
+        return (
+            query
+            .join(Disk, Folder.disk_id == Disk.id_)
+            .outerjoin(Tutorial, Folder.tutorial_id == Tutorial.id_)
+            .outerjoin(Publisher, Tutorial.publisher_id == Publisher.id_)
+        )
+
     def __query(self) -> Query:
         query = (
             dal
@@ -190,12 +205,9 @@ class TutorialsModel(QAbstractTableModel):
                 TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
                 TutorialsModel.Columns.TITLE.column.label(TutorialsModel.Columns.TITLE.alias)
             )
-            .join(Disk, Folder.disk_id == Disk.id_)
-            .outerjoin(Tutorial, Folder.tutorial_id == Tutorial.id_)
-            .outerjoin(Publisher, Tutorial.publisher_id == Publisher.id_)
         )
 
-        return self.__filtered(query)
+        return self.__filtered(self.__joined(query))
 
     def tutorial(self, row: int) -> Any:
         if row < 0 or row >= self.__row_count:
@@ -232,6 +244,32 @@ class TutorialsModel(QAbstractTableModel):
         self.__sort_ascending = (sort_oder == Qt.SortOrder.AscendingOrder)
         self.__cache.clear()
         self.endResetModel()
+
+    def __size_query(self, selection):
+        query = (
+            dal
+            .session
+            .query(Folder.size.sum())
+            .join(Disk, Folder.disk_id == Disk.id_)
+        )
+
+        if len(selection) > 0:
+            query = query.filter(Folder.id_.in_(self.__ids(selection)))
+
+        return self.__filtered(query)
+
+    def total_size(self) -> int:
+        if dal.session is None:
+            return 0
+
+        query = (
+            dal
+            .session
+            .query(func.sum(Folder.size))
+        )
+
+        total_size = self.__filtered(self.__joined(query)).scalar()
+        return total_size if total_size is not None else 0
 
 
 tutorials_model = TutorialsModel()

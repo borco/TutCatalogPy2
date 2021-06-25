@@ -97,10 +97,10 @@ class MainWindow(CommonMainWindow):
     def _setup_statusbar(self) -> None:
         super()._setup_statusbar()
 
-        self.__folder_summary = QLabel()
-        self.__folder_summary.setFrameShape(QFrame.StyledPanel)
-        self.__folder_summary.setMinimumWidth(200)
-        self._statusbar.addPermanentWidget(self.__folder_summary)
+        self.__tutorials_summary = QLabel()
+        self.__tutorials_summary.setFrameShape(QFrame.StyledPanel)
+        self.__tutorials_summary.setMinimumWidth(150)
+        self._statusbar.addPermanentWidget(self.__tutorials_summary)
 
     def _setup_docks(self) -> None:
         class CatalogLoggingDock(LoggingDock):
@@ -243,6 +243,8 @@ class MainWindow(CommonMainWindow):
         scan_worker = scan_controller.worker
         scan_worker.scan_started.connect(self.__on_scan_worker_scan_started)
         scan_worker.scan_finished.connect(self.__on_scan_worker_scan_finished)
+
+        tutorials_model.summary_changed.connect(self.__on_tutorials_model_summary_changed)
 
     def __cleanup_controllers(self) -> None:
         scan_controller.cleanup()
@@ -393,6 +395,9 @@ class MainWindow(CommonMainWindow):
 
     def __on_tags_dock_view_activated(self, index: QModelIndex) -> None:
         tags_model.cycle_search_flag(index)
+
+    def __on_tutorials_model_summary_changed(self, summary: str) -> None:
+        self.__tutorials_summary.setText(summary)
 
 
 if __name__ == '__main__':
