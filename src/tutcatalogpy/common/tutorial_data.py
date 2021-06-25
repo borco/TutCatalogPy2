@@ -1,5 +1,4 @@
 import logging
-from dataclasses import dataclass
 from typing import Final
 
 import yaml
@@ -12,7 +11,6 @@ log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
 
-@dataclass
 class TutorialData:
     FILE_NAME: Final[str] = 'info.tc'
 
@@ -39,22 +37,17 @@ class TutorialData:
     @staticmethod
     def load_from_string(session: Session, tutorial: Tutorial, text: str) -> None:
         if len(text) == 0:
-            tutorial.title = ''
-            tutorial.publisher = None
-            return
-
-        data = yaml.load(text, Loader=yaml.FullLoader)
-
-        if data is None:
-            raise Exception('Could not parse .tc file')
+            data = {}
+        else:
+            data = yaml.load(text, Loader=yaml.FullLoader)
+            if data is None:
+                data = {}
+                log.warning('Could not parse .tc file')
 
         tutorial.title = str(data.get(TutorialData.TITLE_KEY, ''))
 
         publisher_name = str(data.get(TutorialData.PUBLISHER_KEY, ''))
-        if publisher_name != '':
-            publisher = session.query(Publisher).filter_by(name=publisher_name).first()
-            if publisher is None:
-                publisher = Publisher(name=publisher_name)
-            tutorial.publisher = publisher
-        else:
-            tutorial.publisher = None
+        publisher = session.query(Publisher).filter_by(name=publisher_name).first()
+        if publisher is None:
+            publisher = Publisher(name=publisher_name)
+        tutorial.publisher = publisher

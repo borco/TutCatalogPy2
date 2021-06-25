@@ -74,6 +74,21 @@ def test_load_from_string_sets_publisher(dal_: DataAccessLayer) -> None:
     assert tutorial.publisher.name == 'my publisher'
 
 
+def test_load_from_string_set_empty_publisher_if_none_specified(dal_: DataAccessLayer) -> None:
+    tutorial = Tutorial()
+    dal_.session.add(tutorial)
+    dal_.session.commit()
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'title: my title')
+    dal_.session.commit()
+
+    dal_.renew_session()
+    tutorial = dal_.session.query(Tutorial).one()
+
+    assert tutorial.publisher is not None
+    assert tutorial.publisher.name == ''
+
+
 def test_load_from_empty_string_unsets_publisher(dal_: DataAccessLayer) -> None:
     tutorial = Tutorial()
     publisher = Publisher(name='my publisher')
@@ -87,7 +102,7 @@ def test_load_from_empty_string_unsets_publisher(dal_: DataAccessLayer) -> None:
     dal_.renew_session()
     tutorial = dal_.session.query(Tutorial).one()
 
-    assert tutorial.publisher is None
+    assert tutorial.publisher.name == ''
 
 
 def test_load_from_string_unsets_publisher(dal_: DataAccessLayer) -> None:
@@ -103,7 +118,7 @@ def test_load_from_string_unsets_publisher(dal_: DataAccessLayer) -> None:
     dal_.renew_session()
     tutorial = dal_.session.query(Tutorial).one()
 
-    assert tutorial.publisher is None
+    assert tutorial.publisher.name == ''
 
 
 def test_load_from_string_reuses_publisher(dal_: DataAccessLayer) -> None:

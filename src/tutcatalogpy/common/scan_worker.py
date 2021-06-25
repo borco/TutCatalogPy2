@@ -429,30 +429,35 @@ class ScanWorker(QObject):
         path: Path = folder.path() / ScanWorker.INFO_TC_NAME
         if path.exists():
             modified, created, system_id, size = get_path_stats(path)
-            tutorial: Tutorial = folder.tutorial
-            if tutorial is None:
-                tutorial = Tutorial()
-                folder.tutorial = tutorial
-            elif (
-                tutorial.size == size
-                and tutorial.modified == modified
-                and tutorial.created == created
-                and tutorial.system_id == system_id):
-                return
-            tutorial.system_id = system_id
-            tutorial.created = created
-            tutorial.modified = modified
-            tutorial.size = size
+        else:
+            modified, created, system_id, size = None, None, None, None
 
+        tutorial: Tutorial = folder.tutorial
+        if tutorial is None:
+            tutorial = Tutorial()
+            folder.tutorial = tutorial
+        elif (
+            tutorial.size == size
+            and tutorial.modified == modified
+            and tutorial.created == created
+            and tutorial.system_id == system_id):
+            return
+        tutorial.system_id = system_id
+        tutorial.created = created
+        tutorial.modified = modified
+        tutorial.size = size
+
+        if path.exists():
             with open(path, mode='r', encoding='utf-8') as f:
                 text = f.read()
-                try:
-                    TutorialData.load_from_string(session, tutorial, text)
-                except Exception as ex:
-                    folder.tutorial = None
-                    log.error("Couldn't parse %s: %s", path, str(ex))
         else:
-            folder.tutorial = None
+            text = ''
+
+        try:
+            TutorialData.load_from_string(session, tutorial, text)
+        except Exception as ex:
+            folder.tutorial = Tutorial()
+            log.error("Couldn't parse %s: %s", path, str(ex))
 
         session.commit()
 

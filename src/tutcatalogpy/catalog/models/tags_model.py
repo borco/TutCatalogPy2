@@ -21,6 +21,9 @@ PUBLISHERS_LABEL: Final[str] = 'publishers'
 CUSTOM_TAGS_LABEL: Final[str] = 'tags (custom)'
 PUBLISHER_TAGS_LABEL: Final[str] = 'tags (publishes)'
 
+NO_NAME_LABEL: Final[str] = '(no name)'
+NO_PUBLISHER_LABEL: Final[str] = '(no publisher)'
+
 SEARCH_TO_TEXT: Final[Dict[int, str]] = {
     Search.WITHOUT: '- ',
     Search.IGNORED: '',
@@ -68,6 +71,8 @@ class TagsItem:
 
 
 class TagsGroupItem(TagsItem, ABC):
+    _no_name_label: str = NO_NAME_LABEL
+
     def refresh(self) -> None:
         self._children.clear()
 
@@ -75,7 +80,10 @@ class TagsGroupItem(TagsItem, ABC):
             return
 
         for publisher, count in self._query():
-            self.append(TagsItem(f'{publisher.name} ({count})', publisher))
+            name = publisher.name
+            if name is None or len(name) == 0:
+                name = self._no_name_label
+            self.append(TagsItem(f'{name} ({count})', publisher))
 
     @abstractmethod
     def _query(self) -> Query:
@@ -98,6 +106,7 @@ class PublishersItem(TagsGroupItem):
         )
 
     _label = PUBLISHERS_LABEL
+    _no_name_label = NO_PUBLISHER_LABEL
 
 
 class TagsModel(QAbstractItemModel):

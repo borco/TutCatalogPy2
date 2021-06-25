@@ -26,9 +26,9 @@ class Tutorial(Base):
 
     status = Column(Integer, default=Status.OK, nullable=False)
 
-    system_id = Column(Text, default='', nullable=False)
-    created = Column(DateTime, default=datetime.today(), nullable=False)
-    modified = Column(DateTime, default=datetime.today(), nullable=False)
+    system_id = Column(Text)
+    created = Column(DateTime, default=datetime.today())
+    modified = Column(DateTime, default=datetime.today())
     size = Column(Integer)
 
     authors = relationship('Author', secondary='tutorial_author', backref='tutorials')
