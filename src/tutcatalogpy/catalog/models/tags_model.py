@@ -6,6 +6,7 @@ from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from sqlalchemy.orm.query import Query
 from sqlalchemy.sql.functions import func
 
+from tutcatalogpy.common.db.base import Search
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
@@ -20,7 +21,11 @@ PUBLISHERS_LABEL: Final[str] = 'publishers'
 CUSTOM_TAGS_LABEL: Final[str] = 'tags (custom)'
 PUBLISHER_TAGS_LABEL: Final[str] = 'tags (publishes)'
 
-SEARCH_TO_TEXT: Final[Dict[int, str]] = {-1: '- ', 0: '', 1: '+ '}
+SEARCH_TO_TEXT: Final[Dict[int, str]] = {
+    Search.WITHOUT: '- ',
+    Search.IGNORED: '',
+    Search.WITH: '+ ',
+}
 
 
 class TagsItem:
@@ -169,9 +174,24 @@ class TagsModel(QAbstractItemModel):
         if item.data is None:
             return
 
-        item.data.search = ((item.data.search + 2) % 3 - 1)
+        next_search = {
+            Search.IGNORED: Search.WITH,
+            Search.WITH: Search.WITHOUT,
+            Search.WITHOUT: Search.IGNORED,
+        }
+        item.data.search = next_search[item.data.search]
         dal.session.commit()
         self.dataChanged.emit(index, index)
+        self.search_changed.emit()
+
+    def clear_search_flags(self) -> None:
+        if dal.session is None:
+            return
+
+        dal.session.query(Publisher).update({Publisher.search: Search.IGNORED})
+        dal.session.commit()
+
+        self.refresh()
         self.search_changed.emit()
 
 
