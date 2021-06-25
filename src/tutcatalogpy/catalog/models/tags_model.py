@@ -1,13 +1,13 @@
 import logging
-from abc import ABC, abstractmethod
 from typing import Any, Dict, Final, List, Optional
 
 from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from sqlalchemy.orm.query import Query
 from sqlalchemy.sql.functions import func
 
+from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.base import Search
-from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.dal import dal, tutorial_author_table
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
 
@@ -22,7 +22,9 @@ CUSTOM_TAGS_LABEL: Final[str] = 'tags (custom)'
 PUBLISHER_TAGS_LABEL: Final[str] = 'tags (publishes)'
 
 NO_NAME_LABEL: Final[str] = '(no name)'
-NO_PUBLISHER_LABEL: Final[str] = '(no publisher)'
+UNKNOWN_AUTHOR_LABEL: Final[str] = '(unknown author)'
+UNKNOWN_PUBLISHER_LABEL: Final[str] = '(unknown publisher)'
+
 
 SEARCH_TO_TEXT: Final[Dict[int, str]] = {
     Search.WITHOUT: '- ',
@@ -70,8 +72,24 @@ class TagsItem:
         self._children.append(item)
 
 
-class TagsGroupItem(TagsItem, ABC):
-    _no_name_label: str = NO_NAME_LABEL
+class AuthorsItem(TagsItem):
+    __label = AUTHORS_LABEL
+    __no_name_label = UNKNOWN_AUTHOR_LABEL
+
+    def __query(self) -> Query:
+        return (
+            dal
+            .session
+            .query(Author, func.count(Tutorial.id_))
+            .join(tutorial_author_table)
+            .filter(
+                tutorial_author_table.c.tutorial_id == Tutorial.id_,
+                tutorial_author_table.c.author_id == Author.id_,
+            )
+            .outerjoin(Tutorial)
+            .group_by(Author.id_)
+            .order_by(Author.name.asc())
+        )
 
     def refresh(self) -> None:
         self._children.clear()
@@ -79,49 +97,81 @@ class TagsGroupItem(TagsItem, ABC):
         if dal.session is None:
             return
 
-        for publisher, count in self._query():
-            name = publisher.name
+        for author, count in (
+            dal
+            .session
+            .query(
+                Author,
+                func.count(tutorial_author_table.c.tutorial_id),
+                )
+            .outerjoin(tutorial_author_table)
+            .filter(tutorial_author_table.c.author_id == Author.id_)
+            .group_by(Author.id_)
+            .order_by(Author.name)
+        ):
+            name = author.name
             if name is None or len(name) == 0:
-                name = self._no_name_label
-            self.append(TagsItem(f'{name} ({count})', publisher))
-
-    @abstractmethod
-    def _query(self) -> Query:
-        pass
+                name = self.__no_name_label
+            self.append(TagsItem(f'{name} ({count})', author))
 
     @property
     def label(self) -> str:
-        return f'{self._label} ({self.rows})'
+        return f'{self.__label} ({self.rows})'
 
 
-class PublishersItem(TagsGroupItem):
-    def _query(self) -> Query:
-        return (
+class PublishersItem(TagsItem):
+    __label = PUBLISHERS_LABEL
+    __no_name_label = UNKNOWN_PUBLISHER_LABEL
+
+    def refresh(self) -> None:
+        self._children.clear()
+
+        if dal.session is None:
+            return
+
+        for publisher, count in (
             dal
             .session
-            .query(Publisher, func.count(Tutorial.title))
+            .query(Publisher, func.count(Tutorial.id_))
             .outerjoin(Tutorial)
             .group_by(Publisher.id_)
             .order_by(Publisher.name.asc())
-        )
+        ):
+            name = publisher.name
+            if name is None or len(name) == 0:
+                name = self.__no_name_label
+            self.append(TagsItem(f'{name} ({count})', publisher))
 
-    _label = PUBLISHERS_LABEL
-    _no_name_label = NO_PUBLISHER_LABEL
+    @property
+    def label(self) -> str:
+        return f'{self.__label} ({self.rows})'
 
 
 class TagsModel(QAbstractItemModel):
+
+    TOP_TABLES: Final = (Author, Publisher)
 
     search_changed = Signal()
 
     def __init__(self):
         super().__init__()
         self.__root_item = TagsItem('root')
+
+        self.__authors_item = AuthorsItem()
+        self.__root_item.append(self.__authors_item)
+
         self.__publishers_item = PublishersItem()
         self.__root_item.append(self.__publishers_item)
 
+        self.__top_items = [
+            self.__authors_item,
+            self.__publishers_item,
+        ]
+
     def refresh(self) -> None:
         self.beginResetModel()
-        self.__publishers_item.refresh()
+        for item in self.__top_items:
+            item.refresh()
         self.endResetModel()
 
     def index(self, row: int, column: int, parent: QModelIndex) -> QModelIndex:
@@ -197,7 +247,8 @@ class TagsModel(QAbstractItemModel):
         if dal.session is None:
             return
 
-        dal.session.query(Publisher).update({Publisher.search: Search.IGNORED})
+        for table in self.TOP_TABLES:
+            dal.session.query(table).update({table.search: Search.IGNORED})
         dal.session.commit()
 
         self.refresh()
