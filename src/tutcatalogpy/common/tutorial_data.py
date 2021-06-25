@@ -5,6 +5,7 @@ import fastjsonschema
 import yaml
 from sqlalchemy.orm.session import Session
 
+from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
 
@@ -35,11 +36,13 @@ class TutorialData:
     MY_LEARNING_PATHS_KEY: Final[str] = 'my_learning_paths'
     DESCRIPTION_KEY: Final[str] = 'description'
 
+    # fastjsonschema returns default values if no data is provided
     VALIDATION_SCHEMA: Final[Dict[str, Any]] = {
         'type': 'object',
         'properties': {
-            'title': {'type': 'string', 'default': ''},
             'publisher': {'type': 'string', 'default': ''},
+            'title': {'type': 'string', 'default': ''},
+            'author': {'type': 'array', 'items': {'type': 'string'}, 'default': ['']},
         }
     }
 
@@ -64,3 +67,9 @@ class TutorialData:
         if publisher is None:
             publisher = Publisher(name=publisher_name)
         tutorial.publisher = publisher
+
+        for name in data.get(TutorialData.AUTHORS_KEY):
+            author = session.query(Author).filter_by(name=name).first()
+            if author is None:
+                author = Author(name=name)
+            tutorial.authors.append(author)
