@@ -66,6 +66,9 @@ class TagsGroupItem(TagsItem, ABC):
     def refresh(self) -> None:
         self._children.clear()
 
+        if dal.session is None:
+            return
+
         for publisher, count in self._query():
             self.append(TagsItem(f'{publisher.name} ({count})', publisher))
 
