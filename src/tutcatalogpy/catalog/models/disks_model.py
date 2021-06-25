@@ -44,6 +44,8 @@ class DisksModel(QAbstractTableModel):
             else:
                 return DisksModel.Columns(section).label
 
+        return super().headerData(section, orientation, role)
+
     def rowCount(self, index) -> int:
         return self.__row_count
 
@@ -71,6 +73,8 @@ class DisksModel(QAbstractTableModel):
             if column == DisksModel.Columns.NAME.value and not disk.online:
                 return QBrush(Qt.red)
         elif role == Qt.DisplayRole:
+            if column == DisksModel.Columns.CHECKED.value:
+                return ''
             return getattr(disk, DisksModel.Columns(column).alias)
         elif role == Qt.UserRole:
             return disk
