@@ -31,10 +31,11 @@ class TutorialsModel(QAbstractTableModel):
         DISK_NAME = (4, 'Disk', 'disk_name', Disk.disk_name)
         FOLDER_PARENT = (5, 'Folder Parent', 'folder_parent', Folder.folder_parent)
         FOLDER_NAME = (6, 'Folder Name', 'folder_name', Folder.folder_name)
-        TITLE = (7, 'Title', 'tutorial_title', Tutorial.title)
-        SIZE = (8, 'Size', 'size', Folder.size)
-        CREATED = (9, 'Created', 'created', Folder.created)
-        MODIFIED = (10, 'Modified', 'modified', Folder.modified)
+        PUBLISHER = (7, 'Publisher', 'publisher_name', Publisher.name)
+        TITLE = (8, 'Title', 'tutorial_title', Tutorial.title)
+        SIZE = (9, 'Size', 'size', Folder.size)
+        CREATED = (10, 'Created', 'created', Folder.created)
+        MODIFIED = (11, 'Modified', 'modified', Folder.modified)
 
     NO_COVER_ICON = relative_path(__file__, '../../resources/icons/no_cover.svg')
     OFFLINE_ICON = relative_path(__file__, '../../resources/icons/offline.svg')
@@ -205,6 +206,7 @@ class TutorialsModel(QAbstractTableModel):
                 Disk.checked,
                 TutorialsModel.Columns.CHECKED.column.label(TutorialsModel.Columns.CHECKED.alias),
                 TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
+                TutorialsModel.Columns.PUBLISHER.column.label(TutorialsModel.Columns.PUBLISHER.alias),
                 TutorialsModel.Columns.TITLE.column.label(TutorialsModel.Columns.TITLE.alias)
             )
         )
@@ -231,7 +233,7 @@ class TutorialsModel(QAbstractTableModel):
         query = self.__query()
 
         column: Column = TutorialsModel.Columns(self.__sort_column).column
-        if column == TutorialsModel.Columns.TITLE.column:
+        if column in [TutorialsModel.Columns.TITLE.column, TutorialsModel.Columns.PUBLISHER.column]:
             query = query.order_by(column.is_(None), column.is_(''))
         column = column.asc() if self.__sort_ascending else column.desc()
         query = query.order_by(column)
@@ -246,19 +248,6 @@ class TutorialsModel(QAbstractTableModel):
         self.__sort_ascending = (sort_oder == Qt.SortOrder.AscendingOrder)
         self.__cache.clear()
         self.endResetModel()
-
-    def __size_query(self, selection):
-        query = (
-            dal
-            .session
-            .query(Folder.size.sum())
-            .join(Disk, Folder.disk_id == Disk.id_)
-        )
-
-        if len(selection) > 0:
-            query = query.filter(Folder.id_.in_(self.__ids(selection)))
-
-        return self.__filtered(query)
 
     def total_size(self) -> int:
         if dal.session is None:
