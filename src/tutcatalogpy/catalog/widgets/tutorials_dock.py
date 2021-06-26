@@ -119,15 +119,15 @@ class TutorialsDock(DockWidget):
 
         selection_model = self.__tutorials_view.selectionModel()
 
-        tutorials = []
+        folders = []
         index: QModelIndex
         for index in selection_model.selectedRows():
-            data = data_model.tutorial(index.row())
-            tutorials.append(data.id_)
+            folder = data_model.folder(index.row())
+            folders.append(folder.id_)
 
-        # log.info('Selected tutorials: %s', tutorials)
+        # log.info('Selected tutorials: %s', folders)
 
-        self.selection_changed.emit(tutorials)
+        self.selection_changed.emit(folders)
 
 
 if __name__ == '__main__':

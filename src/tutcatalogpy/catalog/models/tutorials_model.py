@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 from typing import Any, Dict, Final, Optional
 
 from humanize import naturalsize
@@ -17,7 +18,6 @@ from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import relative_path
-from tutcatalogpy.common.widgets.db_table_column_enum import DbTableColumnEnum
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -25,22 +25,32 @@ log.addHandler(logging.NullHandler())
 AUTHORS_SEPARATOR: Final[str] = ', '
 
 
+class ColumnEnum(bytes, Enum):
+    label: str  # column label displayed in the table view
+
+    def __new__(cls, value: int, label: str):
+        obj = bytes.__new__(cls, [value])
+        obj._value_ = value
+        obj.label = label
+        return obj
+
+
 class TutorialsModel(QAbstractTableModel):
 
-    class Columns(DbTableColumnEnum):
-        CHECKED = (0, 'Checked', 'folder_checked', Folder.checked)
-        INDEX = (1, 'Index', 'id_', Folder.id_)
-        ONLINE = (2, 'Online', 'online', Disk.online)
-        HAS_COVER = (3, 'Cover', 'has_cover', (Folder.cover_id != None))
-        DISK_NAME = (4, 'Disk', 'disk_name', Disk.disk_name)
-        FOLDER_PARENT = (5, 'Folder Parent', 'folder_parent', Folder.folder_parent)
-        FOLDER_NAME = (6, 'Folder Name', 'folder_name', Folder.folder_name)
-        PUBLISHER = (7, 'Publisher', 'publisher_name', Publisher.name)
-        TITLE = (8, 'Title', 'tutorial_title', Tutorial.title)
-        AUTHORS = (9, 'Authors', 'authors', func.group_concat(Author.name, AUTHORS_SEPARATOR))
-        SIZE = (10, 'Size', 'size', Folder.size)
-        CREATED = (11, 'Created', 'created', Folder.created)
-        MODIFIED = (12, 'Modified', 'modified', Folder.modified)
+    class Columns(ColumnEnum):
+        CHECKED = (0, 'Checked')
+        INDEX = (1, 'Index')
+        ONLINE = (2, 'Online')
+        HAS_COVER = (3, 'Cover')
+        DISK_NAME = (4, 'Disk')
+        # FOLDER_PARENT = (5, 'Folder Parent', 'folder_parent', Folder.folder_parent)
+        # FOLDER_NAME = (6, 'Folder Name', 'folder_name', Folder.folder_name)
+        # PUBLISHER = (7, 'Publisher', 'publisher_name', Publisher.name)
+        # TITLE = (8, 'Title', 'tutorial_title', Tutorial.title)
+        # AUTHORS = (9, 'Authors', 'authors', func.group_concat(Author.name, AUTHORS_SEPARATOR))
+        # SIZE = (10, 'Size', 'size', Folder.size)
+        # CREATED = (11, 'Created', 'created', Folder.created)
+        # MODIFIED = (12, 'Modified', 'modified', Folder.modified)
 
     NO_COVER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
     OFFLINE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/offline.svg')
@@ -91,7 +101,12 @@ class TutorialsModel(QAbstractTableModel):
 
     def refresh(self) -> None:
         self.beginResetModel()
-        self.__row_count = self.__query().count() if dal.connected else 0
+        if dal.connected:
+            self.__cached_query = self.__filtered_and_sorted(self.__joined(self.__query()))
+            self.__row_count = self.__cached_query.count()
+        else:
+            self.__cached_query = None
+            self.__row_count = 0
         self.__cache.clear()
         self.endResetModel()
         log.debug('Folder model updated row count: %s.', self.__row_count)
@@ -103,52 +118,63 @@ class TutorialsModel(QAbstractTableModel):
     def data(self, index, role) -> Any:
         row = index.row()
 
-        tutorial = self.tutorial(row)
+        folder = self.folder(row)
 
-        if tutorial is None:
+        if folder is None:
             return None
 
         column = index.column()
 
-        value = getattr(tutorial, TutorialsModel.Columns(column).alias)
+        # value = getattr(tutorial, TutorialsModel.Columns(column).alias)
+        # if role == Qt.DecorationRole:
+        #     if column == TutorialsModel.Columns.HAS_COVER.value:
+        #         return None if value else self.__no_cover_icon
+        #     elif column == TutorialsModel.Columns.ONLINE.value:
+        #         return None if value else self.__offline_icon
+        # if role == Qt.CheckStateRole:
+        #     if column == TutorialsModel.Columns.CHECKED.value:
+        #         return Qt.Checked if value else Qt.Unchecked
+        # elif role == Qt.DisplayRole:
+        #     if column == TutorialsModel.Columns.SIZE.value:
+        #         return naturalsize(value) if value else ''
+        #     elif column in [
+        #         TutorialsModel.Columns.HAS_COVER.value,
+        #         TutorialsModel.Columns.CHECKED.value,
+        #         TutorialsModel.Columns.ONLINE.value,
+        #     ]:
+        #         return None
+        #     elif column in [TutorialsModel.Columns.CREATED.value, TutorialsModel.Columns.MODIFIED.value]:
+        #         return QDateTime.fromSecsSinceEpoch(value.timestamp())
+        #     else:
+        #         return value
         if role == Qt.DecorationRole:
             if column == TutorialsModel.Columns.HAS_COVER.value:
+                value = folder.cover
                 return None if value else self.__no_cover_icon
             elif column == TutorialsModel.Columns.ONLINE.value:
-                return None if value else self.__offline_icon
-        if role == Qt.CheckStateRole:
+                return None if folder.disk.online else self.__offline_icon
+        elif role == Qt.CheckStateRole:
             if column == TutorialsModel.Columns.CHECKED.value:
-                return Qt.Checked if value else Qt.Unchecked
+                return Qt.Checked if folder.checked else Qt.Unchecked
         elif role == Qt.DisplayRole:
-            if column == TutorialsModel.Columns.SIZE.value:
-                return naturalsize(value) if value else ''
-            elif column in [
-                TutorialsModel.Columns.HAS_COVER.value,
-                TutorialsModel.Columns.CHECKED.value,
-                TutorialsModel.Columns.ONLINE.value,
-            ]:
-                return None
-            elif column in [TutorialsModel.Columns.CREATED.value, TutorialsModel.Columns.MODIFIED.value]:
-                return QDateTime.fromSecsSinceEpoch(value.timestamp())
-            else:
-                return value
+            if column == TutorialsModel.Columns.INDEX.value:
+                return folder.id_
+            elif column == TutorialsModel.Columns.DISK_NAME.value:
+                return folder.disk.disk_name
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
 
-        tutorial = self.tutorial(row)
+        folder = self.folder(row)
 
-        if tutorial is None:
+        if folder is None:
             return False
 
         column = index.column()
 
         if role == Qt.CheckStateRole:
             if column == TutorialsModel.Columns.CHECKED.value:
-                # couldn't set directly the Folder.check value using the cached row
-                # so we set it directly in the folder
-                t = dal.session.query(Folder).where(Folder.id_ == tutorial.id_).one()
-                t.checked = (value == Qt.Checked)
+                folder.checked = (value == Qt.Checked)
                 dal.session.commit()
                 del self.__cache[row]
                 return True
@@ -164,86 +190,95 @@ class TutorialsModel(QAbstractTableModel):
 
         return flags
 
-    def __filtered(self, query: Query) -> Query:
+    def __filtered_and_sorted(self, query: Query) -> Query:
         if self.__only_show_checked_disks:
             query = query.filter(Disk.checked == True)  # noqa: E712
 
-        if len(self.__search_text):
-            for key in self.__search_text.split():
-                query = (
-                    query
-                    .filter((Disk.disk_parent + '/' + Disk.disk_name + '/' + Folder.folder_parent + '/' + Folder.folder_name)
-                    .like(f'%{key}%'))
-                )
+        # if len(self.__search_text):
+        #     for key in self.__search_text.split():
+        #         query = (
+        #             query
+        #             .filter((Disk.disk_parent + '/' + Disk.disk_name + '/' + Folder.folder_parent + '/' + Folder.folder_name)
+        #             .like(f'%{key}%'))
+        #         )
 
-        for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITH):
-            query = query.filter(Publisher.id_ == publisher.id_)
+        # for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITH):
+        #     query = query.filter(Publisher.id_ == publisher.id_)
 
-        for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITHOUT):
-            query = query.filter(Publisher.id_ != publisher.id_)
+        # for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITHOUT):
+        #     query = query.filter(Publisher.id_ != publisher.id_)
 
-        for author in dal.session.query(Author).filter(Author.search == Search.WITH):
-            query = query.filter(Author.id_ == author.id_)
+        # for author in dal.session.query(Author).filter(Author.search == Search.WITH):
+        #     query = query.filter(Author.id_ == author.id_)
 
-        for author in dal.session.query(Author).filter(Author.search == Search.WITHOUT):
-            tutorials_with_author = dal.session.query(tutorial_author_table.c.tutorial_id).filter(tutorial_author_table.c.author_id == author.id_)
-            query = query.filter(Tutorial.id_.not_in(tutorials_with_author))
+        # for author in dal.session.query(Author).filter(Author.search == Search.WITHOUT):
+        #     tutorials_with_author = dal.session.query(tutorial_author_table.c.tutorial_id).filter(tutorial_author_table.c.author_id == author.id_)
+        #     query = query.filter(Tutorial.id_.not_in(tutorials_with_author))
 
         return query
 
     def __joined(self, query: Query) -> Query:
-        return (
-            query
-            .join(Disk)
-            .join(Tutorial)
-            .join(Publisher)
-            .join(tutorial_author_table)
-            .join(Author)
-            .filter(
-                Folder.disk_id == Disk.id_,
-                Folder.tutorial_id == Tutorial.id_,
-                Tutorial.publisher_id == Publisher.id_,
-                tutorial_author_table.c.tutorial_id == Tutorial.id_,
-                tutorial_author_table.c.author_id == Author.id_
-            )
-            .group_by(Tutorial.id_)
-        )
+        # query = (
+        #     query
+        #     .join(Disk)
+        #     .join(Tutorial)
+        #     .join(Publisher)
+        #     .join(tutorial_author_table)
+        #     .join(Author)
+        #     .filter(
+        #         Folder.disk_id == Disk.id_,
+        #         Folder.tutorial_id == Tutorial.id_,
+        #         Tutorial.publisher_id == Publisher.id_,
+        #         tutorial_author_table.c.tutorial_id == Tutorial.id_,
+        #         tutorial_author_table.c.author_id == Author.id_
+        #     )
+        #     .group_by(Tutorial.id_)
+        # )
+
+        return query
 
     def __query(self) -> Query:
+        # query = (
+        #     dal
+        #     .session
+        #     .query(
+        #         Folder.id_,
+        #         Folder.folder_parent,
+        #         Folder.folder_name,
+        #         Folder.status,
+        #         Folder.system_id,
+        #         Folder.created,
+        #         Folder.modified,
+        #         Folder.size,
+        #         Disk.online,
+        #         Disk.disk_parent,
+        #         Disk.disk_name,
+        #         Disk.checked,
+        #         TutorialsModel.Columns.CHECKED.column.label(TutorialsModel.Columns.CHECKED.alias),
+        #         TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
+        #         TutorialsModel.Columns.PUBLISHER.column.label(TutorialsModel.Columns.PUBLISHER.alias),
+        #         TutorialsModel.Columns.TITLE.column.label(TutorialsModel.Columns.TITLE.alias),
+        #         TutorialsModel.Columns.AUTHORS.column.label(TutorialsModel.Columns.AUTHORS.alias),
+        #     )
+        # )
+
         query = (
             dal
             .session
-            .query(
-                Folder.id_,
-                Folder.folder_parent,
-                Folder.folder_name,
-                Folder.status,
-                Folder.system_id,
-                Folder.created,
-                Folder.modified,
-                Folder.size,
-                Disk.online,
-                Disk.disk_parent,
-                Disk.disk_name,
-                Disk.checked,
-                TutorialsModel.Columns.CHECKED.column.label(TutorialsModel.Columns.CHECKED.alias),
-                TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
-                TutorialsModel.Columns.PUBLISHER.column.label(TutorialsModel.Columns.PUBLISHER.alias),
-                TutorialsModel.Columns.TITLE.column.label(TutorialsModel.Columns.TITLE.alias),
-                TutorialsModel.Columns.AUTHORS.column.label(TutorialsModel.Columns.AUTHORS.alias),
-            )
+            .query(Folder)
+            .join(Disk)
         )
 
-        return self.__filtered(self.__joined(query))
+        return self.__filtered_and_sorted(self.__joined(query))
 
-    def tutorial(self, row: int) -> Any:
+    def folder(self, row: int) -> Any:
         if row < 0 or row >= self.__row_count:
             return None
 
         data = self.__cache.get(row, None)
 
         if data is None:
-            data = self.__tutorial(row)
+            data = self.__folder(row)
 
         if data is None:
             return None
@@ -252,20 +287,20 @@ class TutorialsModel(QAbstractTableModel):
 
         return data
 
-    def __tutorial(self, row: int) -> Any:
-        query = self.__query()
+    def __folder(self, row: int) -> Any:
+        query = self.__cached_query
 
-        column: Column = TutorialsModel.Columns(self.__sort_column).column
-        if column in [
-            TutorialsModel.Columns.TITLE.column,
-            TutorialsModel.Columns.PUBLISHER.column,
-            TutorialsModel.Columns.AUTHORS.column,
-        ]:
-            query = query.order_by(column.is_(None), column.is_(''))
-        column = column.asc() if self.__sort_ascending else column.desc()
-        query = query.order_by(column)
-        if column not in [Folder.folder_name, Folder.id_]:
-            query = query.order_by(Folder.folder_name.asc())
+        # column: Column = TutorialsModel.Columns(self.__sort_column).column
+        # if column in [
+        #     TutorialsModel.Columns.TITLE.column,
+        #     TutorialsModel.Columns.PUBLISHER.column,
+        #     TutorialsModel.Columns.AUTHORS.column,
+        # ]:
+        #     query = query.order_by(column.is_(None), column.is_(''))
+        # column = column.asc() if self.__sort_ascending else column.desc()
+        # query = query.order_by(column)
+        # if column not in [Folder.folder_name, Folder.id_]:
+        #     query = query.order_by(Folder.folder_name.asc())
 
         return query.offset(row).limit(1).first()
 
@@ -277,28 +312,28 @@ class TutorialsModel(QAbstractTableModel):
         self.endResetModel()
 
     def total_size(self) -> int:
-        if dal.session is None:
-            return 0
+        # if dal.session is None:
+        #     return 0
 
-        folders_shown = self.__filtered(
-            self.__joined(
-                (
-                    dal
-                    .session
-                    .query(Folder.id_)
-                )
-            )
-        )
+        # folders_shown = self.__filtered(
+        #     self.__joined(
+        #         (
+        #             dal
+        #             .session
+        #             .query(Folder.id_)
+        #         )
+        #     )
+        # )
 
-        total_size = (
-            dal
-            .session
-            .query(func.sum(Folder.size))
-            .where(Folder.id_.in_(folders_shown))
-        ).scalar()
+        # total_size = (
+        #     dal
+        #     .session
+        #     .query(func.sum(Folder.size))
+        #     .where(Folder.id_.in_(folders_shown))
+        # ).scalar()
 
-        return total_size if total_size is not None else 0
-
+        # return total_size if total_size is not None else 0
+        return 0
 
 tutorials_model = TutorialsModel()
 
