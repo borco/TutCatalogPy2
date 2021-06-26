@@ -427,31 +427,32 @@ class ScanWorker(QObject):
     @staticmethod
     def update_folder_tutorial(session: Session, folder: Folder) -> None:
         path: Path = folder.path() / ScanWorker.INFO_TC_NAME
-        if path.exists():
-            modified, created, system_id, size = get_path_stats(path)
-        else:
-            modified, created, system_id, size = None, None, None, None
 
-        tutorial: Tutorial = folder.tutorial
-        if tutorial is None:
+        if not path.exists():
             tutorial = Tutorial()
             folder.tutorial = tutorial
-        elif (
-            tutorial.size == size
-            and tutorial.modified == modified
-            and tutorial.created == created
-            and tutorial.system_id == system_id):
-            return
-        tutorial.system_id = system_id
-        tutorial.created = created
-        tutorial.modified = modified
-        tutorial.size = size
+            text = ''
+        else:
+            modified, created, system_id, size = get_path_stats(path)
 
-        if path.exists():
+            tutorial: Tutorial = folder.tutorial
+            if tutorial is None:
+                tutorial = Tutorial()
+                folder.tutorial = tutorial
+            elif (
+                tutorial.size == size
+                and tutorial.modified == modified
+                and tutorial.created == created
+                and tutorial.system_id == system_id):
+                return
+
+            tutorial.system_id = system_id
+            tutorial.created = created
+            tutorial.modified = modified
+            tutorial.size = size
+
             with open(path, mode='r', encoding='utf-8') as f:
                 text = f.read()
-        else:
-            text = ''
 
         try:
             TutorialData.load_from_string(session, tutorial, text)
