@@ -57,7 +57,7 @@ class TutorialsModel(QAbstractTableModel):
         FOLDER_PARENT = (5, 'Folder Parent', Folder.folder_parent)
         FOLDER_NAME = (6, 'Folder Name', Folder.folder_name)
         PUBLISHER = (7, 'Publisher', Publisher.name)
-        # TITLE = (8, 'Title', 'tutorial_title', Tutorial.title)
+        TITLE = (8, 'Title', Tutorial.title)
         # AUTHORS = (9, 'Authors', 'authors', func.group_concat(Author.name, AUTHORS_SEPARATOR))
         # SIZE = (10, 'Size', 'size', Folder.size)
         # CREATED = (11, 'Created', 'created', Folder.created)
@@ -168,8 +168,9 @@ class TutorialsModel(QAbstractTableModel):
             elif column == TutorialsModel.Columns.FOLDER_NAME.value:
                 return folder.folder_name
             elif column == TutorialsModel.Columns.PUBLISHER.value:
-                tutorial: Tutorial = folder.tutorial
-                return tutorial.publisher.name
+                return folder.tutorial.publisher.name
+            elif column == TutorialsModel.Columns.TITLE.value:
+                return folder.tutorial.title
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
@@ -203,7 +204,7 @@ class TutorialsModel(QAbstractTableModel):
         column: Column = TutorialsModel.Columns(self.__sort_column).column
 
         if column in [
-        #     TutorialsModel.Columns.TITLE.column,
+            TutorialsModel.Columns.TITLE.column,
             TutorialsModel.Columns.PUBLISHER.column,
         #     TutorialsModel.Columns.AUTHORS.column,
         ]:
