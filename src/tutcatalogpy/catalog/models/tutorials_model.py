@@ -46,22 +46,23 @@ class ColumnEnum(bytes, Enum):
         return obj
 
 
-class TutorialsModel(QAbstractTableModel):
+class Columns(ColumnEnum):
+    CHECKED = (0, 'Checked', Folder.checked)
+    INDEX = (1, 'Index', Folder.id_)
+    ONLINE = (2, 'Online', Disk.online)
+    HAS_COVER = (3, 'Cover', (Folder.cover_id != None), 'has_cover')
+    DISK_NAME = (4, 'Disk', Disk.disk_name)
+    FOLDER_PARENT = (5, 'Folder Parent', Folder.folder_parent)
+    FOLDER_NAME = (6, 'Folder Name', Folder.folder_name)
+    PUBLISHER = (7, 'Publisher', Publisher.name)
+    TITLE = (8, 'Title', Tutorial.title)
+    # AUTHORS = (9, 'Authors', 'authors', func.group_concat(Author.name, AUTHORS_SEPARATOR))
+    SIZE = (9, 'Size', Folder.size)
+    CREATED = (10, 'Created', Folder.created, 'created')
+    MODIFIED = (11, 'Modified', Folder.modified, 'modified')
 
-    class Columns(ColumnEnum):
-        CHECKED = (0, 'Checked', Folder.checked)
-        INDEX = (1, 'Index', Folder.id_)
-        ONLINE = (2, 'Online', Disk.online)
-        HAS_COVER = (3, 'Cover', (Folder.cover_id != None), 'has_cover')
-        DISK_NAME = (4, 'Disk', Disk.disk_name)
-        FOLDER_PARENT = (5, 'Folder Parent', Folder.folder_parent)
-        FOLDER_NAME = (6, 'Folder Name', Folder.folder_name)
-        PUBLISHER = (7, 'Publisher', Publisher.name)
-        TITLE = (8, 'Title', Tutorial.title)
-        # AUTHORS = (9, 'Authors', 'authors', func.group_concat(Author.name, AUTHORS_SEPARATOR))
-        # SIZE = (10, 'Size', 'size', Folder.size)
-        CREATED = (9, 'Created', Folder.created, 'created')
-        MODIFIED = (10, 'Modified', Folder.modified, 'modified')
+
+class TutorialsModel(QAbstractTableModel):
 
     NO_COVER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
     OFFLINE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/offline.svg')
@@ -93,17 +94,17 @@ class TutorialsModel(QAbstractTableModel):
         self.refresh()
 
     def columnCount(self, index) -> int:
-        return len(TutorialsModel.Columns)
+        return len(Columns)
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int) -> Any:
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             if section in [
-                TutorialsModel.Columns.INDEX.value,
-                TutorialsModel.Columns.CHECKED.value,
+                Columns.INDEX.value,
+                Columns.CHECKED.value,
             ]:
                 return ''
             else:
-                return TutorialsModel.Columns(section).label
+                return Columns(section).label
 
         return super().headerData(section, orientation, role)
 
@@ -128,35 +129,33 @@ class TutorialsModel(QAbstractTableModel):
 
         column = index.column()
 
-        # elif role == Qt.DisplayRole:
-        #     if column == TutorialsModel.Columns.SIZE.value:
-        #         return naturalsize(value) if value else ''
-        #     else:
-        #         return value
         if role == Qt.DecorationRole:
-            if column == TutorialsModel.Columns.HAS_COVER.value:
+            if column == Columns.HAS_COVER.value:
                 return None if result.has_cover else self.__no_cover_icon
-            elif column == TutorialsModel.Columns.ONLINE.value:
+            elif column == Columns.ONLINE.value:
                 return None if folder.disk.online else self.__offline_icon
         elif role == Qt.CheckStateRole:
-            if column == TutorialsModel.Columns.CHECKED.value:
+            if column == Columns.CHECKED.value:
                 return Qt.Checked if folder.checked else Qt.Unchecked
         elif role == Qt.DisplayRole:
-            if column == TutorialsModel.Columns.INDEX.value:
+            if column == Columns.INDEX.value:
                 return folder.id_
-            elif column == TutorialsModel.Columns.DISK_NAME.value:
+            elif column == Columns.DISK_NAME.value:
                 return folder.disk.disk_name
-            elif column == TutorialsModel.Columns.FOLDER_PARENT.value:
+            elif column == Columns.FOLDER_PARENT.value:
                 return folder.folder_parent
-            elif column == TutorialsModel.Columns.FOLDER_NAME.value:
+            elif column == Columns.FOLDER_NAME.value:
                 return folder.folder_name
-            elif column == TutorialsModel.Columns.PUBLISHER.value:
+            elif column == Columns.PUBLISHER.value:
                 return folder.tutorial.publisher.name
-            elif column == TutorialsModel.Columns.TITLE.value:
+            elif column == Columns.TITLE.value:
                 return folder.tutorial.title
-            elif column == TutorialsModel.Columns.CREATED.value:
+            elif column == Columns.SIZE.value:
+                value = folder.size
+                return naturalsize(value) if value else ''
+            elif column == Columns.CREATED.value:
                 return QDateTime.fromSecsSinceEpoch(folder.created.timestamp())
-            elif column == TutorialsModel.Columns.MODIFIED.value:
+            elif column == Columns.MODIFIED.value:
                 return QDateTime.fromSecsSinceEpoch(folder.modified.timestamp())
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
@@ -170,7 +169,7 @@ class TutorialsModel(QAbstractTableModel):
         column = index.column()
 
         if role == Qt.CheckStateRole:
-            if column == TutorialsModel.Columns.CHECKED.value:
+            if column == Columns.CHECKED.value:
                 folder.checked = (value == Qt.Checked)
                 dal.session.commit()
                 del self.__query_results_cache[row]
@@ -182,18 +181,18 @@ class TutorialsModel(QAbstractTableModel):
 
         flags = Qt.ItemIsSelectable | Qt.ItemIsEnabled | super().flags(index)
 
-        if column == TutorialsModel.Columns.CHECKED.value:
+        if column == Columns.CHECKED.value:
             flags |= Qt.ItemIsUserCheckable
 
         return flags
 
     def __sorted_query(self, query: Query) -> Query:
-        column: Column = TutorialsModel.Columns(self.__sort_column).column
+        column: Column = Columns(self.__sort_column).column
 
         if column in [
-            TutorialsModel.Columns.TITLE.column,
-            TutorialsModel.Columns.PUBLISHER.column,
-        #     TutorialsModel.Columns.AUTHORS.column,
+            Columns.TITLE.column,
+            Columns.PUBLISHER.column,
+        #     Columns.AUTHORS.column,
         ]:
             query = query.order_by(column.is_(None), column.is_(''))
         column = column.asc() if self.__sort_ascending else column.desc()
@@ -247,11 +246,11 @@ class TutorialsModel(QAbstractTableModel):
         #         Disk.disk_parent,
         #         Disk.disk_name,
         #         Disk.checked,
-        #         TutorialsModel.Columns.CHECKED.column.label(TutorialsModel.Columns.CHECKED.alias),
-        #         TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
-        #         TutorialsModel.Columns.PUBLISHER.column.label(TutorialsModel.Columns.PUBLISHER.alias),
-        #         TutorialsModel.Columns.TITLE.column.label(TutorialsModel.Columns.TITLE.alias),
-        #         TutorialsModel.Columns.AUTHORS.column.label(TutorialsModel.Columns.AUTHORS.alias),
+        #         Columns.CHECKED.column.label(Columns.CHECKED.alias),
+        #         Columns.HAS_COVER.column.label(Columns.HAS_COVER.alias),
+        #         Columns.PUBLISHER.column.label(Columns.PUBLISHER.alias),
+        #         Columns.TITLE.column.label(Columns.TITLE.alias),
+        #         Columns.AUTHORS.column.label(Columns.AUTHORS.alias),
         #     )
         # )
 
@@ -277,7 +276,7 @@ class TutorialsModel(QAbstractTableModel):
             .session
             .query(
                 Folder,
-                TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
+                Columns.HAS_COVER.column.label(Columns.HAS_COVER.alias),
             )
             .join(Disk)
             .join(Tutorial)
