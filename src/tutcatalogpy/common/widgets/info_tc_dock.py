@@ -94,6 +94,10 @@ class InfoTcDock(DockWidget):
         self.__title = ElidedLabel()
         form_layout.addRow('Title:', self.__title)
 
+        self.__authors = QLabel()
+        self.__authors.setWordWrap(True)
+        form_layout.addRow('Authors:', self.__authors)
+
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
 
@@ -123,6 +127,7 @@ class InfoTcDock(DockWidget):
             self.__size,
             self.__publisher,
             self.__title,
+            self.__authors,
         ]:
             widget.clear()
 
@@ -148,6 +153,10 @@ class InfoTcDock(DockWidget):
         self.__publisher.setText(tutorial.publisher.name)
 
         self.__title.setText(tutorial.title)
+
+        authors = [a.name for a in tutorial.authors]
+        authors.sort()
+        self.__authors.setText(', '.join(authors))
 
 
 if __name__ == '__main__':
