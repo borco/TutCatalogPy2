@@ -30,6 +30,7 @@ AUTHORS_SEPARATOR: Final[str] = ', '
 class QueryResult:
     folder: Optional[Folder] = None
     has_cover: Optional[bool] = None
+    authors: Optional[str] = None
 
 
 class ColumnEnum(bytes, Enum):
@@ -56,10 +57,10 @@ class Columns(ColumnEnum):
     FOLDER_NAME = (6, 'Folder Name', Folder.folder_name)
     PUBLISHER = (7, 'Publisher', Publisher.name)
     TITLE = (8, 'Title', Tutorial.title)
-    # AUTHORS = (9, 'Authors', 'authors', func.group_concat(Author.name, AUTHORS_SEPARATOR))
-    SIZE = (9, 'Size', Folder.size)
-    CREATED = (10, 'Created', Folder.created, 'created')
-    MODIFIED = (11, 'Modified', Folder.modified, 'modified')
+    AUTHORS = (9, 'Authors', func.group_concat(Author.name, AUTHORS_SEPARATOR), 'authors')
+    SIZE = (10, 'Size', Folder.size)
+    CREATED = (11, 'Created', Folder.created, 'created')
+    MODIFIED = (12, 'Modified', Folder.modified, 'modified')
 
 
 class TutorialsModel(QAbstractTableModel):
@@ -157,6 +158,8 @@ class TutorialsModel(QAbstractTableModel):
                 return QDateTime.fromSecsSinceEpoch(folder.created.timestamp())
             elif column == Columns.MODIFIED.value:
                 return QDateTime.fromSecsSinceEpoch(folder.modified.timestamp())
+            elif column == Columns.AUTHORS.value:
+                return result.authors
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
@@ -186,19 +189,38 @@ class TutorialsModel(QAbstractTableModel):
 
         return flags
 
-    def __sorted_query(self, query: Query) -> Query:
-        column: Column = Columns(self.__sort_column).column
+    def __base_query(self) -> Query:
+        query = (
+            dal
+            .session
+            .query(
+                Folder,
+                Columns.HAS_COVER.column.label(Columns.HAS_COVER.alias),
+                Columns.AUTHORS.column.label(Columns.AUTHORS.alias),
+            )
+        )
 
-        if column in [
-            Columns.TITLE.column,
-            Columns.PUBLISHER.column,
-        #     Columns.AUTHORS.column,
-        ]:
-            query = query.order_by(column.is_(None), column.is_(''))
-        column = column.asc() if self.__sort_ascending else column.desc()
-        query = query.order_by(column)
-        if column not in [Folder.folder_name, Folder.id_]:
-            query = query.order_by(Folder.folder_name.asc())
+        return query
+
+    def __query_result(self, row: int) -> QueryResult:
+        query = self.__cached_query
+        folder, has_cover, authors = query.offset(row).limit(1).first()
+        return QueryResult(folder, has_cover, authors)
+
+    def __joined_query(self, query: Query) -> Query:
+        query = (
+            query
+            .join(Disk)
+            .join(Tutorial)
+            .join(Publisher)
+            .filter(
+                Folder.tutorial_id == Tutorial.id_,
+                Tutorial.publisher_id == Publisher.id_,
+                tutorial_author_table.c.tutorial_id == Tutorial.id_,
+                tutorial_author_table.c.author_id == Author.id_
+            )
+            .group_by(Tutorial.id_)
+        )
 
         return query
 
@@ -220,8 +242,19 @@ class TutorialsModel(QAbstractTableModel):
         for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITHOUT):
             query = query.filter(Publisher.id_ != publisher.id_)
 
+        # included_authors = dal.session.query(Author.id_).filter(Author.search == Search.WITH).order_by(Author.name)
+        # included_tutorials = dal.session.query(tutorial_author_table).group_by(tutorial_author_table.c.tutorial_id)
+        # print('included authors:', included_authors.all())
+        # included_tutorials = dal.session.query(tutorial_author_table).group_by(tutorial_author_table.c.tutorial_id)
+        # print('included tutorials:', included_tutorials.all())
+        # query = query.filter(Tutorial.id_.in_(included_tutorials))
+
         # for author in dal.session.query(Author).filter(Author.search == Search.WITH):
         #     query = query.filter(Author.id_ == author.id_)
+
+        # authors_excluded = dal.session.query(Author.id_).filter(Author.search == Search.WITHOUT)
+        # print(authors_excluded.all())
+        # query = query.filter(Author.id_.not_in(authors_excluded))
 
         # for author in dal.session.query(Author).filter(Author.search == Search.WITHOUT):
         #     tutorials_with_author = dal.session.query(tutorial_author_table.c.tutorial_id).filter(tutorial_author_table.c.author_id == author.id_)
@@ -229,65 +262,19 @@ class TutorialsModel(QAbstractTableModel):
 
         return query
 
-    def __base_query(self) -> Query:
-        # query = (
-        #     dal
-        #     .session
-        #     .query(
-        #         Folder.id_,
-        #         Folder.folder_parent,
-        #         Folder.folder_name,
-        #         Folder.status,
-        #         Folder.system_id,
-        #         Folder.created,
-        #         Folder.modified,
-        #         Folder.size,
-        #         Disk.online,
-        #         Disk.disk_parent,
-        #         Disk.disk_name,
-        #         Disk.checked,
-        #         Columns.CHECKED.column.label(Columns.CHECKED.alias),
-        #         Columns.HAS_COVER.column.label(Columns.HAS_COVER.alias),
-        #         Columns.PUBLISHER.column.label(Columns.PUBLISHER.alias),
-        #         Columns.TITLE.column.label(Columns.TITLE.alias),
-        #         Columns.AUTHORS.column.label(Columns.AUTHORS.alias),
-        #     )
-        # )
+    def __sorted_query(self, query: Query) -> Query:
+        column: Column = Columns(self.__sort_column).column
 
-        query = (
-            dal
-            .session
-            .query(
-                Folder,
-                Columns.HAS_COVER.column.label(Columns.HAS_COVER.alias),
-            )
-        )
-
-        return query
-
-    def __joined_query(self, query: Query) -> Query:
-        # query = (
-        #     query
-        #     .join(tutorial_author_table)
-        #     .join(Author)
-        #     .filter(
-        #         Folder.disk_id == Disk.id_,
-        #         tutorial_author_table.c.tutorial_id == Tutorial.id_,
-        #         tutorial_author_table.c.author_id == Author.id_
-        #     )
-        #     .group_by(Tutorial.id_)
-        # )
-
-        query = (
-            query
-            .join(Disk)
-            .join(Tutorial)
-            .join(Publisher)
-            .filter(
-                Folder.tutorial_id == Tutorial.id_,
-                Tutorial.publisher_id == Publisher.id_,
-            )
-        )
+        if column in [
+            Columns.TITLE.column,
+            Columns.PUBLISHER.column,
+            Columns.AUTHORS.column,
+        ]:
+            query = query.order_by(column.is_(None), column.is_(''))
+        column = column.asc() if self.__sort_ascending else column.desc()
+        query = query.order_by(column)
+        if column not in [Folder.folder_name, Folder.id_]:
+            query = query.order_by(Folder.folder_name.asc())
 
         return query
 
@@ -320,11 +307,6 @@ class TutorialsModel(QAbstractTableModel):
         self.__query_results_cache[row] = result
 
         return result
-
-    def __query_result(self, row: int) -> QueryResult:
-        query = self.__cached_query
-        folder, has_cover = query.offset(row).limit(1).first()
-        return QueryResult(folder, has_cover)
 
     def folder(self, row: int) -> Optional[Folder]:
         return self.__cached_query_result(row).folder
