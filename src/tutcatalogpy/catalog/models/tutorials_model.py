@@ -202,12 +202,12 @@ class TutorialsModel(QAbstractTableModel):
     def __sorted_query(self, query: Query) -> Query:
         column: Column = TutorialsModel.Columns(self.__sort_column).column
 
-        # if column in [
+        if column in [
         #     TutorialsModel.Columns.TITLE.column,
-        #     TutorialsModel.Columns.PUBLISHER.column,
+            TutorialsModel.Columns.PUBLISHER.column,
         #     TutorialsModel.Columns.AUTHORS.column,
-        # ]:
-        #     query = query.order_by(column.is_(None), column.is_(''))
+        ]:
+            query = query.order_by(column.is_(None), column.is_(''))
         column = column.asc() if self.__sort_ascending else column.desc()
         query = query.order_by(column)
         if column not in [Folder.folder_name, Folder.id_]:
