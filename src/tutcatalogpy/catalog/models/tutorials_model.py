@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Final, Optional
 
 from humanize import naturalsize
 from PySide2.QtCore import QAbstractTableModel, QDateTime, QModelIndex, Qt, Signal
@@ -22,6 +22,8 @@ from tutcatalogpy.common.widgets.db_table_column_enum import DbTableColumnEnum
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
+AUTHORS_SEPARATOR: Final[str] = ', '
+
 
 class TutorialsModel(QAbstractTableModel):
 
@@ -35,12 +37,13 @@ class TutorialsModel(QAbstractTableModel):
         FOLDER_NAME = (6, 'Folder Name', 'folder_name', Folder.folder_name)
         PUBLISHER = (7, 'Publisher', 'publisher_name', Publisher.name)
         TITLE = (8, 'Title', 'tutorial_title', Tutorial.title)
-        SIZE = (9, 'Size', 'size', Folder.size)
-        CREATED = (10, 'Created', 'created', Folder.created)
-        MODIFIED = (11, 'Modified', 'modified', Folder.modified)
+        AUTHORS = (9, 'Authors', 'authors', func.group_concat(Author.name, AUTHORS_SEPARATOR))
+        SIZE = (10, 'Size', 'size', Folder.size)
+        CREATED = (11, 'Created', 'created', Folder.created)
+        MODIFIED = (12, 'Modified', 'modified', Folder.modified)
 
-    NO_COVER_ICON = relative_path(__file__, '../../resources/icons/no_cover.svg')
-    OFFLINE_ICON = relative_path(__file__, '../../resources/icons/offline.svg')
+    NO_COVER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
+    OFFLINE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/offline.svg')
 
     summary_changed = Signal(str)
 
@@ -226,7 +229,8 @@ class TutorialsModel(QAbstractTableModel):
                 TutorialsModel.Columns.CHECKED.column.label(TutorialsModel.Columns.CHECKED.alias),
                 TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
                 TutorialsModel.Columns.PUBLISHER.column.label(TutorialsModel.Columns.PUBLISHER.alias),
-                TutorialsModel.Columns.TITLE.column.label(TutorialsModel.Columns.TITLE.alias)
+                TutorialsModel.Columns.TITLE.column.label(TutorialsModel.Columns.TITLE.alias),
+                TutorialsModel.Columns.AUTHORS.column.label(TutorialsModel.Columns.AUTHORS.alias),
             )
         )
 
@@ -252,7 +256,11 @@ class TutorialsModel(QAbstractTableModel):
         query = self.__query()
 
         column: Column = TutorialsModel.Columns(self.__sort_column).column
-        if column in [TutorialsModel.Columns.TITLE.column, TutorialsModel.Columns.PUBLISHER.column]:
+        if column in [
+            TutorialsModel.Columns.TITLE.column,
+            TutorialsModel.Columns.PUBLISHER.column,
+            TutorialsModel.Columns.AUTHORS.column,
+        ]:
             query = query.order_by(column.is_(None), column.is_(''))
         column = column.asc() if self.__sort_ascending else column.desc()
         query = query.order_by(column)
