@@ -43,8 +43,8 @@ class TutorialsModel(QAbstractTableModel):
         ONLINE = (2, 'Online')
         HAS_COVER = (3, 'Cover')
         DISK_NAME = (4, 'Disk')
-        # FOLDER_PARENT = (5, 'Folder Parent', 'folder_parent', Folder.folder_parent)
-        # FOLDER_NAME = (6, 'Folder Name', 'folder_name', Folder.folder_name)
+        FOLDER_PARENT = (5, 'Folder Parent')
+        FOLDER_NAME = (6, 'Folder Name')
         # PUBLISHER = (7, 'Publisher', 'publisher_name', Publisher.name)
         # TITLE = (8, 'Title', 'tutorial_title', Tutorial.title)
         # AUTHORS = (9, 'Authors', 'authors', func.group_concat(Author.name, AUTHORS_SEPARATOR))
@@ -118,7 +118,7 @@ class TutorialsModel(QAbstractTableModel):
     def data(self, index, role) -> Any:
         row = index.row()
 
-        folder = self.folder(row)
+        folder: Optional[Folder] = self.folder(row)
 
         if folder is None:
             return None
@@ -161,6 +161,10 @@ class TutorialsModel(QAbstractTableModel):
                 return folder.id_
             elif column == TutorialsModel.Columns.DISK_NAME.value:
                 return folder.disk.disk_name
+            elif column == TutorialsModel.Columns.FOLDER_PARENT.value:
+                return folder.folder_parent
+            elif column == TutorialsModel.Columns.FOLDER_NAME.value:
+                return folder.folder_name
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
