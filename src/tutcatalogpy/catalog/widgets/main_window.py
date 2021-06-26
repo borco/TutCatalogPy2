@@ -346,6 +346,7 @@ class MainWindow(CommonMainWindow):
         folder = self.__get_current_folder(folder_id)
         online = (folder is not None and folder.disk.online)
 
+        self.__info_tc_dock.set_folder(folder_id)
         self.__update_cover_dock(folder_id)
         self.__update_file_browser_dock(folder_id)
         selected_one_folder = (folder_id is not None)
