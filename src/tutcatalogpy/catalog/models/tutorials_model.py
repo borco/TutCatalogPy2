@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, Final, Optional
 
@@ -25,26 +26,36 @@ log.addHandler(logging.NullHandler())
 AUTHORS_SEPARATOR: Final[str] = ', '
 
 
+@dataclass
+class QueryResult:
+    folder: Optional[Folder] = None
+    has_cover: Optional[bool] = None
+
+
 class ColumnEnum(bytes, Enum):
     label: str  # column label displayed in the table view
+    column: Column
+    alias: Optional[str]
 
-    def __new__(cls, value: int, label: str):
+    def __new__(cls, value: int, label: str, column: Column, alias: Optional[str] = None):
         obj = bytes.__new__(cls, [value])
         obj._value_ = value
         obj.label = label
+        obj.column = column
+        obj.alias = alias
         return obj
 
 
 class TutorialsModel(QAbstractTableModel):
 
     class Columns(ColumnEnum):
-        CHECKED = (0, 'Checked')
-        INDEX = (1, 'Index')
-        ONLINE = (2, 'Online')
-        HAS_COVER = (3, 'Cover')
-        DISK_NAME = (4, 'Disk')
-        FOLDER_PARENT = (5, 'Folder Parent')
-        FOLDER_NAME = (6, 'Folder Name')
+        CHECKED = (0, 'Checked', Folder.checked)
+        INDEX = (1, 'Index', Folder.id_)
+        ONLINE = (2, 'Online', Disk.online)
+        HAS_COVER = (3, 'Cover', (Folder.cover_id != None), 'has_cover')
+        DISK_NAME = (4, 'Disk', Disk.disk_name)
+        FOLDER_PARENT = (5, 'Folder Parent', Folder.folder_parent)
+        FOLDER_NAME = (6, 'Folder Name', Folder.folder_name)
         # PUBLISHER = (7, 'Publisher', 'publisher_name', Publisher.name)
         # TITLE = (8, 'Title', 'tutorial_title', Tutorial.title)
         # AUTHORS = (9, 'Authors', 'authors', func.group_concat(Author.name, AUTHORS_SEPARATOR))
@@ -59,7 +70,7 @@ class TutorialsModel(QAbstractTableModel):
 
     def __init__(self):
         super().__init__()
-        self.__cache: Dict[int, Any] = {}
+        self.__query_results_cache: Dict[int, QueryResult] = {}
         self.__row_count: int = 0
         self.__sort_column: int = 0
         self.__sort_ascending: bool = True
@@ -101,24 +112,16 @@ class TutorialsModel(QAbstractTableModel):
 
     def refresh(self) -> None:
         self.beginResetModel()
-        if dal.connected:
-            self.__cached_query = self.__filtered_and_sorted(self.__joined(self.__query()))
-            self.__row_count = self.__cached_query.count()
-        else:
-            self.__cached_query = None
-            self.__row_count = 0
-        self.__cache.clear()
+        self.__update_cached_query()
         self.endResetModel()
         log.debug('Folder model updated row count: %s.', self.__row_count)
-
-        total_size = self.total_size()
-        total_size = naturalsize(total_size) if total_size > 0 else '0'
-        self.summary_changed.emit(f'F: {self.__row_count} ({total_size})')
 
     def data(self, index, role) -> Any:
         row = index.row()
 
-        folder: Optional[Folder] = self.folder(row)
+        result = self.__cached_query_result(row)
+
+        folder = result.folder
 
         if folder is None:
             return None
@@ -149,8 +152,7 @@ class TutorialsModel(QAbstractTableModel):
         #         return value
         if role == Qt.DecorationRole:
             if column == TutorialsModel.Columns.HAS_COVER.value:
-                value = folder.cover
-                return None if value else self.__no_cover_icon
+                return None if result.has_cover else self.__no_cover_icon
             elif column == TutorialsModel.Columns.ONLINE.value:
                 return None if folder.disk.online else self.__offline_icon
         elif role == Qt.CheckStateRole:
@@ -169,7 +171,7 @@ class TutorialsModel(QAbstractTableModel):
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
 
-        folder = self.folder(row)
+        folder = self.__cached_query_result(row).folder
 
         if folder is None:
             return False
@@ -180,7 +182,7 @@ class TutorialsModel(QAbstractTableModel):
             if column == TutorialsModel.Columns.CHECKED.value:
                 folder.checked = (value == Qt.Checked)
                 dal.session.commit()
-                del self.__cache[row]
+                del self.__query_results_cache[row]
                 return True
         return False
 
@@ -194,7 +196,23 @@ class TutorialsModel(QAbstractTableModel):
 
         return flags
 
-    def __filtered_and_sorted(self, query: Query) -> Query:
+    def __sorted_query(self, query: Query) -> Query:
+        column: Column = TutorialsModel.Columns(self.__sort_column).column
+
+        # if column in [
+        #     TutorialsModel.Columns.TITLE.column,
+        #     TutorialsModel.Columns.PUBLISHER.column,
+        #     TutorialsModel.Columns.AUTHORS.column,
+        # ]:
+        #     query = query.order_by(column.is_(None), column.is_(''))
+        column = column.asc() if self.__sort_ascending else column.desc()
+        query = query.order_by(column)
+        if column not in [Folder.folder_name, Folder.id_]:
+            query = query.order_by(Folder.folder_name.asc())
+
+        return query
+
+    def __filtered_query(self, query: Query) -> Query:
         if self.__only_show_checked_disks:
             query = query.filter(Disk.checked == True)  # noqa: E712
 
@@ -221,7 +239,7 @@ class TutorialsModel(QAbstractTableModel):
 
         return query
 
-    def __joined(self, query: Query) -> Query:
+    def __joined_query(self, query: Query) -> Query:
         # query = (
         #     query
         #     .join(Disk)
@@ -241,7 +259,7 @@ class TutorialsModel(QAbstractTableModel):
 
         return query
 
-    def __query(self) -> Query:
+    def __base_query(self) -> Query:
         # query = (
         #     dal
         #     .session
@@ -269,50 +287,57 @@ class TutorialsModel(QAbstractTableModel):
         query = (
             dal
             .session
-            .query(Folder)
+            .query(
+                Folder,
+                TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
+            )
             .join(Disk)
         )
 
-        return self.__filtered_and_sorted(self.__joined(query))
+        return query
 
-    def folder(self, row: int) -> Any:
+    def __update_cached_query(self) -> None:
+        if dal.connected:
+            self.__cached_query = self.__sorted_query(self.__filtered_query(self.__joined_query(self.__base_query())))
+            self.__row_count = self.__cached_query.count()
+        else:
+            self.__cached_query = None
+            self.__row_count = 0
+        self.__query_results_cache.clear()
+
+        total_size = self.total_size()
+        total_size = naturalsize(total_size) if total_size > 0 else '0'
+        self.summary_changed.emit(f'F: {self.__row_count} ({total_size})')
+
+    def __cached_query_result(self, row: int) -> QueryResult:
         if row < 0 or row >= self.__row_count:
-            return None
+            return QueryResult()
 
-        data = self.__cache.get(row, None)
+        result = self.__query_results_cache.get(row, QueryResult())
 
-        if data is None:
-            data = self.__folder(row)
+        if result.folder is None:
+            result = self.__query_result(row)
 
-        if data is None:
-            return None
+            if result.folder is None:
+                return QueryResult()
 
-        self.__cache[row] = data
+        self.__query_results_cache[row] = result
 
-        return data
+        return result
 
-    def __folder(self, row: int) -> Any:
+    def __query_result(self, row: int) -> QueryResult:
         query = self.__cached_query
+        folder, has_cover = query.offset(row).limit(1).first()
+        return QueryResult(folder, has_cover)
 
-        # column: Column = TutorialsModel.Columns(self.__sort_column).column
-        # if column in [
-        #     TutorialsModel.Columns.TITLE.column,
-        #     TutorialsModel.Columns.PUBLISHER.column,
-        #     TutorialsModel.Columns.AUTHORS.column,
-        # ]:
-        #     query = query.order_by(column.is_(None), column.is_(''))
-        # column = column.asc() if self.__sort_ascending else column.desc()
-        # query = query.order_by(column)
-        # if column not in [Folder.folder_name, Folder.id_]:
-        #     query = query.order_by(Folder.folder_name.asc())
-
-        return query.offset(row).limit(1).first()
+    def folder(self, row: int) -> Optional[Folder]:
+        return self.__cached_query_result(row).folder
 
     def sort(self, index: int, sort_oder: Qt.SortOrder) -> None:
         self.beginResetModel()
         self.__sort_column = index
         self.__sort_ascending = (sort_oder == Qt.SortOrder.AscendingOrder)
-        self.__cache.clear()
+        self.__update_cached_query()
         self.endResetModel()
 
     def total_size(self) -> int:
@@ -338,6 +363,7 @@ class TutorialsModel(QAbstractTableModel):
 
         # return total_size if total_size is not None else 0
         return 0
+
 
 tutorials_model = TutorialsModel()
 
