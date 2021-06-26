@@ -214,11 +214,11 @@ class TutorialsModel(QAbstractTableModel):
                     .like(f'%{key}%'))
                 )
 
-        # for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITH):
-        #     query = query.filter(Publisher.id_ == publisher.id_)
+        for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITH):
+            query = query.filter(Publisher.id_ == publisher.id_)
 
-        # for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITHOUT):
-        #     query = query.filter(Publisher.id_ != publisher.id_)
+        for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITHOUT):
+            query = query.filter(Publisher.id_ != publisher.id_)
 
         # for author in dal.session.query(Author).filter(Author.search == Search.WITH):
         #     query = query.filter(Author.id_ == author.id_)
@@ -254,23 +254,6 @@ class TutorialsModel(QAbstractTableModel):
         #     )
         # )
 
-        # query = (
-        #     query
-        #     .join(Disk)
-        #     .join(Tutorial)
-        #     .join(Publisher)
-        #     .join(tutorial_author_table)
-        #     .join(Author)
-        #     .filter(
-        #         Folder.disk_id == Disk.id_,
-        #         Folder.tutorial_id == Tutorial.id_,
-        #         Tutorial.publisher_id == Publisher.id_,
-        #         tutorial_author_table.c.tutorial_id == Tutorial.id_,
-        #         tutorial_author_table.c.author_id == Author.id_
-        #     )
-        #     .group_by(Tutorial.id_)
-        # )
-
         query = (
             dal
             .session
@@ -283,6 +266,18 @@ class TutorialsModel(QAbstractTableModel):
         return query
 
     def __joined_query(self, query: Query) -> Query:
+        # query = (
+        #     query
+        #     .join(tutorial_author_table)
+        #     .join(Author)
+        #     .filter(
+        #         Folder.disk_id == Disk.id_,
+        #         tutorial_author_table.c.tutorial_id == Tutorial.id_,
+        #         tutorial_author_table.c.author_id == Author.id_
+        #     )
+        #     .group_by(Tutorial.id_)
+        # )
+
         query = (
             query
             .join(Disk)
