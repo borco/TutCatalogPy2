@@ -56,7 +56,7 @@ class TutorialsModel(QAbstractTableModel):
         DISK_NAME = (4, 'Disk', Disk.disk_name)
         FOLDER_PARENT = (5, 'Folder Parent', Folder.folder_parent)
         FOLDER_NAME = (6, 'Folder Name', Folder.folder_name)
-        # PUBLISHER = (7, 'Publisher', 'publisher_name', Publisher.name)
+        PUBLISHER = (7, 'Publisher', Publisher.name)
         # TITLE = (8, 'Title', 'tutorial_title', Tutorial.title)
         # AUTHORS = (9, 'Authors', 'authors', func.group_concat(Author.name, AUTHORS_SEPARATOR))
         # SIZE = (10, 'Size', 'size', Folder.size)
@@ -167,6 +167,9 @@ class TutorialsModel(QAbstractTableModel):
                 return folder.folder_parent
             elif column == TutorialsModel.Columns.FOLDER_NAME.value:
                 return folder.folder_name
+            elif column == TutorialsModel.Columns.PUBLISHER.value:
+                tutorial: Tutorial = folder.tutorial
+                return tutorial.publisher.name
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
@@ -239,26 +242,6 @@ class TutorialsModel(QAbstractTableModel):
 
         return query
 
-    def __joined_query(self, query: Query) -> Query:
-        # query = (
-        #     query
-        #     .join(Disk)
-        #     .join(Tutorial)
-        #     .join(Publisher)
-        #     .join(tutorial_author_table)
-        #     .join(Author)
-        #     .filter(
-        #         Folder.disk_id == Disk.id_,
-        #         Folder.tutorial_id == Tutorial.id_,
-        #         Tutorial.publisher_id == Publisher.id_,
-        #         tutorial_author_table.c.tutorial_id == Tutorial.id_,
-        #         tutorial_author_table.c.author_id == Author.id_
-        #     )
-        #     .group_by(Tutorial.id_)
-        # )
-
-        return query
-
     def __base_query(self) -> Query:
         # query = (
         #     dal
@@ -284,6 +267,23 @@ class TutorialsModel(QAbstractTableModel):
         #     )
         # )
 
+        # query = (
+        #     query
+        #     .join(Disk)
+        #     .join(Tutorial)
+        #     .join(Publisher)
+        #     .join(tutorial_author_table)
+        #     .join(Author)
+        #     .filter(
+        #         Folder.disk_id == Disk.id_,
+        #         Folder.tutorial_id == Tutorial.id_,
+        #         Tutorial.publisher_id == Publisher.id_,
+        #         tutorial_author_table.c.tutorial_id == Tutorial.id_,
+        #         tutorial_author_table.c.author_id == Author.id_
+        #     )
+        #     .group_by(Tutorial.id_)
+        # )
+
         query = (
             dal
             .session
@@ -292,13 +292,19 @@ class TutorialsModel(QAbstractTableModel):
                 TutorialsModel.Columns.HAS_COVER.column.label(TutorialsModel.Columns.HAS_COVER.alias),
             )
             .join(Disk)
+            .join(Tutorial)
+            .join(Publisher)
+            .filter(
+                Folder.tutorial_id == Tutorial.id_,
+                Tutorial.publisher_id == Publisher.id_,
+            )
         )
 
         return query
 
     def __update_cached_query(self) -> None:
         if dal.connected:
-            self.__cached_query = self.__sorted_query(self.__filtered_query(self.__joined_query(self.__base_query())))
+            self.__cached_query = self.__sorted_query(self.__filtered_query(self.__base_query()))
             self.__row_count = self.__cached_query.count()
         else:
             self.__cached_query = None
