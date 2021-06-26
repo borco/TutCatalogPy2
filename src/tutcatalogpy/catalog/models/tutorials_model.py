@@ -60,8 +60,8 @@ class TutorialsModel(QAbstractTableModel):
         TITLE = (8, 'Title', Tutorial.title)
         # AUTHORS = (9, 'Authors', 'authors', func.group_concat(Author.name, AUTHORS_SEPARATOR))
         # SIZE = (10, 'Size', 'size', Folder.size)
-        # CREATED = (11, 'Created', 'created', Folder.created)
-        # MODIFIED = (12, 'Modified', 'modified', Folder.modified)
+        CREATED = (9, 'Created', Folder.created, 'created')
+        MODIFIED = (10, 'Modified', Folder.modified, 'modified')
 
     NO_COVER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
     OFFLINE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/offline.svg')
@@ -128,26 +128,9 @@ class TutorialsModel(QAbstractTableModel):
 
         column = index.column()
 
-        # value = getattr(tutorial, TutorialsModel.Columns(column).alias)
-        # if role == Qt.DecorationRole:
-        #     if column == TutorialsModel.Columns.HAS_COVER.value:
-        #         return None if value else self.__no_cover_icon
-        #     elif column == TutorialsModel.Columns.ONLINE.value:
-        #         return None if value else self.__offline_icon
-        # if role == Qt.CheckStateRole:
-        #     if column == TutorialsModel.Columns.CHECKED.value:
-        #         return Qt.Checked if value else Qt.Unchecked
         # elif role == Qt.DisplayRole:
         #     if column == TutorialsModel.Columns.SIZE.value:
         #         return naturalsize(value) if value else ''
-        #     elif column in [
-        #         TutorialsModel.Columns.HAS_COVER.value,
-        #         TutorialsModel.Columns.CHECKED.value,
-        #         TutorialsModel.Columns.ONLINE.value,
-        #     ]:
-        #         return None
-        #     elif column in [TutorialsModel.Columns.CREATED.value, TutorialsModel.Columns.MODIFIED.value]:
-        #         return QDateTime.fromSecsSinceEpoch(value.timestamp())
         #     else:
         #         return value
         if role == Qt.DecorationRole:
@@ -171,6 +154,10 @@ class TutorialsModel(QAbstractTableModel):
                 return folder.tutorial.publisher.name
             elif column == TutorialsModel.Columns.TITLE.value:
                 return folder.tutorial.title
+            elif column == TutorialsModel.Columns.CREATED.value:
+                return QDateTime.fromSecsSinceEpoch(folder.created.timestamp())
+            elif column == TutorialsModel.Columns.MODIFIED.value:
+                return QDateTime.fromSecsSinceEpoch(folder.modified.timestamp())
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
