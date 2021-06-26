@@ -25,6 +25,7 @@ from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
 from tutcatalogpy.common.widgets.file_browser_dock import FileBrowserDock
+from tutcatalogpy.common.widgets.info_tc_dock import InfoTcDock
 from tutcatalogpy.common.widgets.logging_dock import LoggingDock
 from tutcatalogpy.common.widgets.main_window import CommonMainWindow
 
@@ -64,7 +65,7 @@ class MainWindow(CommonMainWindow):
 
     OPEN_FOLDER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_folder.svg')
     OPEN_FOLDER_TIP: Final[str] = 'Open folder in external file browser'
-    OPEN_TC_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_tc.svg')
+    OPEN_TC_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_info_tc.svg')
     OPEN_TC_TIP: Final[str] = 'Open info.tc in external viewer'
 
     __current_folder_id: Optional[int] = None
@@ -114,6 +115,8 @@ class MainWindow(CommonMainWindow):
         self.__tutorials_dock = TutorialsDock()
         self.__tutorials_dock.set_model(tutorials_model)
 
+        self.__info_tc_dock = InfoTcDock()
+
         self.__cover_dock = CoverDock()
 
         self.__tags_dock = TagsDock()
@@ -130,6 +133,7 @@ class MainWindow(CommonMainWindow):
             self.__search_dock,
             self.__disks_dock,
             self.__tutorials_dock,
+            self.__info_tc_dock,
             self.__cover_dock,
             self.__tags_dock,
             self.__file_browser_dock,
