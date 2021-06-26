@@ -2,13 +2,16 @@ import logging
 from typing import Final, Optional
 
 from PySide2.QtCore import QMargins, Qt
-from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QWidget
+from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QStyle, QWidget
 from PySide2.QtSvg import QSvgWidget
 
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
+from tutcatalogpy.common.widgets.elided_label import ElidedLabel
+from tutcatalogpy.common.widgets.form_layout import FormLayout
+from tutcatalogpy.common.widgets.path_view import PathView
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -46,9 +49,11 @@ class InfoTcDock(DockWidget):
         self.setWidget(widget)
 
         layout = QGridLayout()
-        layout.setMargin(0)
         widget.setLayout(layout)
 
+        layout.setMargin(0)
+
+        # status icons
         info_layout = QHBoxLayout()
         info_layout.setContentsMargins(QMargins(8, 8, 8, 8))
         layout.addLayout(info_layout, 0, 0, 1, 1, Qt.AlignRight | Qt.AlignTop)
@@ -65,6 +70,28 @@ class InfoTcDock(DockWidget):
             icon.setVisible(False)
             info_layout.addWidget(icon)
 
+        # main icons
+        self.__form_widget = QWidget()
+        layout.addWidget(self.__form_widget, 0, 0)
+
+        form_layout = FormLayout()
+        self.__form_widget.setLayout(form_layout)
+
+        self.__path_name = PathView()
+        form_layout.addRow('Tutorial:', self.__path_name)
+
+        self.__path_parent = PathView()
+        form_layout.addRow('Path:', self.__path_parent)
+
+        self.__size = QLabel()
+        form_layout.addRow('Size:', self.__size)
+
+        self.__publisher = ElidedLabel()
+        form_layout.addRow('Publisher:', self.__publisher)
+
+        self.__title = ElidedLabel()
+        form_layout.addRow('Title:', self.__title)
+
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
 
@@ -76,6 +103,7 @@ class InfoTcDock(DockWidget):
             self.__folder = dal.session.query(Folder).filter(Folder.id_ == folder_id).one()
 
         self.__update_status_icons()
+        self.__update_info()
         log.info('Show info.tc for folder: %s', folder_id)
 
     def __update_status_icons(self) -> None:
@@ -85,6 +113,21 @@ class InfoTcDock(DockWidget):
         else:
             self.__no_info_tc.setVisible(self.__folder.tutorial.size is None)
             self.__offline.setVisible(not self.__folder.disk.online)
+
+    def __update_info(self) -> None:
+        if self.__folder is None:
+            self.__form_widget.setVisible(False)
+            for widget in [
+                self.__path_name,
+                self.__path_parent,
+                self.__size,
+                self.__publisher,
+                self.__title,
+            ]:
+                widget.clear()
+        else:
+            self.__form_widget.setVisible(True)
+
 
 if __name__ == '__main__':
     from tutcatalogpy.catalog.main import run
