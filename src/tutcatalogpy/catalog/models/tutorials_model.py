@@ -278,6 +278,13 @@ class TutorialsModel(QAbstractTableModel):
                 Folder,
                 Columns.HAS_COVER.column.label(Columns.HAS_COVER.alias),
             )
+        )
+
+        return query
+
+    def __joined_query(self, query: Query) -> Query:
+        query = (
+            query
             .join(Disk)
             .join(Tutorial)
             .join(Publisher)
@@ -291,14 +298,15 @@ class TutorialsModel(QAbstractTableModel):
 
     def __update_cached_query(self) -> None:
         if dal.connected:
-            self.__cached_query = self.__sorted_query(self.__filtered_query(self.__base_query()))
+            self.__cached_query = self.__sorted_query(self.__filtered_query(self.__joined_query(self.__base_query())))
             self.__row_count = self.__cached_query.count()
+            total_size = self.__total_size()
         else:
             self.__cached_query = None
             self.__row_count = 0
+            total_size = 0
         self.__query_results_cache.clear()
 
-        total_size = self.total_size()
         total_size = naturalsize(total_size) if total_size > 0 else '0'
         self.summary_changed.emit(f'F: {self.__row_count} ({total_size})')
 
@@ -333,29 +341,25 @@ class TutorialsModel(QAbstractTableModel):
         self.__update_cached_query()
         self.endResetModel()
 
-    def total_size(self) -> int:
-        # if dal.session is None:
-        #     return 0
+    def __total_size(self) -> int:
+        visible_folders = self.__filtered_query(
+            self.__joined_query(
+                (
+                    dal
+                    .session
+                    .query(Folder.id_)
+                )
+            )
+        )
 
-        # folders_shown = self.__filtered(
-        #     self.__joined(
-        #         (
-        #             dal
-        #             .session
-        #             .query(Folder.id_)
-        #         )
-        #     )
-        # )
+        total_size = (
+            dal
+            .session
+            .query(func.sum(Folder.size))
+            .where(Folder.id_.in_(visible_folders))
+        ).scalar()
 
-        # total_size = (
-        #     dal
-        #     .session
-        #     .query(func.sum(Folder.size))
-        #     .where(Folder.id_.in_(folders_shown))
-        # ).scalar()
-
-        # return total_size if total_size is not None else 0
-        return 0
+        return total_size if total_size is not None else 0
 
 
 tutorials_model = TutorialsModel()
