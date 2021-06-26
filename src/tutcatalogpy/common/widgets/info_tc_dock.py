@@ -1,12 +1,14 @@
 import logging
 from typing import Final, Optional
 
+from humanize import naturalsize
 from PySide2.QtCore import QMargins, Qt
-from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QStyle, QWidget
+from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QWidget
 from PySide2.QtSvg import QSvgWidget
 
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.folder import Folder
+from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
 from tutcatalogpy.common.widgets.elided_label import ElidedLabel
@@ -104,7 +106,7 @@ class InfoTcDock(DockWidget):
 
         self.__update_status_icons()
         self.__update_info()
-        log.info('Show info.tc for folder: %s', folder_id)
+        log.debug('Show info.tc for folder: %s', folder_id)
 
     def __update_status_icons(self) -> None:
         if self.__folder is None:
@@ -114,19 +116,38 @@ class InfoTcDock(DockWidget):
             self.__no_info_tc.setVisible(self.__folder.tutorial.size is None)
             self.__offline.setVisible(not self.__folder.disk.online)
 
+    def __clear_form_widget(self) -> None:
+        for widget in [
+            self.__path_name,
+            self.__path_parent,
+            self.__size,
+            self.__publisher,
+            self.__title,
+        ]:
+            widget.clear()
+
     def __update_info(self) -> None:
-        if self.__folder is None:
+        folder: Optional[Folder] = self.__folder
+        if folder is None:
             self.__form_widget.setVisible(False)
-            for widget in [
-                self.__path_name,
-                self.__path_parent,
-                self.__size,
-                self.__publisher,
-                self.__title,
-            ]:
-                widget.clear()
-        else:
-            self.__form_widget.setVisible(True)
+            self.__clear_form_widget()
+            return
+
+        self.__form_widget.setVisible(True)
+
+        path = folder.path()
+        self.__path_name.set_path(path, folder.folder_name)
+
+        path = path.parent
+        self.__path_parent.set_path(path, path.name)
+
+        self.__size.setText(naturalsize(self.__folder.size))
+
+        tutorial: Tutorial = folder.tutorial
+
+        self.__publisher.setText(tutorial.publisher.name)
+
+        self.__title.setText(tutorial.title)
 
 
 if __name__ == '__main__':
