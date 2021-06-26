@@ -1,5 +1,4 @@
 import enum
-from datetime import datetime
 
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql.schema import Column, ForeignKey
@@ -27,8 +26,8 @@ class Tutorial(Base):
     status = Column(Integer, default=Status.OK, nullable=False)
 
     system_id = Column(Text)
-    created = Column(DateTime, default=datetime.today())
-    modified = Column(DateTime, default=datetime.today())
+    created = Column(DateTime)
+    modified = Column(DateTime)
     size = Column(Integer)
 
     authors = relationship('Author', secondary='tutorial_author', backref='tutorials')
