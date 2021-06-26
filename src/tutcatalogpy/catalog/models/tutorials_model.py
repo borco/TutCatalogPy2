@@ -198,13 +198,13 @@ class TutorialsModel(QAbstractTableModel):
         if self.__only_show_checked_disks:
             query = query.filter(Disk.checked == True)  # noqa: E712
 
-        # if len(self.__search_text):
-        #     for key in self.__search_text.split():
-        #         query = (
-        #             query
-        #             .filter((Disk.disk_parent + '/' + Disk.disk_name + '/' + Folder.folder_parent + '/' + Folder.folder_name)
-        #             .like(f'%{key}%'))
-        #         )
+        if len(self.__search_text):
+            for key in self.__search_text.split():
+                query = (
+                    query
+                    .filter((Disk.disk_parent + '/' + Disk.disk_name + '/' + Folder.folder_parent + '/' + Folder.folder_name)
+                    .like(f'%{key}%'))
+                )
 
         # for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITH):
         #     query = query.filter(Publisher.id_ == publisher.id_)
