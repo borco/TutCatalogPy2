@@ -268,6 +268,7 @@ class TutorialsModel(QAbstractTableModel):
     def __sorted_query(self, query: Query) -> Query:
         column: Column = Columns(self.__sort_column).column
 
+        # handle missing values
         if column in [
             Columns.TITLE.column,
             Columns.PUBLISHER.column,
@@ -283,10 +284,12 @@ class TutorialsModel(QAbstractTableModel):
             Columns.LEVEL.column,
         ]:
             query = query.order_by(column.is_(None), column.is_(0))
-        column = column.asc() if self.__sort_ascending else column.desc()
+
+        column = column.collate('NOCASE').asc() if self.__sort_ascending else column.collate('NOCASE').desc()
+
         query = query.order_by(column)
         if column not in [Folder.folder_name, Folder.id_]:
-            query = query.order_by(Folder.folder_name.asc())
+            query = query.order_by(Folder.folder_name.collate('NOCASE').asc())
 
         return query
 
