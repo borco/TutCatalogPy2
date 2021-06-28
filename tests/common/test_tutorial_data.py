@@ -8,7 +8,7 @@ from tutcatalogpy.common.db.dal import DataAccessLayer, dal
 from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
-from tutcatalogpy.common.tutorial_data import TutorialData
+from tutcatalogpy.common.tutorial_data import TutorialData, TutorialLevel
 
 
 @fixture
@@ -312,3 +312,55 @@ def test_load_from_string_detects_invalid_duration(text: str, dal_: DataAccessLa
 )
 def test_duration_to_text(duration: int, text: str) -> None:
     assert TutorialData.duration_to_text(duration) == text
+
+
+@mark.parametrize(
+    'text, level',
+    [
+        ('', TutorialLevel.UNKNOWN),
+        ('beginner', TutorialLevel.BEGINNER),
+        ('intermediate', TutorialLevel.INTERMEDIATE),
+        ('advanced', TutorialLevel.ADVANCED),
+        ('any', TutorialLevel.ANY),
+        ('intermediate, beginner', TutorialLevel.BEGINNER | TutorialLevel.INTERMEDIATE),
+        ('intermediate, beginner, advanced', TutorialLevel.ANY),
+        ('intermediate, advanced', TutorialLevel.INTERMEDIATE | TutorialLevel.ADVANCED),
+        ('xxx', TutorialLevel.UNKNOWN),
+        ('xxx, intermediate', TutorialLevel.INTERMEDIATE),
+    ]
+)
+def test_text_to_level(text: str, level: TutorialLevel) -> None:
+    assert TutorialData.text_to_level(text) == level
+
+
+@mark.parametrize(
+    'level, text',
+    [
+        (TutorialLevel.UNKNOWN, ''),
+        (TutorialLevel.BEGINNER, 'beginner'),
+        (TutorialLevel.INTERMEDIATE, 'intermediate'),
+        (TutorialLevel.ADVANCED, 'advanced'),
+        (TutorialLevel.ANY, 'any'),
+        (TutorialLevel.BEGINNER | TutorialLevel.INTERMEDIATE, 'beginner, intermediate'),
+        (TutorialLevel.INTERMEDIATE | TutorialLevel.ADVANCED, 'intermediate, advanced'),
+    ]
+)
+def test_level_to_text(level: TutorialLevel, text: str) -> None:
+    assert TutorialData.level_to_text(level) == text
+
+
+@mark.parametrize(
+    'level',
+    [
+        TutorialLevel.UNKNOWN,
+        TutorialLevel.BEGINNER,
+        TutorialLevel.INTERMEDIATE,
+        TutorialLevel.ADVANCED,
+        TutorialLevel.ANY,
+        TutorialLevel.BEGINNER | TutorialLevel.INTERMEDIATE,
+        TutorialLevel.INTERMEDIATE | TutorialLevel.ADVANCED,
+    ]
+)
+def test_level_to_text_to_level(level: TutorialLevel) -> None:
+    text = TutorialData.level_to_text(level)
+    assert TutorialData.text_to_level(text) & level == level
