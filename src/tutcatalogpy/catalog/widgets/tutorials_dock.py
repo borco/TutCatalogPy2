@@ -4,7 +4,7 @@ from typing import Final
 from PySide2.QtCore import QByteArray, QItemSelection, QModelIndex, QSettings, Qt, Signal
 from PySide2.QtWidgets import QAction, QMenu, QTableView
 
-from tutcatalogpy.catalog.models.tutorials_model import TutorialsModel
+from tutcatalogpy.catalog.models.tutorials_model import TutorialsModel, Columns
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
 
@@ -71,8 +71,8 @@ class TutorialsDock(DockWidget):
         self.__vertical_header_visible_action = action
 
         # other columns
-        for section in range(len(TutorialsModel.Columns)):
-            label = TutorialsModel.Columns(section).label
+        for section in range(len(Columns)):
+            label = Columns(section).label
             action = QAction(label, menu)
             action.setData(section)
             action.setCheckable(True)
@@ -119,15 +119,15 @@ class TutorialsDock(DockWidget):
 
         selection_model = self.__tutorials_view.selectionModel()
 
-        tutorials = []
+        folders = []
         index: QModelIndex
         for index in selection_model.selectedRows():
-            data = data_model.tutorial(index.row())
-            tutorials.append(data.id_)
+            folder = data_model.folder(index.row())
+            folders.append(folder.id_)
 
-        # log.info('Selected tutorials: %s', tutorials)
+        # log.info('Selected tutorials: %s', folders)
 
-        self.selection_changed.emit(tutorials)
+        self.selection_changed.emit(folders)
 
 
 if __name__ == '__main__':
