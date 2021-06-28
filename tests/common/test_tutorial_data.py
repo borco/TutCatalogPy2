@@ -364,3 +364,31 @@ def test_level_to_text(level: TutorialLevel, text: str) -> None:
 def test_level_to_text_to_level(level: TutorialLevel) -> None:
     text = TutorialData.level_to_text(level)
     assert TutorialData.text_to_level(text) & level == level
+
+
+@mark.parametrize(
+    'text, level',
+    [
+        ('', TutorialLevel.UNKNOWN),
+        ('level: beginner', TutorialLevel.BEGINNER),
+        ('level: intermediate', TutorialLevel.INTERMEDIATE),
+        ('level: advanced', TutorialLevel.ADVANCED),
+        ('level: any', TutorialLevel.ANY),
+        ('level: intermediate, beginner', TutorialLevel.BEGINNER | TutorialLevel.INTERMEDIATE),
+        ('level: intermediate, beginner, advanced', TutorialLevel.ANY),
+        ('level: intermediate, advanced', TutorialLevel.INTERMEDIATE | TutorialLevel.ADVANCED),
+        ('level: xxx', TutorialLevel.UNKNOWN),
+        ('level: xxx, intermediate', TutorialLevel.INTERMEDIATE),
+    ]
+)
+def test_load_from_string_reads_level(text: str, level: TutorialLevel, dal_: DataAccessLayer) -> None:
+    tutorial = Tutorial()
+    dal_.session.add(tutorial)
+    dal_.session.commit()
+
+    TutorialData.load_from_string(dal_.session, tutorial, text)
+    dal_.session.commit()
+
+    dal_.renew_session()
+    tutorial = dal_.session.query(Tutorial).one()
+    assert tutorial.level == level
