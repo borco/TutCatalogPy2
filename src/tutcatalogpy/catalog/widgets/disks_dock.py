@@ -4,7 +4,7 @@ from typing import Final
 from PySide2.QtCore import QByteArray, QSettings, Qt
 from PySide2.QtWidgets import QAction, QMenu, QTableView
 
-from tutcatalogpy.catalog.models.disks_model import DisksModel
+from tutcatalogpy.catalog.models.disks_model import Columns
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
 
@@ -70,8 +70,8 @@ class DisksDock(DockWidget):
         self.__vertical_header_visible_action = action
 
         # other columns
-        for section in range(len(DisksModel.Columns)):
-            label = DisksModel.Columns(section).label
+        for section in range(len(Columns)):
+            label = Columns(section).label
             action = QAction(label, menu)
             action.setData(section)
             action.setCheckable(True)

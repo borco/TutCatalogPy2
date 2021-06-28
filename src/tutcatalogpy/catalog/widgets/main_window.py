@@ -76,6 +76,8 @@ class MainWindow(CommonMainWindow):
         self.setWindowTitle(self.WINDOW_TITLE)
 
         disks_model.setParent(self)
+        disks_model.init_icons()
+
         tutorials_model.setParent(self)
         tutorials_model.init_icons()
 
