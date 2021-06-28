@@ -105,6 +105,9 @@ class InfoTcDock(DockWidget):
         self.__duration = QLabel()
         form_layout.addRow('Duration:', self.__duration)
 
+        self.__level = QLabel()
+        form_layout.addRow('Duration:', self.__level)
+
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
 
@@ -137,6 +140,7 @@ class InfoTcDock(DockWidget):
             self.__authors,
             self.__released,
             self.__duration,
+            self.__level,
         ]:
             widget.clear()
 
@@ -170,6 +174,8 @@ class InfoTcDock(DockWidget):
         self.__released.setText(tutorial.released)
 
         self.__duration.setText(TutorialData.duration_to_text(tutorial.duration))
+
+        self.__level.setText(TutorialData.level_to_text(tutorial.level))
 
 
 if __name__ == '__main__':
