@@ -23,6 +23,7 @@ class Tutorial(Base):
     publisher_id = Column(Integer, ForeignKey('publisher.id'))
     title = Column(Text, default='', nullable=False)
     released = Column(Text, default='', nullable=False)
+    duration = Column(Integer, default=0)
 
     # aggregate fields used by models to search and filter and by view to display
     # separator: base.FIELD_SEPARATOR
