@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Final, List, Optional
+from typing import Any, Final, List, Optional
 
 from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from sqlalchemy.orm.query import Query
