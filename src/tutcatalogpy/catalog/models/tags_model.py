@@ -69,21 +69,6 @@ class AuthorsItem(TagsItem):
     __label = AUTHORS_LABEL
     __no_name_label = UNKNOWN_AUTHOR_LABEL
 
-    def __query(self) -> Query:
-        return (
-            dal
-            .session
-            .query(Author, func.count(Tutorial.id_))
-            .join(tutorial_author_table)
-            .filter(
-                tutorial_author_table.c.tutorial_id == Tutorial.id_,
-                tutorial_author_table.c.author_id == Author.id_,
-            )
-            .outerjoin(Tutorial)
-            .group_by(Author.id_)
-            .order_by(Author.name.asc())
-        )
-
     def refresh(self) -> None:
         self._children.clear()
 
@@ -96,11 +81,11 @@ class AuthorsItem(TagsItem):
             .query(
                 Author,
                 func.count(tutorial_author_table.c.tutorial_id),
-                )
+            )
             .outerjoin(tutorial_author_table)
             .filter(tutorial_author_table.c.author_id == Author.id_)
             .group_by(Author.id_)
-            .order_by(Author.name)
+            .order_by(Author.name.collate('NOCASE').asc())
         ):
             name = author.name
             if name is None or len(name) == 0:
@@ -128,7 +113,7 @@ class PublishersItem(TagsItem):
             .query(Publisher, func.count(Tutorial.id_))
             .outerjoin(Tutorial)
             .group_by(Publisher.id_)
-            .order_by(Publisher.name.asc())
+            .order_by(Publisher.name.collate('NOCASE').asc())
         ):
             name = publisher.name
             if name is None or len(name) == 0:
