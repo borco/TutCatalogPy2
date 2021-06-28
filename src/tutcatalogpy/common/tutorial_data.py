@@ -38,12 +38,21 @@ class TutorialData:
     DESCRIPTION_KEY: Final[str] = 'description'
 
     # fastjsonschema returns default values if no data is provided
+    # https://horejsek.github.io/python-fastjsonschema/
+    # https://json-schema.org/understanding-json-schema/index.html
     VALIDATION_SCHEMA: Final[Dict[str, Any]] = {
         'type': 'object',
         'properties': {
             'publisher': {'type': 'string', 'default': ''},
             'title': {'type': 'string', 'default': ''},
             'author': {'type': 'array', 'items': {'type': 'string'}, 'default': ['']},
+            'released': {
+                'type': ['string', 'integer'],
+                'pattern': r'^\d{4}(/\d{2}(/\d{2})?)?$',
+                'minimum': 1900,
+                'maximum': 3000,
+                'default': ''
+            },
         }
     }
 
@@ -78,6 +87,8 @@ class TutorialData:
             all_authors.append(author.name)
         all_authors.sort()
         tutorial.all_authors = FIELD_SEPARATOR.join([''] + all_authors + [''])
+
+        tutorial.released = data.get(TutorialData.RELEASED_KEY)
 
 
 if __name__ == '__main__':
