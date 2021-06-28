@@ -1,3 +1,4 @@
+import enum
 import logging
 from re import compile
 from typing import Any, Dict, Final
@@ -13,6 +14,31 @@ from tutcatalogpy.common.db.tutorial import Tutorial
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
+
+
+class TutorialLevel(enum.IntFlag):
+    UNKNOWN = 0
+    BEGINNER = 2
+    INTERMEDIATE = 4
+    ADVANCED = 8
+    ANY = BEGINNER | INTERMEDIATE | ADVANCED
+
+
+TEXT_TO_TUTORIAL_LEVEL: Final[Dict[str, TutorialLevel]] = {
+    '': TutorialLevel.UNKNOWN,
+    'beginner': TutorialLevel.BEGINNER,
+    'intermediate': TutorialLevel.INTERMEDIATE,
+    'advanced': TutorialLevel.ADVANCED,
+    'any': TutorialLevel.ANY,
+}
+
+TUTORIAL_LEVEL_TO_TEXT: Final[Dict[TutorialLevel, str]] = {
+    TutorialLevel.UNKNOWN: '',
+    TutorialLevel.BEGINNER: 'beginner',
+    TutorialLevel.INTERMEDIATE: 'intermediate',
+    TutorialLevel.ADVANCED: 'advanced',
+    TutorialLevel.ANY: 'any',
+}
 
 
 class TutorialData:
@@ -63,7 +89,8 @@ class TutorialData:
                 'type': 'string',
                 'pattern': DURATION_REGEX,
                 'default': ''
-            }
+            },
+            'level': {'type': 'string', 'default': ''},
         }
     }
 
@@ -105,6 +132,8 @@ class TutorialData:
 
         tutorial.duration = TutorialData.text_to_duration(data.get(TutorialData.DURATION_KEY))
 
+        tutorial.level = TutorialData.text_to_level(data.get(TutorialData.LEVEL_KEY))
+
     @staticmethod
     def text_to_duration(text: str) -> int:
         match = TutorialData.__duration_regex.match(text)
@@ -125,6 +154,30 @@ class TutorialData:
         hours = minutes // 60
         minutes %= 60
         return f'{hours}h {minutes:02}m' if hours > 0 else f'{minutes}m'
+
+    @staticmethod
+    def text_to_level(text: str) -> TutorialLevel:
+        level = TutorialLevel.UNKNOWN
+        for token in map(str.strip, text.split(',')):
+            lvl = TEXT_TO_TUTORIAL_LEVEL.get(token, None)
+            if lvl is not None:
+                level |= lvl
+        return level
+
+    @staticmethod
+    def level_to_text(level: TutorialLevel) -> str:
+        if TutorialLevel.ANY & level == TutorialLevel.ANY:
+            return TUTORIAL_LEVEL_TO_TEXT[TutorialLevel.ANY]
+
+        tokens = []
+        for lvl in [
+            TutorialLevel.BEGINNER,
+            TutorialLevel.INTERMEDIATE,
+            TutorialLevel.ADVANCED
+        ]:
+            if level & lvl == lvl:
+                tokens.append(TUTORIAL_LEVEL_TO_TEXT[lvl])
+        return ', '.join(tokens)
 
 
 if __name__ == '__main__':
