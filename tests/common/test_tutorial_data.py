@@ -244,7 +244,7 @@ def test_load_from_string_detects_invalid_released(text: str) -> None:
         ('10h  1m', 601),
     ]
 )
-def test_parse_duration(text: str, duration: int) -> None:
+def test_text_to_duration(text: str, duration: int) -> None:
     assert TutorialData.text_to_duration(text) == duration
 
 
@@ -253,13 +253,17 @@ def test_parse_duration(text: str, duration: int) -> None:
     [
         ('', 0),
         ('duration: 0m', 0),
+        ('duration: 00m', 0),
         ('duration: 1m', 1),
+        ('duration: 01m', 1),
         ('duration: 59m', 59),
         ('duration: 1h', 60),
         ('duration: 10h', 600),
         ('duration: 100h', 6000),
         ('duration: 1h 0m', 60),
+        ('duration: 1h 0m', 60),
         ('duration: 1h 1m', 61),
+        ('duration: 1h 01m', 61),
         ('duration: 10h  1m', 601),
     ]
 )
@@ -291,3 +295,20 @@ def test_load_from_string_detects_invalid_duration(text: str, dal_: DataAccessLa
 
     with raises(fastjsonschema.JsonSchemaValueException, match='^data.duration must .*'):
         TutorialData.load_from_string(dal_.session, tutorial, text)
+
+
+@mark.parametrize(
+    'duration, text',
+    [
+        (0, ''),
+        (1, '1m'),
+        (59, '59m'),
+        (60, '1h 00m'),
+        (600, '10h 00m'),
+        (6000, '100h 00m'),
+        (61, '1h 01m'),
+        (601, '10h 01m'),
+    ]
+)
+def test_duration_to_text(duration: int, text: str) -> None:
+    assert TutorialData.duration_to_text(duration) == text
