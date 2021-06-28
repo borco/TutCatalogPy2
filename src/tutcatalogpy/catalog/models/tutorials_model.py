@@ -57,9 +57,10 @@ class Columns(bytes, enum.Enum):
     PUBLISHER = (8, 'Publisher', Publisher.name)
     TITLE = (9, 'Title', Tutorial.title)
     AUTHORS = (10, 'Authors', Tutorial.all_authors)
-    SIZE = (11, 'Size', Folder.size)
-    CREATED = (12, 'Created', Folder.created)
-    MODIFIED = (13, 'Modified', Folder.modified)
+    RELEASED = (11, 'Released', Tutorial.released)
+    SIZE = (12, 'Size', Folder.size)
+    CREATED = (13, 'Created', Folder.created)
+    MODIFIED = (14, 'Modified', Folder.modified)
 
 
 class TutorialsModel(QAbstractTableModel):
@@ -163,6 +164,8 @@ class TutorialsModel(QAbstractTableModel):
                 return QDateTime.fromSecsSinceEpoch(folder.modified.timestamp())
             elif column == Columns.AUTHORS.value:
                 return folder.tutorial.all_authors[1:-1].replace(FIELD_SEPARATOR, ', ')
+            elif column == Columns.RELEASED.value:
+                return folder.tutorial.released
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
@@ -261,6 +264,7 @@ class TutorialsModel(QAbstractTableModel):
         if column in [
             Columns.TITLE.column,
             Columns.PUBLISHER.column,
+            Columns.RELEASED.column,
         ]:
             query = query.order_by(column.is_(None), column.is_(''))
         query = query.order_by(column.is_(None), column.is_(FIELD_SEPARATOR * 2))
