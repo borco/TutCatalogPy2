@@ -23,6 +23,13 @@ class Tutorial(Base):
     publisher_id = Column(Integer, ForeignKey('publisher.id'))
     title = Column(Text, default='', nullable=False)
 
+    # aggregate fields used by models to search and filter and by view to display
+    # separator: base.FIELD_SEPARATOR
+    # example: ',A Field,Another Field,One More Field,'
+    all_authors = Column(Text, default='', nullable=False)
+    all_tags = Column(Text, default='', nullable=False)
+    all_learning_paths = Column(Text, default='', nullable=False)
+
     status = Column(Integer, default=Status.OK, nullable=False)
 
     system_id = Column(Text)

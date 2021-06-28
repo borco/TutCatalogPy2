@@ -6,6 +6,7 @@ import yaml
 from sqlalchemy.orm.session import Session
 
 from tutcatalogpy.common.db.author import Author
+from tutcatalogpy.common.db.base import FIELD_SEPARATOR
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
 
@@ -68,8 +69,17 @@ class TutorialData:
             publisher = Publisher(name=publisher_name)
         tutorial.publisher = publisher
 
+        all_authors = []
         for name in data.get(TutorialData.AUTHORS_KEY):
             author = session.query(Author).filter_by(name=name).first()
             if author is None:
                 author = Author(name=name)
             tutorial.authors.append(author)
+            all_authors.append(author.name)
+        all_authors.sort()
+        tutorial.all_authors = FIELD_SEPARATOR.join([''] + all_authors + [''])
+
+
+if __name__ == '__main__':
+    from tutcatalogpy.catalog.main import run
+    run()

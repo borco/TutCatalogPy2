@@ -12,7 +12,7 @@ from sqlalchemy.sql.schema import Column
 
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.common.db.author import Author
-from tutcatalogpy.common.db.base import Search
+from tutcatalogpy.common.db.base import FIELD_SEPARATOR, Search
 from tutcatalogpy.common.db.dal import dal, tutorial_author_table
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
@@ -57,10 +57,10 @@ class Columns(ColumnEnum):
     FOLDER_NAME = (6, 'Folder Name', Folder.folder_name)
     PUBLISHER = (7, 'Publisher', Publisher.name)
     TITLE = (8, 'Title', Tutorial.title)
-    AUTHORS = (9, 'Authors', func.group_concat(Author.name, AUTHORS_SEPARATOR), 'authors')
+    AUTHORS = (9, 'Authors', Tutorial.all_authors)
     SIZE = (10, 'Size', Folder.size)
-    CREATED = (11, 'Created', Folder.created, 'created')
-    MODIFIED = (12, 'Modified', Folder.modified, 'modified')
+    CREATED = (11, 'Created', Folder.created)
+    MODIFIED = (12, 'Modified', Folder.modified)
 
 
 class TutorialsModel(QAbstractTableModel):
@@ -159,7 +159,7 @@ class TutorialsModel(QAbstractTableModel):
             elif column == Columns.MODIFIED.value:
                 return QDateTime.fromSecsSinceEpoch(folder.modified.timestamp())
             elif column == Columns.AUTHORS.value:
-                return result.authors
+                return folder.tutorial.all_authors[1:-1].replace(FIELD_SEPARATOR, ', ')
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
@@ -196,7 +196,6 @@ class TutorialsModel(QAbstractTableModel):
             .query(
                 Folder,
                 Columns.HAS_COVER.column.label(Columns.HAS_COVER.alias),
-                Columns.AUTHORS.column.label(Columns.AUTHORS.alias),
             )
         )
 
@@ -204,8 +203,8 @@ class TutorialsModel(QAbstractTableModel):
 
     def __query_result(self, row: int) -> QueryResult:
         query = self.__cached_query
-        folder, has_cover, authors = query.offset(row).limit(1).first()
-        return QueryResult(folder, has_cover, authors)
+        folder, has_cover = query.offset(row).limit(1).first()
+        return QueryResult(folder, has_cover)
 
     def __joined_query(self, query: Query) -> Query:
         query = (
@@ -268,9 +267,9 @@ class TutorialsModel(QAbstractTableModel):
         if column in [
             Columns.TITLE.column,
             Columns.PUBLISHER.column,
-            Columns.AUTHORS.column,
         ]:
             query = query.order_by(column.is_(None), column.is_(''))
+        query = query.order_by(column.is_(None), column.is_(FIELD_SEPARATOR * 2))
         column = column.asc() if self.__sort_ascending else column.desc()
         query = query.order_by(column)
         if column not in [Folder.folder_name, Folder.id_]:
