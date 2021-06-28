@@ -1,6 +1,6 @@
+import enum
 import logging
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, Dict, Final, Optional
 
 from humanize import naturalsize
@@ -33,7 +33,7 @@ class QueryResult:
     authors: Optional[str] = None
 
 
-class ColumnEnum(bytes, Enum):
+class Columns(bytes, enum.Enum):
     label: str  # column label displayed in the table view
     column: Column
     alias: Optional[str]
@@ -46,8 +46,6 @@ class ColumnEnum(bytes, Enum):
         obj.alias = alias
         return obj
 
-
-class Columns(ColumnEnum):
     CHECKED = (0, 'Checked', Folder.checked)
     INDEX = (1, 'Index', Folder.id_)
     ONLINE = (2, 'Online', Disk.online)
@@ -68,8 +66,7 @@ class TutorialsModel(QAbstractTableModel):
 
     NO_COVER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
     OFFLINE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/offline.svg')
-    REMOTE_ICON:  Final[str] = relative_path(__file__, '../../resources/icons/remote.svg')
-    REMOTE_OFFLINE_ICON:  Final[str] = relative_path(__file__, '../../resources/icons/remote_offline.svg')
+    REMOTE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/remote.svg')
 
     summary_changed = Signal(str)
 
@@ -87,7 +84,6 @@ class TutorialsModel(QAbstractTableModel):
         self.__no_cover_icon = QIcon(self.NO_COVER_ICON)
         self.__offline_icon = QIcon(self.OFFLINE_ICON)
         self.__remote_icon = QIcon(self.REMOTE_ICON)
-        self.__remote_offline_icon = QIcon(self.REMOTE_OFFLINE_ICON)
 
     def search(self, search_dock: SearchDock, force: bool = False) -> None:
         if search_dock.text == self.__search_text and search_dock.only_show_checked_disks == self.__only_show_checked_disks and not force:
@@ -141,10 +137,7 @@ class TutorialsModel(QAbstractTableModel):
             elif column == Columns.ONLINE.value:
                 return None if folder.disk.online else self.__offline_icon
             elif column == Columns.LOCATION.value:
-                if folder.disk.location == Disk.Location.LOCAL:
-                    return None
-                else:
-                    return self.__remote_icon if folder.disk.online else self.__remote_offline_icon
+                return None if folder.disk.location == Disk.Location.LOCAL else self.__remote_icon
         elif role == Qt.CheckStateRole:
             if column == Columns.CHECKED.value:
                 return Qt.Checked if folder.checked else Qt.Unchecked
