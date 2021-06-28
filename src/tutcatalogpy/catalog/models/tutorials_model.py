@@ -241,23 +241,14 @@ class TutorialsModel(QAbstractTableModel):
         for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.EXCLUDE):
             query = query.filter(Publisher.id_ != publisher.id_)
 
-        # included_authors = dal.session.query(Author.id_).filter(Author.search == Search.WITH).order_by(Author.name)
-        # included_tutorials = dal.session.query(tutorial_author_table).group_by(tutorial_author_table.c.tutorial_id)
-        # print('included authors:', included_authors.all())
-        # included_tutorials = dal.session.query(tutorial_author_table).group_by(tutorial_author_table.c.tutorial_id)
-        # print('included tutorials:', included_tutorials.all())
-        # query = query.filter(Tutorial.id_.in_(included_tutorials))
+        for author in dal.session.query(Author).filter(Author.search == Search.INCLUDE):
+            query = query.filter(Tutorial.all_authors.like(f'%{FIELD_SEPARATOR}{author.name}{FIELD_SEPARATOR}%'))
 
-        # for author in dal.session.query(Author).filter(Author.search == Search.WITH):
-        #     query = query.filter(Author.id_ == author.id_)
+        for author in dal.session.query(Author).filter(Author.search == Search.INCLUDE):
+            query = query.filter(Tutorial.all_authors.like(f'%{FIELD_SEPARATOR}{author.name}{FIELD_SEPARATOR}%'))
 
-        # authors_excluded = dal.session.query(Author.id_).filter(Author.search == Search.WITHOUT)
-        # print(authors_excluded.all())
-        # query = query.filter(Author.id_.not_in(authors_excluded))
-
-        # for author in dal.session.query(Author).filter(Author.search == Search.WITHOUT):
-        #     tutorials_with_author = dal.session.query(tutorial_author_table.c.tutorial_id).filter(tutorial_author_table.c.author_id == author.id_)
-        #     query = query.filter(Tutorial.id_.not_in(tutorials_with_author))
+        for author in dal.session.query(Author).filter(Author.search == Search.EXCLUDE):
+            query = query.filter(Tutorial.all_authors.not_like(f'%{FIELD_SEPARATOR}{author.name}{FIELD_SEPARATOR}%'))
 
         return query
 
