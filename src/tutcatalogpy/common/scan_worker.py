@@ -393,7 +393,7 @@ class ScanWorker(QObject):
                     session.add(cover)
                     session.flush()
                     folder.cover_id = cover.id_
-                    log.info('Found cover: %s', path)
+                    log.debug('Found cover: %s', path)
                 elif (
                     cover.size == size
                     and cover.modified == modified

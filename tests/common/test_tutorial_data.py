@@ -1,6 +1,7 @@
 from typing import Set
+import fastjsonschema
 
-from pytest import fixture, mark
+from pytest import fixture, mark, raises
 
 import tutcatalogpy.common.logging_config  # noqa: F401
 from tutcatalogpy.common.db.dal import DataAccessLayer, dal
@@ -187,3 +188,47 @@ def test_load_from_string_authors_reused(dal_: DataAccessLayer) -> None:
 
     assert len(authors) == 4
     assert {author.name for author in authors} == {'', 'Author 1', 'Author 2', 'Author 3'}
+
+
+@mark.parametrize(
+    'text, released',
+    [
+        ('', ''),
+        ('released: 2000', '2000'),
+        ('released: 2000/01', '2000/01'),
+        ('released: 2000/01/01', '2000/01/01'),
+    ]
+)
+def test_load_from_string_released(text: str, released: str, dal_: DataAccessLayer) -> None:
+    tutorial = Tutorial()
+    dal_.session.add(tutorial)
+    dal_.session.commit()
+
+    TutorialData.load_from_string(dal_.session, tutorial, text)
+    dal_.session.commit()
+
+    dal_.renew_session()
+    tutorial = dal_.session.query(Tutorial).one()
+    assert tutorial.released == released
+
+
+@mark.parametrize(
+    'text',
+    [
+        # verify integer values
+        'released: 1899',
+        'released: 3001',
+        # 'released: 2000.', # we can't test for this, as it will be interpretted as an integer
+        # verify string values
+        'released: x',
+        'released: 2000/1',
+        'released: 2000/01/1',
+    ]
+)
+def test_load_from_string_detects_invalid_released(text: str, dal_: DataAccessLayer) -> None:
+    tutorial = Tutorial()
+    dal_.session.add(tutorial)
+    dal_.session.commit()
+
+    with raises(fastjsonschema.JsonSchemaValueException, match='^data.released must .*'):
+        TutorialData.load_from_string(dal_.session, tutorial, text)
