@@ -60,9 +60,10 @@ class Columns(bytes, enum.Enum):
     AUTHORS = (10, 'Authors', Tutorial.all_authors)
     RELEASED = (11, 'Released', Tutorial.released)
     DURATION = (12, 'Duration', Tutorial.duration)
-    SIZE = (13, 'Size', Folder.size)
-    CREATED = (14, 'Created', Folder.created)
-    MODIFIED = (15, 'Modified', Folder.modified)
+    LEVEL = (13, 'Level', Tutorial.level)
+    SIZE = (14, 'Size', Folder.size)
+    CREATED = (15, 'Created', Folder.created)
+    MODIFIED = (16, 'Modified', Folder.modified)
 
 
 class TutorialsModel(QAbstractTableModel):
@@ -170,6 +171,8 @@ class TutorialsModel(QAbstractTableModel):
                 return folder.tutorial.released
             elif column == Columns.DURATION.value:
                 return TutorialData.duration_to_text(folder.tutorial.duration)
+            elif column == Columns.LEVEL.value:
+                return TutorialData.level_to_text(folder.tutorial.level)
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
@@ -275,7 +278,10 @@ class TutorialsModel(QAbstractTableModel):
             Columns.AUTHORS.column,
         ]:
             query = query.order_by(column.is_(None), column.is_(FIELD_SEPARATOR * 2))
-        elif column == Columns.DURATION.column:
+        elif column in [
+            Columns.DURATION.column,
+            Columns.LEVEL.column,
+        ]:
             query = query.order_by(column.is_(None), column.is_(0))
         column = column.asc() if self.__sort_ascending else column.desc()
         query = query.order_by(column)
