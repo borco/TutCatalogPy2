@@ -236,10 +236,10 @@ class TutorialsModel(QAbstractTableModel):
                     .like(f'%{key}%'))
                 )
 
-        for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITH):
+        for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.INCLUDE):
             query = query.filter(Publisher.id_ == publisher.id_)
 
-        for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.WITHOUT):
+        for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.EXCLUDE):
             query = query.filter(Publisher.id_ != publisher.id_)
 
         # included_authors = dal.session.query(Author.id_).filter(Author.search == Search.WITH).order_by(Author.name)

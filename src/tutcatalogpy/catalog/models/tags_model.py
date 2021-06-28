@@ -26,13 +26,6 @@ UNKNOWN_AUTHOR_LABEL: Final[str] = '(unknown author)'
 UNKNOWN_PUBLISHER_LABEL: Final[str] = '(unknown publisher)'
 
 
-SEARCH_TO_TEXT: Final[Dict[int, str]] = {
-    Search.WITHOUT: '- ',
-    Search.IGNORED: '',
-    Search.WITH: '+ ',
-}
-
-
 class TagsItem:
     _label: str = ''
 
@@ -221,7 +214,7 @@ class TagsModel(QAbstractItemModel):
 
         item: TagsItem = index.internalPointer()
         if item.data is not None:
-            return SEARCH_TO_TEXT[item.data.search] + item.label
+            return Search(item.data.search).label + item.label
         else:
             return item.label
 
@@ -234,9 +227,9 @@ class TagsModel(QAbstractItemModel):
             return
 
         next_search = {
-            Search.IGNORED: Search.WITH,
-            Search.WITH: Search.WITHOUT,
-            Search.WITHOUT: Search.IGNORED,
+            Search.IGNORED: Search.INCLUDE,
+            Search.INCLUDE: Search.EXCLUDE,
+            Search.EXCLUDE: Search.IGNORED,
         }
         item.data.search = next_search[item.data.search]
         dal.session.commit()
