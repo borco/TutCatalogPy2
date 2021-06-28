@@ -103,10 +103,10 @@ class TutorialData:
 
         tutorial.released = data.get(TutorialData.RELEASED_KEY)
 
-        tutorial.duration = TutorialData.parse_duration(data.get(TutorialData.DURATION_KEY))
+        tutorial.duration = TutorialData.text_to_duration(data.get(TutorialData.DURATION_KEY))
 
     @staticmethod
-    def parse_duration(text: str) -> int:
+    def text_to_duration(text: str) -> int:
         match = TutorialData.__duration_regex.match(text)
         if match is not None:
             h = match['hours']
@@ -117,6 +117,14 @@ class TutorialData:
         else:
             # fastjsonschema doesn't correctly
             raise fastjsonschema.JsonSchemaValueException('data.duration must match ' + TutorialData.DURATION_REGEX)
+
+    @staticmethod
+    def duration_to_text(minutes: int) -> str:
+        if minutes == 0:
+            return ''
+        hours = minutes // 60
+        minutes %= 60
+        return f'{hours}h {minutes:02}m' if hours > 0 else f'{minutes}m'
 
 
 if __name__ == '__main__':

@@ -245,7 +245,7 @@ def test_load_from_string_detects_invalid_released(text: str) -> None:
     ]
 )
 def test_parse_duration(text: str, duration: int) -> None:
-    assert TutorialData.parse_duration(text) == duration
+    assert TutorialData.text_to_duration(text) == duration
 
 
 @mark.parametrize(

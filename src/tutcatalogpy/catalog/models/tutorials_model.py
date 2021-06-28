@@ -19,6 +19,7 @@ from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import relative_path
+from tutcatalogpy.common.tutorial_data import TutorialData
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -168,12 +169,7 @@ class TutorialsModel(QAbstractTableModel):
             elif column == Columns.RELEASED.value:
                 return folder.tutorial.released
             elif column == Columns.DURATION.value:
-                m = folder.tutorial.duration
-                if m == 0:
-                    return ''
-                h = m // 60
-                m %= 60
-                return f'{h}h {m:02}m' if h > 0 else f'{m}m'
+                return TutorialData.duration_to_text(folder.tutorial.duration)
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
