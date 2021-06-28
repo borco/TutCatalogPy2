@@ -98,6 +98,9 @@ class InfoTcDock(DockWidget):
         self.__authors.setWordWrap(True)
         form_layout.addRow('Authors:', self.__authors)
 
+        self.__released = QLabel()
+        form_layout.addRow('Released:', self.__released)
+
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
 
@@ -128,6 +131,7 @@ class InfoTcDock(DockWidget):
             self.__publisher,
             self.__title,
             self.__authors,
+            self.__released,
         ]:
             widget.clear()
 
@@ -157,6 +161,8 @@ class InfoTcDock(DockWidget):
         authors = [a.name for a in tutorial.authors]
         authors.sort()
         self.__authors.setText(', '.join(authors))
+
+        self.__released.setText(tutorial.released)
 
 
 if __name__ == '__main__':
