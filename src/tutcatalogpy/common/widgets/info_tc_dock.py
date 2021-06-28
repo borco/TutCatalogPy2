@@ -10,6 +10,7 @@ from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import relative_path
+from tutcatalogpy.common.tutorial_data import TutorialData
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
 from tutcatalogpy.common.widgets.elided_label import ElidedLabel
 from tutcatalogpy.common.widgets.form_layout import FormLayout
@@ -101,6 +102,9 @@ class InfoTcDock(DockWidget):
         self.__released = QLabel()
         form_layout.addRow('Released:', self.__released)
 
+        self.__duration = QLabel()
+        form_layout.addRow('Duration:', self.__duration)
+
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
 
@@ -132,6 +136,7 @@ class InfoTcDock(DockWidget):
             self.__title,
             self.__authors,
             self.__released,
+            self.__duration,
         ]:
             widget.clear()
 
@@ -163,6 +168,8 @@ class InfoTcDock(DockWidget):
         self.__authors.setText(', '.join(authors))
 
         self.__released.setText(tutorial.released)
+
+        self.__duration.setText(TutorialData.duration_to_text(tutorial.duration))
 
 
 if __name__ == '__main__':

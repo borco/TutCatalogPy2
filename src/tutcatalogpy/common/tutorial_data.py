@@ -1,4 +1,5 @@
 import logging
+from re import compile
 from typing import Any, Dict, Final
 
 import fastjsonschema
@@ -37,6 +38,11 @@ class TutorialData:
     MY_LEARNING_PATHS_KEY: Final[str] = 'my_learning_paths'
     DESCRIPTION_KEY: Final[str] = 'description'
 
+    RELEASED_MINIMUM_YEAR: Final[int] = 1900
+    RELEASED_MAXIMUM_YEAR: Final[int] = 3000
+    RELEASED_REGEX: Final[str] = r'^\d{4}(/\d{2}(/\d{2})?)?$'
+    DURATION_REGEX: Final[str] = r'(^(?P<hours>\d{1,3})h)? *((?P<minutes>\d{1,2})m)?$'
+
     # fastjsonschema returns default values if no data is provided
     # https://horejsek.github.io/python-fastjsonschema/
     # https://json-schema.org/understanding-json-schema/index.html
@@ -48,27 +54,34 @@ class TutorialData:
             'author': {'type': 'array', 'items': {'type': 'string'}, 'default': ['']},
             'released': {
                 'type': ['string', 'integer'],
-                'pattern': r'^\d{4}(/\d{2}(/\d{2})?)?$',
-                'minimum': 1900,
-                'maximum': 3000,
+                'pattern': RELEASED_REGEX,
+                'minimum': RELEASED_MINIMUM_YEAR,
+                'maximum': RELEASED_MAXIMUM_YEAR,
                 'default': ''
             },
+            'duration': {
+                'type': 'string',
+                'pattern': DURATION_REGEX,
+                'default': ''
+            }
         }
     }
 
-    validate = fastjsonschema.compile(VALIDATION_SCHEMA)
+    __validate = fastjsonschema.compile(VALIDATION_SCHEMA)
+    __duration_regex: Final = compile(DURATION_REGEX)
 
     @staticmethod
     def load_from_string(session: Session, tutorial: Tutorial, text: str) -> None:
         if len(text) == 0:
-            data = TutorialData.validate({})
+            data = TutorialData.__validate({})
         else:
             data = yaml.load(text, Loader=yaml.FullLoader)
             if data is None:
-                data = TutorialData.validate(data)
-                log.warning('Could not parse .tc file')
-            else:
-                data = TutorialData.validate(data)
+                log.warning("Couldn't parse .tc file")
+            data = TutorialData.__validate(data)
+
+        assert session is not None
+        assert tutorial is not None
 
         tutorial.title = str(data.get(TutorialData.TITLE_KEY))
 
@@ -89,6 +102,29 @@ class TutorialData:
         tutorial.all_authors = FIELD_SEPARATOR.join([''] + all_authors + [''])
 
         tutorial.released = data.get(TutorialData.RELEASED_KEY)
+
+        tutorial.duration = TutorialData.text_to_duration(data.get(TutorialData.DURATION_KEY))
+
+    @staticmethod
+    def text_to_duration(text: str) -> int:
+        match = TutorialData.__duration_regex.match(text)
+        if match is not None:
+            h = match['hours']
+            m = match['minutes']
+            h = int(h) if h is not None else 0
+            m = int(m) if m is not None else 0
+            return h * 60 + m
+        else:
+            # fastjsonschema doesn't correctly
+            raise fastjsonschema.JsonSchemaValueException('data.duration must match ' + TutorialData.DURATION_REGEX)
+
+    @staticmethod
+    def duration_to_text(minutes: int) -> str:
+        if minutes == 0:
+            return ''
+        hours = minutes // 60
+        minutes %= 60
+        return f'{hours}h {minutes:02}m' if hours > 0 else f'{minutes}m'
 
 
 if __name__ == '__main__':

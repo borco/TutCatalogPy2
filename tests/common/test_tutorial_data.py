@@ -199,7 +199,7 @@ def test_load_from_string_authors_reused(dal_: DataAccessLayer) -> None:
         ('released: 2000/01/01', '2000/01/01'),
     ]
 )
-def test_load_from_string_released(text: str, released: str, dal_: DataAccessLayer) -> None:
+def test_load_from_string_reads_released(text: str, released: str, dal_: DataAccessLayer) -> None:
     tutorial = Tutorial()
     dal_.session.add(tutorial)
     dal_.session.commit()
@@ -225,10 +225,69 @@ def test_load_from_string_released(text: str, released: str, dal_: DataAccessLay
         'released: 2000/01/1',
     ]
 )
-def test_load_from_string_detects_invalid_released(text: str, dal_: DataAccessLayer) -> None:
+def test_load_from_string_detects_invalid_released(text: str) -> None:
+    with raises(fastjsonschema.JsonSchemaValueException, match='^data.released must .*'):
+        TutorialData.load_from_string(None, None, text)
+
+
+@mark.parametrize(
+    'text, duration',
+    [
+        ('', 0),
+        ('0m', 0),
+        ('1m', 1),
+        ('59m', 59),
+        ('1h', 60),
+        ('10h', 600),
+        ('100h', 6000),
+        ('1h 1m', 61),
+        ('10h  1m', 601),
+    ]
+)
+def test_parse_duration(text: str, duration: int) -> None:
+    assert TutorialData.text_to_duration(text) == duration
+
+
+@mark.parametrize(
+    'text, duration',
+    [
+        ('', 0),
+        ('duration: 0m', 0),
+        ('duration: 1m', 1),
+        ('duration: 59m', 59),
+        ('duration: 1h', 60),
+        ('duration: 10h', 600),
+        ('duration: 100h', 6000),
+        ('duration: 1h 0m', 60),
+        ('duration: 1h 1m', 61),
+        ('duration: 10h  1m', 601),
+    ]
+)
+def test_load_from_string_reads_duration(text: str, duration: int, dal_: DataAccessLayer) -> None:
     tutorial = Tutorial()
     dal_.session.add(tutorial)
     dal_.session.commit()
 
-    with raises(fastjsonschema.JsonSchemaValueException, match='^data.released must .*'):
+    TutorialData.load_from_string(dal_.session, tutorial, text)
+    dal_.session.commit()
+
+    dal_.renew_session()
+    tutorial = dal_.session.query(Tutorial).one()
+    assert tutorial.duration == duration
+
+
+@mark.parametrize(
+    'text',
+    [
+        'duration: 1',
+        'duration: m',
+        'duration: 111m',
+    ]
+)
+def test_load_from_string_detects_invalid_duration(text: str, dal_: DataAccessLayer) -> None:
+    tutorial = Tutorial()
+    dal_.session.add(tutorial)
+    dal_.session.commit()
+
+    with raises(fastjsonschema.JsonSchemaValueException, match='^data.duration must .*'):
         TutorialData.load_from_string(dal_.session, tutorial, text)
