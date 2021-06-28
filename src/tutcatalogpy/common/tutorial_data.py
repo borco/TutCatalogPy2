@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
 
-class TutorialLevel(enum.Flag):
+class TutorialLevel(enum.IntFlag):
     UNKNOWN = 0
     BEGINNER = 2
     INTERMEDIATE = 4
@@ -89,7 +89,8 @@ class TutorialData:
                 'type': 'string',
                 'pattern': DURATION_REGEX,
                 'default': ''
-            }
+            },
+            'level': {'type': 'string', 'default': ''},
         }
     }
 
@@ -130,6 +131,8 @@ class TutorialData:
         tutorial.released = data.get(TutorialData.RELEASED_KEY)
 
         tutorial.duration = TutorialData.text_to_duration(data.get(TutorialData.DURATION_KEY))
+
+        tutorial.level = TutorialData.text_to_level(data.get(TutorialData.LEVEL_KEY))
 
     @staticmethod
     def text_to_duration(text: str) -> int:
