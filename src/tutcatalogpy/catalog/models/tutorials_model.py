@@ -51,22 +51,25 @@ class Columns(ColumnEnum):
     CHECKED = (0, 'Checked', Folder.checked)
     INDEX = (1, 'Index', Folder.id_)
     ONLINE = (2, 'Online', Disk.online)
-    HAS_COVER = (3, 'Cover', (Folder.cover_id != None), 'has_cover')
-    DISK_NAME = (4, 'Disk', Disk.disk_name)
-    FOLDER_PARENT = (5, 'Folder Parent', Folder.folder_parent)
-    FOLDER_NAME = (6, 'Folder Name', Folder.folder_name)
-    PUBLISHER = (7, 'Publisher', Publisher.name)
-    TITLE = (8, 'Title', Tutorial.title)
-    AUTHORS = (9, 'Authors', Tutorial.all_authors)
-    SIZE = (10, 'Size', Folder.size)
-    CREATED = (11, 'Created', Folder.created)
-    MODIFIED = (12, 'Modified', Folder.modified)
+    LOCATION = (3, 'Location', Disk.location)
+    HAS_COVER = (4, 'Cover', (Folder.cover_id != None), 'has_cover')
+    DISK_NAME = (5, 'Disk', Disk.disk_name)
+    FOLDER_PARENT = (6, 'Folder Parent', Folder.folder_parent)
+    FOLDER_NAME = (7, 'Folder Name', Folder.folder_name)
+    PUBLISHER = (8, 'Publisher', Publisher.name)
+    TITLE = (9, 'Title', Tutorial.title)
+    AUTHORS = (10, 'Authors', Tutorial.all_authors)
+    SIZE = (11, 'Size', Folder.size)
+    CREATED = (12, 'Created', Folder.created)
+    MODIFIED = (13, 'Modified', Folder.modified)
 
 
 class TutorialsModel(QAbstractTableModel):
 
     NO_COVER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
     OFFLINE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/offline.svg')
+    REMOTE_ICON:  Final[str] = relative_path(__file__, '../../resources/icons/remote.svg')
+    REMOTE_OFFLINE_ICON:  Final[str] = relative_path(__file__, '../../resources/icons/remote_offline.svg')
 
     summary_changed = Signal(str)
 
@@ -83,6 +86,8 @@ class TutorialsModel(QAbstractTableModel):
     def init_icons(self) -> None:
         self.__no_cover_icon = QIcon(self.NO_COVER_ICON)
         self.__offline_icon = QIcon(self.OFFLINE_ICON)
+        self.__remote_icon = QIcon(self.REMOTE_ICON)
+        self.__remote_offline_icon = QIcon(self.REMOTE_OFFLINE_ICON)
 
     def search(self, search_dock: SearchDock, force: bool = False) -> None:
         if search_dock.text == self.__search_text and search_dock.only_show_checked_disks == self.__only_show_checked_disks and not force:
@@ -135,6 +140,11 @@ class TutorialsModel(QAbstractTableModel):
                 return None if result.has_cover else self.__no_cover_icon
             elif column == Columns.ONLINE.value:
                 return None if folder.disk.online else self.__offline_icon
+            elif column == Columns.LOCATION.value:
+                if folder.disk.location == Disk.Location.LOCAL:
+                    return None
+                else:
+                    return self.__remote_icon if folder.disk.online else self.__remote_offline_icon
         elif role == Qt.CheckStateRole:
             if column == Columns.CHECKED.value:
                 return Qt.Checked if folder.checked else Qt.Unchecked
