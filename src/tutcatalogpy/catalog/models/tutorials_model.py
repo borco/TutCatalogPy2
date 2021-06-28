@@ -58,9 +58,10 @@ class Columns(bytes, enum.Enum):
     TITLE = (9, 'Title', Tutorial.title)
     AUTHORS = (10, 'Authors', Tutorial.all_authors)
     RELEASED = (11, 'Released', Tutorial.released)
-    SIZE = (12, 'Size', Folder.size)
-    CREATED = (13, 'Created', Folder.created)
-    MODIFIED = (14, 'Modified', Folder.modified)
+    DURATION = (12, 'Duration', Tutorial.duration)
+    SIZE = (13, 'Size', Folder.size)
+    CREATED = (14, 'Created', Folder.created)
+    MODIFIED = (15, 'Modified', Folder.modified)
 
 
 class TutorialsModel(QAbstractTableModel):
@@ -166,6 +167,13 @@ class TutorialsModel(QAbstractTableModel):
                 return folder.tutorial.all_authors[1:-1].replace(FIELD_SEPARATOR, ', ')
             elif column == Columns.RELEASED.value:
                 return folder.tutorial.released
+            elif column == Columns.DURATION.value:
+                m = folder.tutorial.duration
+                if m == 0:
+                    return ''
+                h = m // 60
+                m %= 60
+                return f'{h}h {m:02}m' if h > 0 else f'{m}m'
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
@@ -267,7 +275,12 @@ class TutorialsModel(QAbstractTableModel):
             Columns.RELEASED.column,
         ]:
             query = query.order_by(column.is_(None), column.is_(''))
-        query = query.order_by(column.is_(None), column.is_(FIELD_SEPARATOR * 2))
+        elif column in [
+            Columns.AUTHORS.column,
+        ]:
+            query = query.order_by(column.is_(None), column.is_(FIELD_SEPARATOR * 2))
+        elif column == Columns.DURATION.column:
+            query = query.order_by(column.is_(None), column.is_(0))
         column = column.asc() if self.__sort_ascending else column.desc()
         query = query.order_by(column)
         if column not in [Folder.folder_name, Folder.id_]:

@@ -258,6 +258,7 @@ def test_parse_duration(text: str, duration: int) -> None:
         ('duration: 1h', 60),
         ('duration: 10h', 600),
         ('duration: 100h', 6000),
+        ('duration: 1h 0m', 60),
         ('duration: 1h 1m', 61),
         ('duration: 10h  1m', 601),
     ]
