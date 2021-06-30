@@ -2,8 +2,8 @@ import logging
 from pathlib import Path
 from typing import Final, List, Optional
 
-from PySide2.QtCore import QModelIndex, QSize, QTimer, QUrl, Qt
-from PySide2.QtGui import QCloseEvent, QDesktopServices, QIcon, QKeySequence, QPixmap
+from PySide2.QtCore import QModelIndex, QSize, QTimer, Qt
+from PySide2.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
 from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenuBar, QToolBar
 
 from tutcatalogpy.catalog.config import config
@@ -22,6 +22,7 @@ from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
+from tutcatalogpy.common.desktop_services import open_url
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
 from tutcatalogpy.common.widgets.file_browser_dock import FileBrowserDock
@@ -339,14 +340,13 @@ class MainWindow(CommonMainWindow):
         if folder is not None:
             path = folder.path()
             if path.exists():
-                QDesktopServices.openUrl(QUrl(f'file://{path}', QUrl.TolerantMode))
+                open_url(path)
 
     def __on_open_parent_folder_triggered(self) -> None:
         folder: Optional[Folder] = self.__get_current_folder(self.__current_folder_id)
         if folder is not None:
-            path = folder.path().parent
-            if path.exists():
-                QDesktopServices.openUrl(QUrl(f'file://{path}', QUrl.TolerantMode))
+            path = folder.path()
+            open_url(path, in_parent=True)
 
     def __on_open_tc_triggered(self) -> None:
         folder: Optional[Folder] = self.__get_current_folder(self.__current_folder_id)
@@ -356,7 +356,7 @@ class MainWindow(CommonMainWindow):
                 tc_path = path / 'info.tc'
                 if not tc_path.exists():
                     tc_path.touch()
-                QDesktopServices.openUrl(QUrl(f'file://{tc_path}', QUrl.TolerantMode))
+                open_url(tc_path)
 
     def __update_ui_with_current_folder(self) -> None:
         folder_id = self.__current_folder_id

@@ -1,9 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from PySide2.QtCore import QUrl
-from PySide2.QtGui import QDesktopServices
-
+from tutcatalogpy.common.desktop_services import open_url
 from tutcatalogpy.common.widgets.elided_label import ElidedLabel
 
 
@@ -27,7 +25,7 @@ class PathView(ElidedLabel):
 
     def __on_triggered(self, text: str) -> None:
         if self.__path.exists():
-            QDesktopServices.openUrl(QUrl(f'file://{self.__path}', QUrl.TolerantMode))
+            open_url(self.__path)
 
 
 if __name__ == '__main__':
