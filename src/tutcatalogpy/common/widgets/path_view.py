@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from tutcatalogpy.common.desktop_services import open_url
+from tutcatalogpy.common.desktop_services import open_path
 from tutcatalogpy.common.widgets.elided_label import ElidedLabel
 
 
@@ -25,7 +25,7 @@ class PathView(ElidedLabel):
 
     def __on_triggered(self, text: str) -> None:
         if self.__path.exists():
-            open_url(self.__path)
+            open_path(self.__path)
 
 
 if __name__ == '__main__':

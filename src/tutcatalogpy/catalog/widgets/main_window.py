@@ -22,7 +22,7 @@ from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
-from tutcatalogpy.common.desktop_services import open_url
+from tutcatalogpy.common.desktop_services import open_path
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
 from tutcatalogpy.common.widgets.file_browser_dock import FileBrowserDock
@@ -340,13 +340,13 @@ class MainWindow(CommonMainWindow):
         if folder is not None:
             path = folder.path()
             if path.exists():
-                open_url(path)
+                open_path(path)
 
     def __on_open_parent_folder_triggered(self) -> None:
         folder: Optional[Folder] = self.__get_current_folder(self.__current_folder_id)
         if folder is not None:
             path = folder.path()
-            open_url(path, in_parent=True)
+            open_path(path, in_parent=True)
 
     def __on_open_tc_triggered(self) -> None:
         folder: Optional[Folder] = self.__get_current_folder(self.__current_folder_id)
@@ -356,7 +356,7 @@ class MainWindow(CommonMainWindow):
                 tc_path = path / 'info.tc'
                 if not tc_path.exists():
                     tc_path.touch()
-                open_url(tc_path)
+                open_path(tc_path)
 
     def __update_ui_with_current_folder(self) -> None:
         folder_id = self.__current_folder_id

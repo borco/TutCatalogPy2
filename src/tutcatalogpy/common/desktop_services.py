@@ -4,7 +4,7 @@ from PySide2.QtCore import QUrl
 from PySide2.QtGui import QDesktopServices
 
 
-def open_url(path: Path, in_parent: bool = False) -> None:
+def open_path(path: Path, in_parent: bool = False) -> None:
     if path.exists():
         if in_parent:
             p = path.parent
