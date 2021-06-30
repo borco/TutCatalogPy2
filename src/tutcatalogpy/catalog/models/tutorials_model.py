@@ -19,7 +19,7 @@ from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import relative_path
-from tutcatalogpy.common.tutorial_data import TutorialData
+from tutcatalogpy.common.tutorial_data import TutorialData, TutorialLevel
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -71,6 +71,16 @@ class TutorialsModel(QAbstractTableModel):
     NO_COVER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
     OFFLINE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/offline.svg')
     REMOTE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/remote.svg')
+    LEVEL_ICONS: Final[Dict[int, Optional[str]]] = {
+        TutorialLevel.UNKNOWN: None,
+        TutorialLevel.BEGINNER: relative_path(__file__, '../../resources/icons/level_100.svg'),
+        TutorialLevel.INTERMEDIATE: relative_path(__file__, '../../resources/icons/level_010.svg'),
+        TutorialLevel.ADVANCED: relative_path(__file__, '../../resources/icons/level_001.svg'),
+        TutorialLevel.BEGINNER | TutorialLevel.INTERMEDIATE: relative_path(__file__, '../../resources/icons/level_110.svg'),
+        TutorialLevel.INTERMEDIATE | TutorialLevel.ADVANCED: relative_path(__file__, '../../resources/icons/level_011.svg'),
+        TutorialLevel.BEGINNER | TutorialLevel.ADVANCED: relative_path(__file__, '../../resources/icons/level_101.svg'),
+        TutorialLevel.ANY: relative_path(__file__, '../../resources/icons/level_111.svg'),
+    }
 
     summary_changed = Signal(str)
 
@@ -88,6 +98,10 @@ class TutorialsModel(QAbstractTableModel):
         self.__no_cover_icon = QIcon(self.NO_COVER_ICON)
         self.__offline_icon = QIcon(self.OFFLINE_ICON)
         self.__remote_icon = QIcon(self.REMOTE_ICON)
+
+        self.__level_icon: Dict[int, Optional[QIcon]] = {}
+        for key, value in self.LEVEL_ICONS.items():
+            self.__level_icon[key] = QIcon(value) if value is not None else None
 
     def search(self, search_dock: SearchDock, force: bool = False) -> None:
         if search_dock.text == self.__search_text and search_dock.only_show_checked_disks == self.__only_show_checked_disks and not force:
@@ -142,6 +156,8 @@ class TutorialsModel(QAbstractTableModel):
                 return None if folder.disk.online else self.__offline_icon
             elif column == Columns.LOCATION.value:
                 return None if folder.disk.location == Disk.Location.LOCAL else self.__remote_icon
+            elif column == Columns.LEVEL.value:
+                return self.__level_icon.get(folder.tutorial.level, None)
         elif role == Qt.CheckStateRole:
             if column == Columns.CHECKED.value:
                 return Qt.Checked if folder.checked else Qt.Unchecked
@@ -171,8 +187,6 @@ class TutorialsModel(QAbstractTableModel):
                 return folder.tutorial.released
             elif column == Columns.DURATION.value:
                 return TutorialData.duration_to_text(folder.tutorial.duration)
-            elif column == Columns.LEVEL.value:
-                return TutorialData.level_to_text(folder.tutorial.level)
 
     def setData(self, index: QModelIndex, value: Any, role: int) -> bool:
         row = index.row()
