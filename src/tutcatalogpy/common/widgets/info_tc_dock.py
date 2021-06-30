@@ -106,7 +106,7 @@ class InfoTcDock(DockWidget):
         form_layout.addRow('Duration:', self.__duration)
 
         self.__level = QLabel()
-        form_layout.addRow('Duration:', self.__level)
+        form_layout.addRow('Level:', self.__level)
 
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
