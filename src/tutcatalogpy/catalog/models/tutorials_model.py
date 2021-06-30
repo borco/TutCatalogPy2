@@ -31,7 +31,7 @@ AUTHORS_SEPARATOR: Final[str] = ', '
 class QueryResult:
     folder: Optional[Folder] = None
     has_cover: Optional[bool] = None
-    authors: Optional[str] = None
+    has_info_tc: Optional[bool] = None
 
 
 class Columns(bytes, enum.Enum):
@@ -52,23 +52,25 @@ class Columns(bytes, enum.Enum):
     ONLINE = (2, 'Online', Disk.online)
     LOCATION = (3, 'Location', Disk.location)
     HAS_COVER = (4, 'Cover', (Folder.cover_id != None), 'has_cover')
-    DISK_NAME = (5, 'Disk', Disk.disk_name)
-    FOLDER_PARENT = (6, 'Folder Parent', Folder.folder_parent)
-    FOLDER_NAME = (7, 'Folder Name', Folder.folder_name)
-    PUBLISHER = (8, 'Publisher', Publisher.name)
-    TITLE = (9, 'Title', Tutorial.title)
-    AUTHORS = (10, 'Authors', Tutorial.all_authors)
-    RELEASED = (11, 'Released', Tutorial.released)
-    DURATION = (12, 'Duration', Tutorial.duration)
-    LEVEL = (13, 'Level', Tutorial.level)
-    SIZE = (14, 'Size', Folder.size)
-    CREATED = (15, 'Created', Folder.created)
-    MODIFIED = (16, 'Modified', Folder.modified)
+    HAS_INFO_TC = (5, 'Info.tc', (Tutorial.size != None), 'has_info')
+    DISK_NAME = (6, 'Disk', Disk.disk_name)
+    FOLDER_PARENT = (7, 'Folder Parent', Folder.folder_parent)
+    FOLDER_NAME = (8, 'Folder Name', Folder.folder_name)
+    PUBLISHER = (9, 'Publisher', Publisher.name)
+    TITLE = (10, 'Title', Tutorial.title)
+    AUTHORS = (11, 'Authors', Tutorial.all_authors)
+    RELEASED = (12, 'Released', Tutorial.released)
+    DURATION = (13, 'Duration', Tutorial.duration)
+    LEVEL = (14, 'Level', Tutorial.level)
+    SIZE = (15, 'Size', Folder.size)
+    CREATED = (16, 'Created', Folder.created)
+    MODIFIED = (17, 'Modified', Folder.modified)
 
 
 class TutorialsModel(QAbstractTableModel):
 
     NO_COVER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
+    NO_INFO_TC_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_info_tc.svg')
     OFFLINE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/offline.svg')
     REMOTE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/remote.svg')
     LEVEL_ICONS: Final[Dict[int, Optional[str]]] = {
@@ -96,6 +98,7 @@ class TutorialsModel(QAbstractTableModel):
 
     def init_icons(self) -> None:
         self.__no_cover_icon = QIcon(self.NO_COVER_ICON)
+        self.__no_info_tc_icon = QIcon(self.NO_INFO_TC_ICON)
         self.__offline_icon = QIcon(self.OFFLINE_ICON)
         self.__remote_icon = QIcon(self.REMOTE_ICON)
 
@@ -152,6 +155,8 @@ class TutorialsModel(QAbstractTableModel):
         if role == Qt.DecorationRole:
             if column == Columns.HAS_COVER.value:
                 return None if result.has_cover else self.__no_cover_icon
+            elif column == Columns.HAS_INFO_TC.value:
+                return None if result.has_info_tc else self.__no_info_tc_icon
             elif column == Columns.ONLINE.value:
                 return None if folder.disk.online else self.__offline_icon
             elif column == Columns.LOCATION.value:
@@ -223,6 +228,7 @@ class TutorialsModel(QAbstractTableModel):
             .query(
                 Folder,
                 Columns.HAS_COVER.column.label(Columns.HAS_COVER.alias),
+                Columns.HAS_INFO_TC.column.label(Columns.HAS_INFO_TC.alias),
             )
         )
 
@@ -230,8 +236,8 @@ class TutorialsModel(QAbstractTableModel):
 
     def __query_result(self, row: int) -> QueryResult:
         query = self.__cached_query
-        folder, has_cover = query.offset(row).limit(1).first()
-        return QueryResult(folder, has_cover)
+        folder, has_cover, has_info = query.offset(row).limit(1).first()
+        return QueryResult(folder, has_cover, has_info)
 
     def __joined_query(self, query: Query) -> Query:
         query = (
