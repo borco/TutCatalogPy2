@@ -18,10 +18,13 @@ from tutcatalogpy.catalog.widgets.scan_dialog import ScanDialog
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.catalog.widgets.tags_dock import TagsDock
 from tutcatalogpy.catalog.widgets.tutorials_dock import TutorialsDock
+from tutcatalogpy.common.db.author import Author
+from tutcatalogpy.common.db.base import Search
 from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
+from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.desktop_services import open_path
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
@@ -29,6 +32,7 @@ from tutcatalogpy.common.widgets.file_browser_dock import FileBrowserDock
 from tutcatalogpy.common.widgets.info_tc_dock import InfoTcDock
 from tutcatalogpy.common.widgets.logging_dock import LoggingDock
 from tutcatalogpy.common.widgets.main_window import CommonMainWindow
+from tutcatalogpy.common.widgets.tags_widget import TagsWidgetItem
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -246,8 +250,9 @@ class MainWindow(CommonMainWindow):
 
     def __setup_connections(self) -> None:
         self.__search_dock.search.connect(lambda: tutorials_model.search(self.__search_dock))
+        self.__search_dock.search_tags.triggered.connect(self.__on_search_dock_search_tags_triggered)
         disks_model.disk_checked_changed.connect(lambda: tutorials_model.search(self.__search_dock, True))
-        tags_model.search_changed.connect(lambda: tutorials_model.search(self.__search_dock, True))
+        tags_model.search_changed.connect(self.__on_tags_model_search_changed)
 
         self.__tutorials_dock.selection_changed.connect(self.__on_tutorials_dock_selection_changed)
         self.__recent_files.triggered.connect(self.__load_config)
@@ -275,6 +280,7 @@ class MainWindow(CommonMainWindow):
         tags_model.refresh()
         self.__tags_dock.view.expandAll()
         self.__update_ui_with_current_folder()
+        self.__update_tags_on_search_dock()
 
     def __on_scan_startup_action_triggered(self) -> None:
         scan_controller.scan_startup()
@@ -422,6 +428,45 @@ class MainWindow(CommonMainWindow):
 
     def __on_tutorials_model_summary_changed(self, summary: str) -> None:
         self.__tutorials_summary.setText(summary)
+
+    def __on_search_dock_search_tags_triggered(self, tag: TagsWidgetItem) -> None:
+        tags_model.clear_search_flag(tag)
+
+    def __on_tags_model_search_changed(self) -> None:
+        self.__update_tags_on_search_dock()
+        tutorials_model.search(self.__search_dock, True)
+
+    def __update_tags_on_search_dock(self) -> None:
+        def add_group_label(group_label: Optional[str]) -> None:
+            if group_label is not None:
+                tags_view.add_tag(key_prefix + 'group label', TagsWidgetItem(group_label, interactive=False))
+                group_label = None
+
+        tags_view = self.__search_dock.search_tags
+        tags_view.clear()
+        if dal.session is not None:
+            author: Author
+            key_prefix = 'author:'
+            group_label = 'authors:'
+            empty_name = '(no author)'
+            for author in dal.session.query(Author).filter(Author.search != Search.IGNORED).order_by(Author.name.collate('NOCASE')):
+                add_group_label(group_label)
+                name = ('+' if author.search == Search.INCLUDE else '-') + (author.name if author.name else empty_name)
+                tags_view.add_tag(key_prefix + author.name, TagsWidgetItem(name, Author, author.id_))
+
+            publisher: Publisher
+            key_prefix = 'publisher:'
+            group_label = 'publishers:'
+            empty_name = '(no publisher)'
+            for publisher in dal.session.query(Publisher).filter(Publisher.search != Search.IGNORED).order_by(Publisher.name.collate('NOCASE')):
+                add_group_label(group_label)
+                name = f'+{publisher.name if publisher.name else empty_name}'
+                tags_view.add_tag(key_prefix + publisher.name, TagsWidgetItem(name, Publisher, publisher.id_))
+
+            for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.EXCLUDE).order_by(Publisher.name.collate('NOCASE')):
+                add_group_label(group_label)
+                name = ('+' if publisher.search == Search.INCLUDE else '-') + (publisher.name if publisher.name else empty_name)
+                tags_view.add_tag(key_prefix + publisher.name, TagsWidgetItem(name, Publisher, publisher.id_))
 
 
 if __name__ == '__main__':

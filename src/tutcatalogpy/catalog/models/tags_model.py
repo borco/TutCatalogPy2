@@ -10,6 +10,7 @@ from tutcatalogpy.common.db.base import Search
 from tutcatalogpy.common.db.dal import dal, tutorial_author_table
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
+from tutcatalogpy.common.widgets.tags_widget import TagsWidgetItem
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -231,6 +232,41 @@ class TagsModel(QAbstractItemModel):
 
         self.refresh()
         self.search_changed.emit()
+
+    def clear_search_flag(self, tag: TagsWidgetItem) -> None:
+        index = self.__find_index_of(tag)
+        if not index.isValid():
+            return
+
+        item: TagsItem = index.internalPointer()
+        if item.data is None:
+            return
+
+        item.data.search = Search.IGNORED
+        dal.session.commit()
+        self.dataChanged.emit(index, index)
+        self.search_changed.emit()
+
+    def __index_of_table(self, table: 'Table') -> QModelIndex:
+        for row in range(self.rowCount(QModelIndex())):
+            child_index = self.index(row, 0, QModelIndex())
+            item = child_index.internalPointer()
+            if (
+                (table == Author and item == self.__authors_item)
+                or (table == Publisher and item == self.__publishers_item)
+            ):
+                return child_index
+        return QModelIndex()
+
+    def __find_index_of(self, tag: TagsWidgetItem) -> QModelIndex:
+        index = self.__index_of_table(tag.table)
+        if index.isValid():
+            for row in range(self.rowCount(index)):
+                child_index = self.index(row, 0, index)
+                item = child_index.internalPointer()
+                if item is not None and item.data is not None and item.data.id_ == tag.index:
+                    return child_index
+        return QModelIndex()
 
 
 tags_model = TagsModel()
