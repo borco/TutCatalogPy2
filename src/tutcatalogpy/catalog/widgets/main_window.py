@@ -63,6 +63,8 @@ class MainWindow(CommonMainWindow):
 
     FOLDER_TOOLBAR_OBJECT_NAME: Final[str] = 'folder_toolbar'
 
+    OPEN_PARENT_FOLDER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_parent_folder.svg')
+    OPEN_PARENT_FOLDER_TIP: Final[str] = 'Open parent folder in external file browser'
     OPEN_FOLDER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_folder.svg')
     OPEN_FOLDER_TIP: Final[str] = 'Open folder in external file browser'
     OPEN_TC_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_info_tc.svg')
@@ -161,6 +163,11 @@ class MainWindow(CommonMainWindow):
         self.__scan_extended_action.setIcon(QIcon(self.SCAN_EXTENDED_ICON))
         self.__scan_extended_action.triggered.connect(self.__on_scan_extended_action_triggered)
 
+        self.__open_parent_folder_action = QAction()
+        self.__open_parent_folder_action.setIcon(QIcon(self.OPEN_PARENT_FOLDER_ICON))
+        self.__open_parent_folder_action.setStatusTip(self.OPEN_PARENT_FOLDER_TIP)
+        self.__open_parent_folder_action.triggered.connect(self.__on_open_parent_folder_triggered)
+
         self.__open_folder_action = QAction()
         self.__open_folder_action.setIcon(QIcon(self.OPEN_FOLDER_ICON))
         self.__open_folder_action.setStatusTip(self.OPEN_FOLDER_TIP)
@@ -178,6 +185,7 @@ class MainWindow(CommonMainWindow):
         ]
 
         self.__folder_actions = [
+            self.__open_parent_folder_action,
             self.__open_folder_action,
             self.__open_tc_action,
         ]
@@ -333,6 +341,13 @@ class MainWindow(CommonMainWindow):
             if path.exists():
                 QDesktopServices.openUrl(QUrl(f'file://{path}', QUrl.TolerantMode))
 
+    def __on_open_parent_folder_triggered(self) -> None:
+        folder: Optional[Folder] = self.__get_current_folder(self.__current_folder_id)
+        if folder is not None:
+            path = folder.path().parent
+            if path.exists():
+                QDesktopServices.openUrl(QUrl(f'file://{path}', QUrl.TolerantMode))
+
     def __on_open_tc_triggered(self) -> None:
         folder: Optional[Folder] = self.__get_current_folder(self.__current_folder_id)
         if folder is not None:
@@ -351,7 +366,9 @@ class MainWindow(CommonMainWindow):
         self.__info_tc_dock.set_folder(folder_id)
         self.__update_cover_dock(folder_id)
         self.__update_file_browser_dock(folder_id)
+
         selected_one_folder = (folder_id is not None)
+        self.__open_parent_folder_action.setEnabled(selected_one_folder and online)
         self.__open_folder_action.setEnabled(selected_one_folder and online)
         self.__open_tc_action.setEnabled(selected_one_folder and online)
 
