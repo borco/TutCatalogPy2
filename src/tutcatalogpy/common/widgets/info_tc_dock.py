@@ -2,10 +2,12 @@ import logging
 from typing import Final, Optional
 
 from humanize import naturalsize
-from PySide2.QtCore import QMargins, Qt
+from PySide2.QtCore import QMargins, Qt, Signal
 from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QWidget
 from PySide2.QtSvg import QSvgWidget
+from sqlalchemy.sql.schema import Table
 
+from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.tutorial import Tutorial
@@ -15,6 +17,7 @@ from tutcatalogpy.common.widgets.dock_widget import DockWidget
 from tutcatalogpy.common.widgets.elided_label import ElidedLabel
 from tutcatalogpy.common.widgets.form_layout import FormLayout
 from tutcatalogpy.common.widgets.path_view import PathView
+from tutcatalogpy.common.widgets.tags_widget import TagsWidget
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -38,6 +41,8 @@ class InfoTcDock(DockWidget):
     __folder_id: Optional[int] = None
     __folder: Optional[Folder] = None
 
+    tag_clicked = Signal(Table, int)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -46,6 +51,7 @@ class InfoTcDock(DockWidget):
 
         self.__setup_widgets()
         self.__setup_actions()
+        self.__setup_connections()
 
     def __setup_widgets(self) -> None:
         widget = QWidget()
@@ -95,7 +101,7 @@ class InfoTcDock(DockWidget):
         self.__title = ElidedLabel()
         form_layout.addRow('Title:', self.__title)
 
-        self.__authors = QLabel()
+        self.__authors = TagsWidget()
         self.__authors.setWordWrap(True)
         form_layout.addRow('Authors:', self.__authors)
 
@@ -110,6 +116,9 @@ class InfoTcDock(DockWidget):
 
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
+
+    def __setup_connections(self) -> None:
+        self.__authors.tag_clicked.connect(self.tag_clicked.emit)
 
     def set_folder(self, folder_id: Optional[int]) -> None:
         self.__folder_id = folder_id
@@ -167,9 +176,12 @@ class InfoTcDock(DockWidget):
 
         self.__title.setText(tutorial.title)
 
-        authors = [a.name for a in tutorial.authors]
-        authors.sort()
-        self.__authors.setText(', '.join(authors))
+        author: Author
+        self.__authors.clear()
+        authors = list(tutorial.authors)
+        authors.sort(key=lambda a: a.name.lower())
+        for author in authors:
+            self.__authors.add_author(author.name, author.id_)
 
         self.__released.setText(tutorial.released)
 
