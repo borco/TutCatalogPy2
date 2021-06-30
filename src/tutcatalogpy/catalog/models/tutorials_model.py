@@ -277,9 +277,6 @@ class TutorialsModel(QAbstractTableModel):
         for author in dal.session.query(Author).filter(Author.search == Search.INCLUDE):
             query = query.filter(Tutorial.all_authors.like(f'%{FIELD_SEPARATOR}{author.name}{FIELD_SEPARATOR}%'))
 
-        for author in dal.session.query(Author).filter(Author.search == Search.INCLUDE):
-            query = query.filter(Tutorial.all_authors.like(f'%{FIELD_SEPARATOR}{author.name}{FIELD_SEPARATOR}%'))
-
         for author in dal.session.query(Author).filter(Author.search == Search.EXCLUDE):
             query = query.filter(Tutorial.all_authors.not_like(f'%{FIELD_SEPARATOR}{author.name}{FIELD_SEPARATOR}%'))
 
