@@ -42,6 +42,7 @@ class TagsWidget(QLabel):
         super().__init__(*args, **kwargs)
         self.__tags: Dict[str, TagsWidgetItem] = {}
         self.linkActivated.connect(self.__on_link_activated)
+        self.setWordWrap(True)
 
     def clear(self) -> None:
         self.setText('')
@@ -78,12 +79,17 @@ class TagsWidget(QLabel):
 
 
 if __name__ == '__main__':
-    from PySide2.QtWidgets import QApplication, QWidget
+    from PySide2.QtWidgets import QApplication, QVBoxLayout, QWidget
 
     app = QApplication([])
     window = QWidget(None)
 
-    tags = TagsWidget(window)
+    layout = QVBoxLayout()
+    window.setLayout(layout)
+
+    tags = TagsWidget()
+    layout.addWidget(tags)
+
     tags.setWordWrap(True)
     tags.tag_clicked.connect(lambda table, tag: print(table, tag))
     tags.add_text('xxx:')
