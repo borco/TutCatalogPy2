@@ -95,14 +95,13 @@ class InfoTcDock(DockWidget):
         self.__size = QLabel()
         form_layout.addRow('Size:', self.__size)
 
-        self.__publisher = ElidedLabel()
+        self.__publisher = TagsWidget()
         form_layout.addRow('Publisher:', self.__publisher)
 
         self.__title = ElidedLabel()
         form_layout.addRow('Title:', self.__title)
 
         self.__authors = TagsWidget()
-        self.__authors.setWordWrap(True)
         form_layout.addRow('Authors:', self.__authors)
 
         self.__released = QLabel()
@@ -118,7 +117,11 @@ class InfoTcDock(DockWidget):
         self._setup_dock_toolbar()
 
     def __setup_connections(self) -> None:
-        self.__authors.tag_clicked.connect(self.tag_clicked.emit)
+        for widget in [
+            self.__publisher,
+            self.__authors,
+        ]:
+            widget.tag_clicked.connect(self.tag_clicked.emit)
 
     def set_folder(self, folder_id: Optional[int]) -> None:
         self.__folder_id = folder_id
@@ -172,7 +175,7 @@ class InfoTcDock(DockWidget):
 
         tutorial: Tutorial = folder.tutorial
 
-        self.__publisher.setText(tutorial.publisher.name)
+        self.__publisher.add_publisher(tutorial.publisher.name, tutorial.publisher_id)
 
         self.__title.setText(tutorial.title)
 
