@@ -458,6 +458,8 @@ class MainWindow(CommonMainWindow):
                 name = ('+' if publisher.search == Search.INCLUDE else '-') + (publisher.name if publisher.name else UNKNOWN_PUBLISHER_LABEL)
                 tags_view.add_publisher(name, publisher.id_)
 
+        tags_view.adjustSize()
+
 
 if __name__ == '__main__':
     from tutcatalogpy.catalog.main import run
