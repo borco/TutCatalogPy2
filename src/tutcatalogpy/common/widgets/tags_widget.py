@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, List, Optional
 
 from PySide2.QtCore import QAbstractItemModel, QAbstractListModel, QModelIndex, QObject, Qt, Signal
@@ -12,17 +12,28 @@ from tutcatalogpy.common.db.publisher import Publisher
 @dataclass
 class TagItem:
     text: str
-    table: Optional[Table] = None
-    index: Optional[int] = None
+    index: Optional[int] = field(default=None)
+    table: Optional[Table] = field(default=None, init=False)
 
     def same_index(self, other: 'TagItem') -> bool:
         return other is not None and self.table == other.table and self.index == other.index
 
+    @property
+    def selectable(self) -> bool:
+        return self.table is not None and self.index is not None
 
+
+@dataclass
+class TextItem(TagItem):
+    pass
+
+
+@dataclass
 class AuthorItem(TagItem):
     table = Author
 
 
+@dataclass
 class PublisherItem(TagItem):
     table = Publisher
 
@@ -50,6 +61,15 @@ class TagsModel(QAbstractListModel):
         self.beginResetModel()
         self.__items.clear()
         self.endResetModel()
+
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        flags = Qt.ItemFlag.ItemIsEnabled
+        row = index.row()
+        if 0 <= row < len(self.__items):
+            item = self.__items[row]
+            if item.selectable:
+                flags |= Qt.ItemIsSelectable
+        return flags
 
     def add_tag(self, item: TagItem) -> None:
         index = self.index_of(item)
@@ -98,7 +118,7 @@ class TagsWidget(QListView):
         self.__model.clear()
 
     def add_text(self, text: str) -> None:
-        self.__model.add_tag(TagItem(text))
+        self.__model.add_tag(TextItem(text))
 
     def add_author(self, text: str, index: int) -> None:
         self.__model.add_tag(AuthorItem(text, index))
