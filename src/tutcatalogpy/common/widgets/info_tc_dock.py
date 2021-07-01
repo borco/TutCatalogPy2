@@ -86,18 +86,6 @@ class InfoTcDock(DockWidget):
         form_layout = FormLayout()
         self.__form_widget.setLayout(form_layout)
 
-        self.__path_name = PathView()
-        form_layout.addRow('Tutorial:', self.__path_name)
-
-        self.__path_parent = PathView()
-        form_layout.addRow('Path:', self.__path_parent)
-
-        self.__size = QLabel()
-        form_layout.addRow('Size:', self.__size)
-
-        self.__publisher = TagsWidget()
-        form_layout.addRow('Publisher:', self.__publisher)
-
         self.__title = ElidedLabel()
         form_layout.addRow('Title:', self.__title)
 
@@ -107,11 +95,23 @@ class InfoTcDock(DockWidget):
         self.__released = QLabel()
         form_layout.addRow('Released:', self.__released)
 
+        self.__level = QLabel()
+        form_layout.addRow('Level:', self.__level)
+
         self.__duration = QLabel()
         form_layout.addRow('Duration:', self.__duration)
 
-        self.__level = QLabel()
-        form_layout.addRow('Level:', self.__level)
+        self.__publisher = TagsWidget()
+        form_layout.addRow('Publisher:', self.__publisher)
+
+        self.__path_name = PathView()
+        form_layout.addRow('Folder Name:', self.__path_name)
+
+        self.__path_parent = PathView()
+        form_layout.addRow('Folder Parent:', self.__path_parent)
+
+        self.__size = QLabel()
+        form_layout.addRow('Size:', self.__size)
 
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
@@ -175,6 +175,7 @@ class InfoTcDock(DockWidget):
 
         tutorial: Tutorial = folder.tutorial
 
+        self.__publisher.clear()
         self.__publisher.add_publisher(tutorial.publisher.name, tutorial.publisher_id)
 
         self.__title.setText(tutorial.title)
@@ -185,6 +186,7 @@ class InfoTcDock(DockWidget):
         authors.sort(key=lambda a: a.name.lower())
         for author in authors:
             self.__authors.add_author(author.name, author.id_)
+        self.__authors.adjustSize()
 
         self.__released.setText(tutorial.released)
 
