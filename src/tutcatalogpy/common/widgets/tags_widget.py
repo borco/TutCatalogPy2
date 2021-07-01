@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any, Final, List, Optional
 
 from PySide2.QtCore import QAbstractItemModel, QAbstractListModel, QEvent, QModelIndex, QObject, QRect, QSize, Qt, Signal
-from PySide2.QtGui import QFontMetrics, QPainter, QResizeEvent
+from PySide2.QtGui import QFontMetrics, QPainter, QPalette, QResizeEvent
 from PySide2.QtWidgets import QFrame, QItemDelegate, QListView, QStyleOptionViewItem
 from sqlalchemy.sql.schema import Table
 
@@ -131,6 +131,9 @@ class TagItemDelegate(QItemDelegate):
                 font.setBold(True)
             else:
                 font.setUnderline(True)
+                pen = painter.pen()
+                pen.setColor(option.palette.color(QPalette.Link))
+                painter.setPen(pen)
             painter.setFont(font)
             painter.drawText(rect, tag.text)
             painter.restore()
