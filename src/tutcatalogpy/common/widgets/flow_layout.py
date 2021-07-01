@@ -18,8 +18,16 @@ class FlowLayout(QLayout):
         self.__items: List[QLayoutItem] = []
 
     def __del__(self) -> None:
+        self.clear()
+
+    def clear(self) -> None:
         item = self.takeAt(0)
-        while item:
+        while item is not None:
+            w = item.widget()
+            if w is not None:
+                w.hide()
+                del w
+            del item
             item = self.takeAt(0)
 
     def addItem(self, item: QLayoutItem) -> None:
@@ -128,23 +136,42 @@ class FlowLayout(QLayout):
 
 
 if __name__ == '__main__':
-    from PySide2.QtWidgets import QApplication, QLabel, QPushButton
+    from PySide2.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout
+
+    def set_tags_1():
+        # flow_layout.clear()
+
+        flow_layout.addWidget(QLabel('authors:'))
+        for i in range(10):
+            flow_layout.addWidget(QLabel(f'Author {i}'))
+
+        flow_layout.addWidget(QLabel('publishers:'))
+        for i in range(10):
+            flow_layout.addWidget(QLabel(f'Publisher {i}'))
+
+    def set_tags_2():
+        flow_layout.clear()
 
     app = QApplication([])
     window = QWidget(None)
 
-    layout = FlowLayout()
+    layout = QVBoxLayout()
     window.setLayout(layout)
 
-    layout.addWidget(QLabel('authors:'))
-    for i in range(10):
-        layout.addWidget(QLabel(f'Author {i}'))
+    flow_layout = FlowLayout()
+    layout.addLayout(flow_layout)
 
-    layout.addWidget(QLabel('publishers:'))
-    for i in range(10):
-        layout.addWidget(QLabel(f'Publisher {i}'))
+    btn1 = QPushButton('1')
+    btn1.clicked.connect(set_tags_1)
+    layout.addWidget(btn1)
 
-    window.resize(100, 100)
+    btn2 = QPushButton('2')
+    btn2.clicked.connect(set_tags_2)
+    layout.addWidget(btn2)
+
+    layout.addStretch(1)
+
+    # window.resize(100, 100)
     window.show()
 
     app.exec_()
