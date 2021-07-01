@@ -186,6 +186,7 @@ class InfoTcDock(DockWidget):
         authors.sort(key=lambda a: a.name.lower())
         for author in authors:
             self.__authors.add_author(author.name, author.id_)
+        self.__authors.adjustSize()
 
         self.__released.setText(tutorial.released)
 
