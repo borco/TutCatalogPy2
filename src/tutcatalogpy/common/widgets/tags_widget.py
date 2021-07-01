@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Any, List, Optional
+from typing import Any, Final, List, Optional
 
-from PySide2.QtCore import QAbstractItemModel, QAbstractListModel, QModelIndex, QObject, Qt, Signal
-from PySide2.QtWidgets import QFrame, QListView, QStyledItemDelegate, QWidget
+from PySide2.QtCore import QAbstractListModel, QModelIndex, QObject, QRect, QSize, Qt, Signal
+from PySide2.QtGui import QFontMetrics, QPainter, QResizeEvent
+from PySide2.QtWidgets import QFrame, QItemDelegate, QListView, QStyleOptionViewItem
 from sqlalchemy.sql.schema import Table
 
 from tutcatalogpy.common.db.author import Author
@@ -56,6 +57,8 @@ class TagsModel(QAbstractListModel):
 
         if role == Qt.DisplayRole:
             return self.__items[row].text
+        elif role == Qt.UserRole:
+            return self.__items[row]
 
     def clear(self) -> None:
         self.beginResetModel()
@@ -86,22 +89,66 @@ class TagsModel(QAbstractListModel):
             self.endInsertRows()
 
     def index_of(self, item: TagItem) -> Optional[int]:
-        return next((index for index, tag in enumerate(self.__items) if item.same_index(tag)), None)
+        if item.table is None or item.index is None:
+            return None
+        else:
+            return next((index for index, tag in enumerate(self.__items) if item.same_index(tag)), None)
+
+    def item_at(self, row: int) -> Optional[TagItem]:
+        if 0 <= row < len(self.__items):
+            return self.__items[row]
+        else:
+            return None
 
 
-class TagItemDelegate(QStyledItemDelegate):
+class TagItemDelegate(QItemDelegate):
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent=parent)
 
+    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex) -> QSize:
+        tag: TagItem = index.data(Qt.UserRole)
+        if isinstance(tag, TagItem):
+            if not tag.selectable:
+                font = option.font
+                font.setBold(True)
+                metrics = QFontMetrics(font)
+                return metrics.boundingRect(tag.text).adjusted(0, 0, 5, 0).size()
+            else:
+                metrics = option.fontMetrics
+                rect: QRect = metrics.boundingRect(tag.text)
+                return rect.adjusted(0, 0, 5, 0).size()
+        return super().sizeHint(option, index)
+
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        tag: TagItem = index.data(Qt.UserRole)
+        if isinstance(tag, TagItem):
+            painter.save()
+            rect: QRect = option.rect
+            font = painter.font()
+            if not tag.selectable:
+                font.setBold(True)
+            else:
+                font.setUnderline(True)
+            painter.setFont(font)
+            painter.drawText(rect, tag.text)
+            painter.restore()
+        else:
+            return super().paint(painter, option, index)
+
 
 class TagsWidget(QListView):
+    MINIMUM_HEIGHT: Final[int] = 16
+    HORIZONTAL_SPACING: Final[int] = 0
+    VERTICAL_SPACING: Final[int] = 0
+    VERTICAL_SCROLLBAR_WIDTH: Final[int] = 0
+
     tag_clicked = Signal(Table, int)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.__model = TagsModel()
-        super().setModel(self.__model)
+        self.setModel(self.__model)
 
         self.__delegate = TagItemDelegate()
         self.setItemDelegate(self.__delegate)
@@ -110,9 +157,21 @@ class TagsWidget(QListView):
         self.setFlow(self.LeftToRight)
         self.setResizeMode(self.Adjust)
         self.setFrameStyle(QFrame.NoFrame)
+        self.setStyleSheet('background-color: transparent;')
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-    def setModel(self, model: QAbstractItemModel) -> None:
-        raise RuntimeError('setting model for TagsWidget is not supported')
+    def sizeHint(self) -> QSize:
+        rect = self.rect()
+        width = rect.width()
+        height = self.__height_for_width(width)
+        return QSize(0, height)
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        width = self.rect().width()
+        height = self.__height_for_width(width)
+        self.setFixedHeight(height)
 
     def clear(self) -> None:
         self.__model.clear()
@@ -126,28 +185,82 @@ class TagsWidget(QListView):
     def add_publisher(self, text: str, index: int) -> None:
         self.__model.add_tag(PublisherItem(text, index))
 
+    def __horizontal_spacing(self) -> int:
+        return self.HORIZONTAL_SPACING
+
+    def __vertical_spacing(self) -> int:
+        return self.VERTICAL_SPACING
+
+    def resizeEvent(self, e: QResizeEvent) -> None:
+        super().resizeEvent(e)
+        self.adjustSize()
+
+    def adjustSize(self) -> None:
+        width = self.frameRect().width()
+        height = self.__height_for_width(width)
+        self.setFixedHeight(height)
+
+    def __height_for_width(self, width: int) -> int:
+        left: int
+        top: int
+        right: int
+        bottom: int
+        left, top, right, bottom = self.getContentsMargins()
+        effective_right: int = width - right - self.VERTICAL_SCROLLBAR_WIDTH
+        effective_x: int = left
+        effective_y: int = top
+        x: int = effective_x
+        y: int = effective_y
+        line_height: int = 0
+
+        for row in range(self.__model.rowCount(QModelIndex())):
+            index = self.__model.index(row, 0, QModelIndex())
+            item_size_hint = self.__delegate.sizeHint(QStyleOptionViewItem(), index)
+
+            space_x: int = self.__horizontal_spacing()
+            space_y: int = self.__vertical_spacing()
+
+            next_x: int = x + item_size_hint.width() + space_x
+            if next_x - space_x > effective_right and line_height > 0:
+                x = effective_x
+                y += line_height + space_y
+                next_x = x + item_size_hint.width() + space_x
+                line_height = 0
+
+            x = next_x
+            line_height = max(line_height, item_size_hint.height())
+        return max(self.MINIMUM_HEIGHT, y + line_height + bottom)
+
+
+# if __name__ == '__main__':
+#     from PySide2.QtWidgets import QApplication, QVBoxLayout, QPushButton
+
+#     app = QApplication([])
+#     window = QWidget(None)
+
+#     layout = QVBoxLayout()
+#     window.setLayout(layout)
+
+#     tags = TagsWidget()
+#     layout.addWidget(tags)
+
+#     tags.tag_clicked.connect(lambda table, tag: print(table, tag))
+#     tags.add_text('xxx:')
+#     tags.add_author('xxx 1', index=1)
+#     tags.add_author('xxx 2', index=2)
+#     tags.add_text('yyy:')
+#     tags.add_publisher('yyy 1', index=1)
+#     tags.add_publisher('yyy 2', index=2)
+
+#     btn = QPushButton('test')
+#     layout.addWidget(btn)
+
+#     layout.addStretch(1)
+
+#     window.show()
+
+#     app.exec_()
 
 if __name__ == '__main__':
-    from PySide2.QtWidgets import QApplication, QVBoxLayout
-
-    app = QApplication([])
-    window = QWidget(None)
-
-    layout = QVBoxLayout()
-    window.setLayout(layout)
-
-    tags = TagsWidget()
-    layout.addWidget(tags)
-
-    tags.tag_clicked.connect(lambda table, tag: print(table, tag))
-    tags.add_text('xxx:')
-    tags.add_author('xxx 1', index=1)
-    tags.add_author('xxx 2', index=2)
-    tags.add_text('yyy:')
-    tags.add_publisher('yyy 1', index=1)
-    tags.add_publisher('yyy 2', index=2)
-
-    window.resize(100, 100)
-    window.show()
-
-    app.exec_()
+    from tutcatalogpy.catalog.main import run
+    run()
