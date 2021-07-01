@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Final, List, Optional
 
-from PySide2.QtCore import QAbstractListModel, QModelIndex, QObject, QRect, QSize, Qt, Signal
+from PySide2.QtCore import QAbstractItemModel, QAbstractListModel, QEvent, QModelIndex, QObject, QRect, QSize, Qt, Signal
 from PySide2.QtGui import QFontMetrics, QPainter, QResizeEvent
 from PySide2.QtWidgets import QFrame, QItemDelegate, QListView, QStyleOptionViewItem
 from sqlalchemy.sql.schema import Table
@@ -102,6 +102,8 @@ class TagsModel(QAbstractListModel):
 
 
 class TagItemDelegate(QItemDelegate):
+    clicked = Signal(Table, int)
+
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent=parent)
 
@@ -135,6 +137,13 @@ class TagItemDelegate(QItemDelegate):
         else:
             return super().paint(painter, option, index)
 
+    def editorEvent(self, event: QEvent, model: QAbstractItemModel, option: QStyleOptionViewItem, index: QModelIndex) -> bool:
+        tag: TagItem = index.data(Qt.UserRole)
+        if isinstance(tag, TagItem):
+            if event.type() == QEvent.MouseButtonRelease and tag.selectable:
+                self.clicked.emit(tag.table, tag.index)
+        return super().editorEvent(event, model, option, index)
+
 
 class TagsWidget(QListView):
     MINIMUM_HEIGHT: Final[int] = 16
@@ -152,6 +161,7 @@ class TagsWidget(QListView):
 
         self.__delegate = TagItemDelegate()
         self.setItemDelegate(self.__delegate)
+        self.__delegate.clicked.connect(self.tag_clicked.emit)
 
         self.setViewMode(self.IconMode)
         self.setFlow(self.LeftToRight)
