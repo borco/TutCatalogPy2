@@ -1,85 +1,78 @@
-import enum
-from dataclasses import dataclass
-from typing import Dict, Optional
-from uuid import uuid4
-
+from typing import Optional
 from PySide2.QtCore import Signal
-from PySide2.QtWidgets import QLabel
+from PySide2.QtWidgets import QLabel, QLayoutItem, QWidget
 from sqlalchemy.sql.schema import Table
 
 from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.publisher import Publisher
+from tutcatalogpy.common.widgets.flow_layout import FlowLayout
 
 
-@dataclass
-class TagsWidgetItem:
-    class Type(bytes, enum.Enum):
-        prefix: str
-        table: Optional[Table]
-        interactive: bool
+class TagItem(QLabel):
+    clicked = Signal(Table, int)
 
-        def __new__(cls, value: int, prefix: str, table: Optional[Table], interactive: bool = True):
-            obj = bytes.__new__(cls, [value])
-            obj._value_ = value
-            obj.prefix = prefix
-            obj.table = table
-            obj.interactive = interactive
-            return obj
+    def __init__(self, text: str, table: Optional[Table] = None, index: Optional[int] = None):
+        super().__init__()
+        if table is not None and index is not None:
+            text = '<a href="tag">' + text + '</a>'
+        self.setText(text)
+        self.__table: Optional[Table] = table
+        self.__index: Optional[int] = index
+        self.linkActivated.connect(lambda: self.clicked.emit(self.__table, self.__index))
 
-        TEXT = (0, '', None, False)
-        AUTHOR = (1, 'author:', Author)
-        PUBLISHER = (2, 'publisher:', Publisher)
-
-    text: str = ''
-    type_: Type = Type.TEXT
-    index: Optional[int] = None
+    def same_with(self, item: Optional[QLayoutItem]) -> bool:
+        return item is not None and item is TagItem and self.__table == item.__table and self.__index == item.__index
 
 
-class TagsWidget(QLabel):
+class TextItem(TagItem):
+    def __init__(self, text: str):
+        super().__init__(text)
+
+
+class AuthorItem(TagItem):
+    def __init__(self, text: str, index: int):
+        super().__init__(text, table=Author, index=index)
+
+
+class PublisherItem(TagItem):
+    def __init__(self, text: str, index: int):
+        super().__init__(text, table=Publisher, index=index)
+
+
+class TagsWidget(QWidget):
     tag_clicked = Signal(Table, int)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.__tags: Dict[str, TagsWidgetItem] = {}
-        self.linkActivated.connect(self.__on_link_activated)
-        self.setWordWrap(True)
+        self.__layout = FlowLayout(margin=0)
+        self.setLayout(self.__layout)
 
     def clear(self) -> None:
-        self.setText('')
-        self.__tags.clear()
+        self.__layout.clear()
 
     def add_text(self, text: str) -> None:
-        self.__add_tag(TagsWidgetItem(text))
+        self.__add_tag(TextItem(text))
 
     def add_author(self, text: str, index: int) -> None:
-        self.__add_tag(TagsWidgetItem(text, TagsWidgetItem.Type.AUTHOR, index))
+        self.__add_tag(AuthorItem(text, index))
 
     def add_publisher(self, text: str, index: int) -> None:
-        self.__add_tag(TagsWidgetItem(text, TagsWidgetItem.Type.PUBLISHER, index))
+        self.__add_tag(PublisherItem(text, index))
 
-    def __add_tag(self, tag: TagsWidgetItem) -> None:
-        if tag.type_ == TagsWidgetItem.Type.TEXT:
-            key = str(uuid4())
+    def __index_of(self, item: TagItem) -> Optional[int]:
+        return next((index for index in range(self.__layout.count()) if item.same_with(self.__layout.itemAt(index))), None)
+
+    def __add_tag(self, item: TagItem) -> None:
+        index = self.__index_of(item)
+        if index is not None:
+            self.__layout.itemAt(index).setText(item.text())
         else:
-            key = tag.type_.prefix + str(tag.index)
-        self.__tags[key] = tag
-
-        prev_interactive = False
-        text = ''
-        for k, v in self.__tags.items():
-            if prev_interactive:
-                text += ', ' if v.type_.interactive else ' '
-            text += f'<a href="{k}">{v.text}</a>' if v.type_.interactive else (v.text + ' ')
-            prev_interactive = v.type_.interactive
-        self.setText(text)
-
-    def __on_link_activated(self, key: str) -> None:
-        tag = self.__tags[key]
-        self.tag_clicked.emit(tag.type_.table, tag.index)
+            self.__layout.addWidget(item)
+            item.clicked.connect(self.tag_clicked.emit)
 
 
 if __name__ == '__main__':
-    from PySide2.QtWidgets import QApplication, QVBoxLayout, QWidget
+    from PySide2.QtWidgets import QApplication, QVBoxLayout
 
     app = QApplication([])
     window = QWidget(None)
@@ -90,7 +83,6 @@ if __name__ == '__main__':
     tags = TagsWidget()
     layout.addWidget(tags)
 
-    tags.setWordWrap(True)
     tags.tag_clicked.connect(lambda table, tag: print(table, tag))
     tags.add_text('xxx:')
     tags.add_author('xxx 1', index=1)
