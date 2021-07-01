@@ -2,8 +2,8 @@ import logging
 from typing import Any, Final, List, Optional
 
 from PySide2.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
-from sqlalchemy.orm.query import Query
 from sqlalchemy.sql.functions import func
+from sqlalchemy.sql.schema import Table
 
 from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.base import Search
@@ -216,10 +216,7 @@ class TagsModel(QAbstractItemModel):
             Search.INCLUDE: Search.EXCLUDE,
             Search.EXCLUDE: Search.IGNORED,
         }
-        item.data.search = next_search[item.data.search]
-        dal.session.commit()
-        self.dataChanged.emit(index, index)
-        self.search_changed.emit()
+        self.__set_index_search(index, next_search[item.data.search])
 
     def clear_search_flags(self) -> None:
         if dal.session is None:
@@ -231,6 +228,48 @@ class TagsModel(QAbstractItemModel):
 
         self.refresh()
         self.search_changed.emit()
+
+    def include_search_tag(self, table: Table, id: int) -> None:
+        index = self.__index_of_table_id(table, id)
+        self.__set_index_search(index, Search.INCLUDE)
+
+    def clear_search_tag(self, table: Table, id: int) -> None:
+        index = self.__index_of_table_id(table, id)
+        self.__set_index_search(index, Search.IGNORED)
+
+    def __set_index_search(self, index: QModelIndex, value: Search) -> None:
+        if not index.isValid() or dal.session is None:
+            return
+
+        item: TagsItem = index.internalPointer()
+        if item.data is None:
+            return
+
+        item.data.search = value
+        dal.session.commit()
+        self.dataChanged.emit(index, index)
+        self.search_changed.emit()
+
+    def __index_of_table(self, table: Table) -> QModelIndex:
+        for row in range(self.rowCount(QModelIndex())):
+            child_index = self.index(row, 0, QModelIndex())
+            item = child_index.internalPointer()
+            if (
+                (table == Author and item == self.__authors_item)
+                or (table == Publisher and item == self.__publishers_item)
+            ):
+                return child_index
+        return QModelIndex()
+
+    def __index_of_table_id(self, table: Table, id: int) -> QModelIndex:
+        index = self.__index_of_table(table)
+        if index.isValid():
+            for row in range(self.rowCount(index)):
+                child_index = self.index(row, 0, index)
+                item = child_index.internalPointer()
+                if item is not None and item.data is not None and item.data.id_ == id:
+                    return child_index
+        return QModelIndex()
 
 
 tags_model = TagsModel()

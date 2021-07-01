@@ -8,7 +8,7 @@ from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenu
 
 from tutcatalogpy.catalog.config import config
 from tutcatalogpy.catalog.models.disks_model import disks_model
-from tutcatalogpy.catalog.models.tags_model import tags_model
+from tutcatalogpy.catalog.models.tags_model import UNKNOWN_AUTHOR_LABEL, UNKNOWN_PUBLISHER_LABEL, tags_model
 from tutcatalogpy.catalog.models.tutorials_model import tutorials_model
 from tutcatalogpy.catalog.scan_controller import scan_controller
 from tutcatalogpy.catalog.widgets.cover_dock import CoverDock
@@ -18,10 +18,13 @@ from tutcatalogpy.catalog.widgets.scan_dialog import ScanDialog
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.catalog.widgets.tags_dock import TagsDock
 from tutcatalogpy.catalog.widgets.tutorials_dock import TutorialsDock
+from tutcatalogpy.common.db.author import Author
+from tutcatalogpy.common.db.base import Search
 from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
+from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.desktop_services import open_path
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
@@ -246,12 +249,15 @@ class MainWindow(CommonMainWindow):
 
     def __setup_connections(self) -> None:
         self.__search_dock.search.connect(lambda: tutorials_model.search(self.__search_dock))
+        self.__search_dock.search_tags.tag_clicked.connect(tags_model.clear_search_tag)
         disks_model.disk_checked_changed.connect(lambda: tutorials_model.search(self.__search_dock, True))
-        tags_model.search_changed.connect(lambda: tutorials_model.search(self.__search_dock, True))
+        tags_model.search_changed.connect(self.__on_tags_model_search_changed)
 
         self.__tutorials_dock.selection_changed.connect(self.__on_tutorials_dock_selection_changed)
         self.__recent_files.triggered.connect(self.__load_config)
         self.__scan_dialog.finished.connect(self.__on_scan_dialog_finished)
+
+        self.__info_tc_dock.tag_clicked.connect(tags_model.include_search_tag)
 
         config.loaded.connect(self.__on_config_loaded)
 
@@ -275,6 +281,7 @@ class MainWindow(CommonMainWindow):
         tags_model.refresh()
         self.__tags_dock.view.expandAll()
         self.__update_ui_with_current_folder()
+        self.__update_tags_on_search_dock()
 
     def __on_scan_startup_action_triggered(self) -> None:
         scan_controller.scan_startup()
@@ -422,6 +429,36 @@ class MainWindow(CommonMainWindow):
 
     def __on_tutorials_model_summary_changed(self, summary: str) -> None:
         self.__tutorials_summary.setText(summary)
+
+    def __on_tags_model_search_changed(self) -> None:
+        self.__update_tags_on_search_dock()
+        tutorials_model.search(self.__search_dock, True)
+
+    def __update_tags_on_search_dock(self) -> None:
+
+        tags_view = self.__search_dock.search_tags
+        tags_view.clear()
+
+        if dal.session is not None:
+            author: Author
+            group_label = 'authors:'
+            for author in dal.session.query(Author).filter(Author.search != Search.IGNORED).order_by(Author.name.collate('NOCASE')):
+                if group_label is not None:
+                    tags_view.add_text(group_label)
+                group_label = None
+                name = ('+' if author.search == Search.INCLUDE else '-') + (author.name if author.name else UNKNOWN_AUTHOR_LABEL)
+                tags_view.add_author(name, author.id_)
+
+            publisher: Publisher
+            group_label = 'publishers:'
+            for publisher in dal.session.query(Publisher).filter(Publisher.search != Search.IGNORED).order_by(Publisher.name.collate('NOCASE')):
+                if group_label is not None:
+                    tags_view.add_text(group_label)
+                group_label = None
+                name = ('+' if publisher.search == Search.INCLUDE else '-') + (publisher.name if publisher.name else UNKNOWN_PUBLISHER_LABEL)
+                tags_view.add_publisher(name, publisher.id_)
+
+        tags_view.adjustSize()
 
 
 if __name__ == '__main__':
