@@ -1,74 +1,110 @@
-from typing import Optional
-from PySide2.QtCore import Signal
-from PySide2.QtWidgets import QLabel, QLayoutItem, QWidget
+from dataclasses import dataclass
+from typing import Any, List, Optional
+
+from PySide2.QtCore import QAbstractItemModel, QAbstractListModel, QModelIndex, QObject, Qt, Signal
+from PySide2.QtWidgets import QFrame, QListView, QStyledItemDelegate, QWidget
 from sqlalchemy.sql.schema import Table
 
 from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.publisher import Publisher
-from tutcatalogpy.common.widgets.flow_layout import FlowLayout
 
 
-class TagItem(QLabel):
-    clicked = Signal(Table, int)
+@dataclass
+class TagItem:
+    text: str
+    table: Optional[Table] = None
+    index: Optional[int] = None
 
-    def __init__(self, text: str, table: Optional[Table] = None, index: Optional[int] = None):
-        super().__init__()
-        if table is not None and index is not None:
-            text = '<a href="tag">' + text + '</a>'
-        self.setText(text)
-        self.__table: Optional[Table] = table
-        self.__index: Optional[int] = index
-        self.linkActivated.connect(lambda: self.clicked.emit(self.__table, self.__index))
-
-    def same_with(self, item: Optional[QLayoutItem]) -> bool:
-        return item is not None and item is TagItem and self.__table == item.__table and self.__index == item.__index
-
-
-class TextItem(TagItem):
-    def __init__(self, text: str):
-        super().__init__(text)
+    def same_index(self, other: 'TagItem') -> bool:
+        return other is not None and self.table == other.table and self.index == other.index
 
 
 class AuthorItem(TagItem):
-    def __init__(self, text: str, index: int):
-        super().__init__(text, table=Author, index=index)
+    table = Author
 
 
 class PublisherItem(TagItem):
-    def __init__(self, text: str, index: int):
-        super().__init__(text, table=Publisher, index=index)
+    table = Publisher
 
 
-class TagsWidget(QWidget):
+class TagsModel(QAbstractListModel):
+    def __init__(self) -> None:
+        super().__init__()
+        self.__items: List[TagItem] = []
+
+    def rowCount(self, parent: QModelIndex) -> int:
+        return len(self.__items)
+
+    def data(self, index: QModelIndex, role: int) -> Any:
+        if not index.isValid():
+            return None
+
+        row = index.row()
+        if row < 0 or row >= len(self.__items):
+            return None
+
+        if role == Qt.DisplayRole:
+            return self.__items[row].text
+
+    def clear(self) -> None:
+        self.beginResetModel()
+        self.__items.clear()
+        self.endResetModel()
+
+    def add_tag(self, item: TagItem) -> None:
+        index = self.index_of(item)
+        if index is not None:
+            tag = self.__items[index]
+            tag.text = item.text
+            row = index
+            model_index = self.createIndex(row, 0, None)
+            self.dataChanged.emit(model_index, model_index)
+        else:
+            row = len(self.__items)
+            self.beginInsertRows(QModelIndex(), row, row)
+            self.__items.append(item)
+            self.endInsertRows()
+
+    def index_of(self, item: TagItem) -> Optional[int]:
+        return next((index for index, tag in enumerate(self.__items) if item.same_index(tag)), None)
+
+
+class TagItemDelegate(QStyledItemDelegate):
+    def __init__(self, parent: Optional[QObject] = None) -> None:
+        super().__init__(parent=parent)
+
+
+class TagsWidget(QListView):
     tag_clicked = Signal(Table, int)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.__layout = FlowLayout(margin=0)
-        self.setLayout(self.__layout)
+
+        self.__model = TagsModel()
+        super().setModel(self.__model)
+
+        self.__delegate = TagItemDelegate()
+        self.setItemDelegate(self.__delegate)
+
+        self.setViewMode(self.IconMode)
+        self.setFlow(self.LeftToRight)
+        self.setResizeMode(self.Adjust)
+        self.setFrameStyle(QFrame.NoFrame)
+
+    def setModel(self, model: QAbstractItemModel) -> None:
+        raise RuntimeError('setting model for TagsWidget is not supported')
 
     def clear(self) -> None:
-        self.__layout.clear()
+        self.__model.clear()
 
     def add_text(self, text: str) -> None:
-        self.__add_tag(TextItem(text))
+        self.__model.add_tag(TagItem(text))
 
     def add_author(self, text: str, index: int) -> None:
-        self.__add_tag(AuthorItem(text, index))
+        self.__model.add_tag(AuthorItem(text, index))
 
     def add_publisher(self, text: str, index: int) -> None:
-        self.__add_tag(PublisherItem(text, index))
-
-    def __index_of(self, item: TagItem) -> Optional[int]:
-        return next((index for index in range(self.__layout.count()) if item.same_with(self.__layout.itemAt(index))), None)
-
-    def __add_tag(self, item: TagItem) -> None:
-        index = self.__index_of(item)
-        if index is not None:
-            self.__layout.itemAt(index).setText(item.text())
-        else:
-            self.__layout.addWidget(item)
-            item.clicked.connect(self.tag_clicked.emit)
+        self.__model.add_tag(PublisherItem(text, index))
 
 
 if __name__ == '__main__':
