@@ -7,7 +7,7 @@ from PySide2.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QSizePolicy, QT
 
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
-from tutcatalogpy.common.widgets.tags_widget import TagsWidget
+from tutcatalogpy.common.widgets.tags_flow_widget import TagsFlowView
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -73,7 +73,7 @@ class SearchDock(DockWidget):
         layout.addWidget(self.__only_show_checked_disks)
         self.__only_show_checked_disks.toggled.connect(self.search)
 
-        self.__search_tags = TagsWidget()
+        self.__search_tags = TagsFlowView()
         layout.addWidget(self.__search_tags)
 
         layout.addStretch(1)
@@ -82,7 +82,7 @@ class SearchDock(DockWidget):
         widget.setSizePolicy(policy)
 
     @property
-    def search_tags(self) -> TagsWidget:
+    def search_tags(self) -> TagsFlowView:
         return self.__search_tags
 
     def __setup_actions(self) -> None:

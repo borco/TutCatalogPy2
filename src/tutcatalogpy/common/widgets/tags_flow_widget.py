@@ -152,7 +152,7 @@ class TagItemDelegate(QItemDelegate):
         return super().editorEvent(event, model, option, index)
 
 
-class TagsWidget(QListView):
+class TagsFlowView(QListView):
     tag_clicked = Signal(Table, int)
 
     def __init__(self, *args, **kwargs) -> None:

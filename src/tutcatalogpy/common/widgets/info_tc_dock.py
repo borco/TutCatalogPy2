@@ -17,7 +17,7 @@ from tutcatalogpy.common.widgets.dock_widget import DockWidget
 from tutcatalogpy.common.widgets.elided_label import ElidedLabel
 from tutcatalogpy.common.widgets.form_layout import FormLayout
 from tutcatalogpy.common.widgets.path_view import PathView
-from tutcatalogpy.common.widgets.tags_widget import TagsWidget
+from tutcatalogpy.common.widgets.tags_flow_widget import TagsFlowView
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -89,7 +89,7 @@ class InfoTcDock(DockWidget):
         self.__title = ElidedLabel()
         form_layout.addRow('Title:', self.__title)
 
-        self.__authors = TagsWidget()
+        self.__authors = TagsFlowView()
         form_layout.addRow('Authors:', self.__authors)
 
         self.__released = QLabel()
@@ -101,7 +101,7 @@ class InfoTcDock(DockWidget):
         self.__duration = QLabel()
         form_layout.addRow('Duration:', self.__duration)
 
-        self.__publisher = TagsWidget()
+        self.__publisher = TagsFlowView()
         form_layout.addRow('Publisher:', self.__publisher)
 
         self.__path_name = PathView()
