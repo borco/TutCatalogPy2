@@ -15,12 +15,17 @@ class ElidedLabel(QAbstractButton):
 
         self.__data: Optional[str] = None
         self.__text: str = ''
+        self.__elided: bool = False
 
         # make sure we trigger the first paint event that determines the minimum height
         self.setMinimumSize(10, 10)
 
         self.__interactive = False
         self.setInteractive(False)
+
+    @property
+    def elided(self) -> bool:
+        return self.__elided
 
     def interactive(self) -> bool:
         return self.__interactive
@@ -79,6 +84,8 @@ class ElidedLabel(QAbstractButton):
         metrics = painter.fontMetrics()
         elidedContent = metrics.elidedText(self.__text, Qt.ElideRight, self.width())
         painter.drawText(QPoint(0, metrics.ascent()), elidedContent)
+
+        self.__elided = (elidedContent != self.__text)
 
         self.setMinimumSize(
             10,
