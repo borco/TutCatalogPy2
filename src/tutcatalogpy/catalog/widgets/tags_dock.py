@@ -59,7 +59,7 @@ class TagsDock(DockWidget):
         model: Optional[TagsModel] = self.__tags_view.model()
         if model is not None:
             model.clear_search_flags()
-            self.__tags_view.expandAll()
+            # self.__tags_view.expandAll()
 
 
 if __name__ == '__main__':

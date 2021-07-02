@@ -279,7 +279,7 @@ class MainWindow(CommonMainWindow):
         disks_model.refresh()
         tutorials_model.refresh()
         tags_model.refresh()
-        self.__tags_dock.view.expandAll()
+        # self.__tags_dock.view.expandAll()
         self.__update_ui_with_current_folder()
         self.__update_tags_on_search_dock()
 
