@@ -147,7 +147,7 @@ class TagItemDelegate(QItemDelegate):
     def editorEvent(self, event: QEvent, model: QAbstractItemModel, option: QStyleOptionViewItem, index: QModelIndex) -> bool:
         tag: TagItem = index.data(Qt.UserRole)
         if isinstance(tag, TagItem):
-            if event.type() == QEvent.MouseButtonRelease and tag.selectable:
+            if event.type() == QEvent.MouseButtonPress and tag.selectable:
                 self.clicked.emit(tag.table, tag.index)
         return super().editorEvent(event, model, option, index)
 
