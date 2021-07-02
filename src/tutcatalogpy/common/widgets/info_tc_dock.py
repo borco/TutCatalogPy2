@@ -13,14 +13,19 @@ from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.tutorial_data import TutorialData
+from tutcatalogpy.common.widgets.description_view import DescriptionView
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
 from tutcatalogpy.common.widgets.elided_label import ElidedLabel
 from tutcatalogpy.common.widgets.form_layout import FormLayout
+from tutcatalogpy.common.widgets.horizontal_separator import HorizontalSeparator
 from tutcatalogpy.common.widgets.path_view import PathView
 from tutcatalogpy.common.widgets.tags_flow_widget import TagsFlowView
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
+
+DESCRIPTION_MINIMUM_WIDTH: int = 350  # a value smaller than images to avoid horizontal scrollbar
+DESCRIPTION_MAXIMUM_WIDTH: int = 900  # avoid lines that are too long when the window grows too much
 
 
 class InfoTcDock(DockWidget):
@@ -107,7 +112,12 @@ class InfoTcDock(DockWidget):
         self.__size = QLabel()
         form_layout.addRow('Size:', self.__size)
 
-        layout.addStretch()
+        layout.addWidget(HorizontalSeparator())
+
+        self.__description = DescriptionView()
+        self.setMinimumWidth(DESCRIPTION_MINIMUM_WIDTH)
+        self.setMaximumWidth(DESCRIPTION_MAXIMUM_WIDTH)
+        layout.addWidget(self.__description, 1)
 
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
@@ -149,6 +159,7 @@ class InfoTcDock(DockWidget):
             self.__released,
             self.__duration,
             self.__level,
+            self.__description,
         ]:
             widget.clear()
 
@@ -189,6 +200,8 @@ class InfoTcDock(DockWidget):
         self.__duration.setText(TutorialData.duration_to_text(tutorial.duration))
 
         self.__level.setText(TutorialData.level_to_text(tutorial.level))
+
+        self.__description.set_content(tutorial.description, folder.path())
 
 
 if __name__ == '__main__':
