@@ -28,6 +28,7 @@ UNKNOWN_PUBLISHER_LABEL: Final[str] = '(unknown publisher)'
 
 class TagsItem:
     _label: str = ''
+    _no_name_label: str = ''
 
     def __init__(self, label: Optional[str] = None, data: Optional[Any] = None) -> None:
         self._parent: Optional['TagsItem'] = None
@@ -65,9 +66,13 @@ class TagsItem:
         self._children.append(item)
 
 
-class AuthorsItem(TagsItem):
-    __label = AUTHORS_LABEL
-    __no_name_label = UNKNOWN_AUTHOR_LABEL
+class GroupItem(TagsItem):
+    @property
+    def label(self) -> str:
+        return f'{self._label} [{self.rows}]'
+
+    def _populate(self) -> None:
+        pass
 
     def refresh(self) -> None:
         self._children.clear()
@@ -75,6 +80,14 @@ class AuthorsItem(TagsItem):
         if dal.session is None:
             return
 
+        self._populate()
+
+
+class AuthorsItem(GroupItem):
+    _label = AUTHORS_LABEL
+    _no_name_label = UNKNOWN_AUTHOR_LABEL
+
+    def _populate(self) -> None:
         for author, count in (
             dal
             .session
@@ -89,24 +102,15 @@ class AuthorsItem(TagsItem):
         ):
             name = author.name
             if name is None or len(name) == 0:
-                name = self.__no_name_label
+                name = self._no_name_label
             self.append(TagsItem(f'{name} ({count})', author))
 
-    @property
-    def label(self) -> str:
-        return f'{self.__label} ({self.rows})'
 
+class PublishersItem(GroupItem):
+    _label = PUBLISHERS_LABEL
+    _no_name_label = UNKNOWN_PUBLISHER_LABEL
 
-class PublishersItem(TagsItem):
-    __label = PUBLISHERS_LABEL
-    __no_name_label = UNKNOWN_PUBLISHER_LABEL
-
-    def refresh(self) -> None:
-        self._children.clear()
-
-        if dal.session is None:
-            return
-
+    def _populate(self) -> None:
         for publisher, count in (
             dal
             .session
@@ -117,12 +121,8 @@ class PublishersItem(TagsItem):
         ):
             name = publisher.name
             if name is None or len(name) == 0:
-                name = self.__no_name_label
+                name = self._no_name_label
             self.append(TagsItem(f'{name} ({count})', publisher))
-
-    @property
-    def label(self) -> str:
-        return f'{self.__label} ({self.rows})'
 
 
 class TagsModel(QAbstractItemModel):
