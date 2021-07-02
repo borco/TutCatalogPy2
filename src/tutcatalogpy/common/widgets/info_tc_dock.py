@@ -2,8 +2,8 @@ import logging
 from typing import Final, Optional
 
 from humanize import naturalsize
-from PySide2.QtCore import QMargins, Qt, Signal
-from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QWidget
+from PySide2.QtCore import Signal
+from PySide2.QtWidgets import QVBoxLayout, QScrollArea, QLabel, QWidget
 from PySide2.QtSvg import QSvgWidget
 from sqlalchemy.sql.schema import Table
 
@@ -33,7 +33,7 @@ class InfoTcDock(DockWidget):
     OFFLINE_TIP: Final[str] = 'Offline'
     NO_INFO_TC_SVG: Final[str] = relative_path(__file__, '../../resources/icons/no_info_tc.svg')
     NO_INFO_TC_TIP: Final[str] = 'No info.tc'
-    SVG_ICON_SIZE: Final[int] = 20
+    SVG_ICON_SIZE: Final[int] = 16
 
     _dock_icon: Final[str] = relative_path(__file__, '../../resources/icons/info_tc.svg')
     _dock_status_tip: Final[str] = 'Toggle tutorial info dock'
@@ -54,18 +54,16 @@ class InfoTcDock(DockWidget):
         self.__setup_connections()
 
     def __setup_widgets(self) -> None:
-        widget = QWidget()
-        self.setWidget(widget)
+        self.__scroll_area = QScrollArea()
+        self.__scroll_area.setFrameShape(QScrollArea.NoFrame)
+        self.__scroll_area.setWidgetResizable(True)
+        self.setWidget(self.__scroll_area)
 
-        layout = QGridLayout()
-        widget.setLayout(layout)
+        self.__widget = QWidget()
+        self.__scroll_area.setWidget(self.__widget)
 
-        layout.setMargin(0)
-
-        # status icons
-        info_layout = QHBoxLayout()
-        info_layout.setContentsMargins(QMargins(8, 8, 8, 8))
-        layout.addLayout(info_layout, 0, 0, 1, 1, Qt.AlignRight | Qt.AlignTop)
+        layout = QVBoxLayout()
+        self.__widget.setLayout(layout)
 
         self.__no_info_tc = QSvgWidget(self.NO_INFO_TC_SVG)
         self.__no_info_tc.setStatusTip(self.NO_INFO_TC_TIP)
@@ -77,17 +75,13 @@ class InfoTcDock(DockWidget):
         for icon in icons:
             icon.setFixedSize(self.SVG_ICON_SIZE, self.SVG_ICON_SIZE)
             icon.setVisible(False)
-            info_layout.addWidget(icon)
 
-        # main icons
-        self.__form_widget = QWidget()
-        layout.addWidget(self.__form_widget, 0, 0)
-
+        # main widgets
         form_layout = FormLayout()
-        self.__form_widget.setLayout(form_layout)
+        layout.addLayout(form_layout)
 
         self.__title = ElidedLabel()
-        form_layout.addRow('Title:', self.__title)
+        form_layout.add_horizontal_widgets('Title:', [self.__title, self.__no_info_tc, self.__offline])
 
         self.__authors = TagsFlowView()
         form_layout.addRow('Authors:', self.__authors)
@@ -112,6 +106,8 @@ class InfoTcDock(DockWidget):
 
         self.__size = QLabel()
         form_layout.addRow('Size:', self.__size)
+
+        layout.addStretch()
 
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
@@ -159,11 +155,11 @@ class InfoTcDock(DockWidget):
     def __update_info(self) -> None:
         folder: Optional[Folder] = self.__folder
         if folder is None:
-            self.__form_widget.setVisible(False)
+            self.__widget.setVisible(False)
             self.__clear_form_widget()
             return
 
-        self.__form_widget.setVisible(True)
+        self.__widget.setVisible(True)
 
         path = folder.path()
         self.__path_name.set_path(path, folder.folder_name)
