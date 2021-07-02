@@ -91,6 +91,7 @@ class TutorialData:
                 'default': ''
             },
             'level': {'type': 'string', 'default': ''},
+            'description': {'type': 'string', 'default': ''},
         }
     }
 
@@ -133,6 +134,8 @@ class TutorialData:
         tutorial.duration = TutorialData.text_to_duration(data.get(TutorialData.DURATION_KEY))
 
         tutorial.level = TutorialData.text_to_level(data.get(TutorialData.LEVEL_KEY))
+
+        tutorial.description = data.get(TutorialData.DESCRIPTION_KEY)
 
     @staticmethod
     def text_to_duration(text: str) -> int:
