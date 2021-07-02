@@ -1,16 +1,11 @@
 import logging
 from pathlib import Path
-from typing import Dict, Final, Optional
+from typing import Dict, Final, List, Optional, Tuple
 
 from markdown import Markdown
-from markdown.extensions import (
-    admonition,
-    fenced_code,
-    nl2br,
-    sane_lists,
-    tables,
-)
+from markdown.extensions import admonition, fenced_code, nl2br, sane_lists, tables
 from PySide2.QtCore import QUrl, Qt
+from PySide2.QtGui import QImage, QTextDocument
 from PySide2.QtWidgets import QFrame
 
 from tutcatalogpy.common.widgets.growing_text_edit import GrowingTextEdit
@@ -152,8 +147,7 @@ class DescriptionView(GrowingTextEdit):
         self.document().setDefaultStyleSheet(DESCRIPTION_STYLE_SHEET)
         self.setAttribute(Qt.WA_StyledBackground, True)
 
-    def set_content(self, description: str, path: Optional[Path] = None) -> None:
-        base_url = QUrl(f'file://{path}/', QUrl.TolerantMode)
+    def set_content(self, description: str, path: Optional[Path] = None, images: List[Tuple[str, QImage]] = list()) -> None:
         md = Markdown(extensions=[
             admonition.AdmonitionExtension(),
             fenced_code.FencedCodeExtension(),
@@ -163,16 +157,30 @@ class DescriptionView(GrowingTextEdit):
         ])
         html = md.convert(description)
         document = self.document()
-        document.setBaseUrl(base_url)
+        for name, image in images:
+            document.addResource(QTextDocument.ImageResource, QUrl(name), image)
+        if path is not None:
+            base_url = QUrl(f'file://{path}/', QUrl.TolerantMode)
+            document.setBaseUrl(base_url)
         document.setHtml(html)
-
         # log.raw_html(html)
 
 
 if __name__ == '__main__':
     from PySide2.QtWidgets import QApplication, QScrollArea
+    from tutcatalogpy.common.files import relative_path
 
-    content = """
+    cover_name = 'cover.png'
+    cover = QImage(relative_path(__file__, '../../resources/icons/cover.png'))
+
+    image1_name = 'image1.jpg'
+    image1 = QImage(relative_path(__file__, '../../resources/icons/image1.jpg'))
+
+    content = f"""
+![cover]({cover_name})
+
+![image]({image1_name})
+
 # H1 Title
 
 ## H2 Title
@@ -241,9 +249,11 @@ Content Cell  | Content Cell
 
     window = QScrollArea()
     view = DescriptionView()
-    view.set_content(content)
+    view.set_content(content, images=[(cover_name, cover), (image1_name, image1)])
     window.setWidget(view)
+
     window.resize(400, 900)
     window.show()
+
 
     app.exec_()
