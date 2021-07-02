@@ -29,7 +29,6 @@ class PathView(ElidedLabel):
 
     def __update_ui(self) -> None:
         super().setInteractive(self.__interactive and self.__path.exists())
-        self.setStatusTip(str(self.__path))
 
     def __on_triggered(self, text: str) -> None:
         if self.__path.exists():

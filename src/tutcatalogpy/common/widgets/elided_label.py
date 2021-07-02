@@ -87,6 +87,9 @@ class ElidedLabel(QAbstractButton):
 
         self.__elided = (elidedContent != self.__text)
 
+        if self.__elided:
+            self.setStatusTip(self.__text)
+
         self.setMinimumSize(
             10,
             metrics.boundingRect('X').height() + metrics.underlinePos()
