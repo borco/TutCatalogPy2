@@ -3,13 +3,16 @@ from typing import Final, Optional
 
 from humanize import naturalsize
 from PySide2.QtCore import Signal
+from PySide2.QtGui import QImage
 from PySide2.QtWidgets import QVBoxLayout, QScrollArea, QLabel, QWidget
 from PySide2.QtSvg import QSvgWidget
 from sqlalchemy.sql.schema import Table
 
 from tutcatalogpy.common.db.author import Author
+from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.folder import Folder
+from tutcatalogpy.common.db.image import Image
 from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.tutorial_data import TutorialData
@@ -201,7 +204,22 @@ class InfoTcDock(DockWidget):
 
         self.__level.setText(TutorialData.level_to_text(tutorial.level))
 
-        self.__description.set_content(tutorial.description, folder.path())
+        self.__update_info_description(folder)
+
+    def __update_info_description(self, folder: Folder) -> None:
+        tutorial: Tutorial = folder.tutorial
+
+        images = []
+
+        cover: Cover = folder.cover
+        if cover is not None and cover.data is not None and cover.name is not None:
+            images.append((cover.name, QImage.fromData(cover.data)))
+
+        image: Image
+        for image in folder.images:
+            images.append((image.name, QImage.fromData(image.data)))
+
+        self.__description.set_content(tutorial.description, images=images)
 
 
 if __name__ == '__main__':
