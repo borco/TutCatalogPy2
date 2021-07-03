@@ -32,6 +32,10 @@ class Cover(Base):
     size = Column(Integer, default=None, nullable=True)
     data = Column(LargeBinary, default=None, nullable=True)
 
+    @property
+    def name(self) -> Optional[str]:
+        return Cover.FileFormat(self.file_format).file_name
+
 
 if __name__ == '__main__':
     from tutcatalogpy.catalog.main import run
