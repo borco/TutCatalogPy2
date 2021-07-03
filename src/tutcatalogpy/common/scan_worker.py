@@ -436,7 +436,7 @@ class ScanWorker(QObject):
 
         image: Image
         for image in folder.images:
-            image_path = folder.path() / image
+            image_path = folder.path() / image.name
             if image_path not in current_images:
                 folder.images.remove(image)
                 # image.tutorial_id = None
