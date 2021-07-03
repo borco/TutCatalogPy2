@@ -157,12 +157,16 @@ class DescriptionView(GrowingTextEdit):
         ])
         html = md.convert(description)
         document = self.document()
+        document.clear() # does this clears the cached resources?
         for name, image in images:
+            # print('adding image:', name)
             document.addResource(QTextDocument.ImageResource, QUrl(name), image)
         if path is not None:
+            # print('setting base path to:', path)
             base_url = QUrl(f'file://{path}/', QUrl.TolerantMode)
             document.setBaseUrl(base_url)
         document.setHtml(html)
+        # print(html)
         # log.raw_html(html)
 
 
@@ -170,16 +174,23 @@ if __name__ == '__main__':
     from PySide2.QtWidgets import QApplication, QScrollArea
     from tutcatalogpy.common.files import relative_path
 
+    def make_image(path) -> QImage:
+        with open(path, 'rb') as f:
+            data = f.read()
+            return QImage.fromData(data)
+
     cover_name = 'cover.png'
-    cover = QImage(relative_path(__file__, '../../resources/icons/cover.png'))
+    cover = make_image(relative_path(__file__, '../../resources/icons/cover.png'))
 
     image1_name = 'image1.jpg'
-    image1 = QImage(relative_path(__file__, '../../resources/icons/image1.jpg'))
+    image1 = make_image(relative_path(__file__, '../../resources/icons/image1.jpg'))
 
     content = f"""
 ![cover]({cover_name})
 
 ![image]({image1_name})
+
+![image](missing.jpg)
 
 # H1 Title
 
