@@ -40,11 +40,12 @@ class DataAccessLayer:
         from tutcatalogpy.common.db.cover import Cover  # noqa: F401
         from tutcatalogpy.common.db.disk import Disk  # noqa: F401
         from tutcatalogpy.common.db.folder import Folder  # noqa: F401
+        from tutcatalogpy.common.db.image import Image  # noqa: F401
         from tutcatalogpy.common.db.learning_path import LearningPath  # noqa: F401
         from tutcatalogpy.common.db.publisher import Publisher  # noqa: F401
         from tutcatalogpy.common.db.tag import Tag  # noqa: F401
-        from tutcatalogpy.common.db.tutorial import Tutorial  # noqa: F401
         from tutcatalogpy.common.db.tutorial_learning_path import TutorialLearningPath  # noqa: F401
+        from tutcatalogpy.common.db.tutorial import Tutorial  # noqa: F401
 
         self.disconnect()
 
