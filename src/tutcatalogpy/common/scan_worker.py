@@ -11,12 +11,12 @@ from sqlalchemy.orm.session import Session
 from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
+from tutcatalogpy.common.db.image import Image
 from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.tutorial import Tutorial
-from tutcatalogpy.common.files import get_creation_datetime, get_modification_datetime, get_folder_size
+from tutcatalogpy.common.files import get_creation_datetime, get_modification_datetime, get_folder_size, get_images
 from tutcatalogpy.common.scan_config import ScanConfig, scan_config
 from tutcatalogpy.common.tutorial_data import TutorialData
-
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -36,6 +36,11 @@ def get_path_stats(path: Path) -> PathStats:
     id = str(stat.st_ino)
     size = stat.st_size
     return PathStats(modified, created, id, size)
+
+
+def get_image_data(path: Path) -> bytes:
+    with open(path, 'rb') as f:
+        return f.read()
 
 
 class ScanWorker(QObject):
@@ -373,6 +378,7 @@ class ScanWorker(QObject):
         folder.size = get_folder_size(path)
         folder.status = Folder.Status.OK
         ScanWorker.update_folder_cover(session, folder)
+        ScanWorker.update_folder_images(session, folder)
         ScanWorker.update_folder_tutorial(session, folder)
         session.commit()
 
@@ -421,6 +427,40 @@ class ScanWorker(QObject):
             if cover is not None:
                 folder.cover_id = None
                 session.delete(cover)
+
+        session.commit()
+
+    @staticmethod
+    def update_folder_images(session: Session, folder: Folder) -> None:
+        current_images = get_images(folder.path())
+
+        image: Image
+        for image in folder.images:
+            image_path = folder.path() / image
+            if image_path not in current_images:
+                folder.images.remove(image)
+                # image.tutorial_id = None
+                # session.delete(image)
+            else:
+                modified, created, system_id, size = get_path_stats(image_path)
+                if (
+                    image.system_id == system_id
+                    and image.modified == modified
+                    and image.created == created
+                    and image.size == size
+                ):
+                    continue
+
+                image.data = get_image_data(image_path)
+                current_images.remove(image_path)
+
+        for image_path in current_images:
+            image = Image()
+            image.name = image_path.name
+            image.modified, image.created, image.system_id, image.size = get_path_stats(image_path)
+            image.data = get_image_data(image_path)
+            session.add(image)
+            folder.images.append(image)
 
         session.commit()
 
