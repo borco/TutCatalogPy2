@@ -195,7 +195,7 @@ class InfoTcDock(DockWidget):
         self.__publisher.clear()
         self.__publisher.add_publisher(tutorial.publisher.name, tutorial.publisher_id)
 
-        self.__title.setText(tutorial.title)
+        self.__title.set_text(tutorial.title)
 
         author: Author
         self.__authors.clear()
