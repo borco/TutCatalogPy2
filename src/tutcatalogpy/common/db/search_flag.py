@@ -25,7 +25,6 @@ class Search(LabeledIntEnum):
 
 class SearchValue(LabeledIntEnum):
     IS_COMPLETE = (0, 'complete')
-    IS_ONLINE = (1, 'online')
 
 
 class SearchFlag(Base):
