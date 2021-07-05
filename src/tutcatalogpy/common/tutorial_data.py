@@ -92,6 +92,7 @@ class TutorialData:
             },
             'level': {'type': 'string', 'default': ''},
             'description': {'type': 'string', 'default': ''},
+            'url': {'type': 'string', 'default': ''},
         }
     }
 
@@ -135,6 +136,7 @@ class TutorialData:
 
         tutorial.level = TutorialData.text_to_level(data.get(TutorialData.LEVEL_KEY))
 
+        tutorial.url = data.get(TutorialData.URL_KEY)
         tutorial.description = data.get(TutorialData.DESCRIPTION_KEY)
 
     @staticmethod
