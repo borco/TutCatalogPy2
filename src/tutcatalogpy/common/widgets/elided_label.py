@@ -31,6 +31,7 @@ class ElidedLabel(QAbstractButton):
         self.setInteractive(False)
 
         self.tip = ElidedLabel.Tip.NO_TIP
+        self.tip_prefix = ''
 
     @property
     def elided(self) -> bool:
@@ -78,6 +79,7 @@ class ElidedLabel(QAbstractButton):
     def clear(self) -> None:
         self.set_text('')
         self.set_data(None)
+        self.setStatusTip('')
 
     def paintEvent(self, event: QPaintEvent) -> None:
         # print('ElidedLabel.paintEvent')
@@ -108,9 +110,9 @@ class ElidedLabel(QAbstractButton):
 
     def __update_status_tip(self) -> None:
         if self.tip == ElidedLabel.Tip.SHOW_DATA and self.__data is not None:
-            self.setStatusTip(self.__data)
+            self.setStatusTip(self.tip_prefix + self.__data)
         elif self.tip == ElidedLabel.Tip.SHOW_TEXT or (self.tip == ElidedLabel.Tip.SHOW_TEXT_IF_ELIDED and self.__elided):
-            self.setStatusTip(self.__text)
+            self.setStatusTip(self.tip_prefix + self.__text)
         else:
             self.setStatusTip('')
 

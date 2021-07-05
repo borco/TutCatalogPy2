@@ -7,6 +7,8 @@ from tutcatalogpy.common.widgets.elided_label import ElidedLabel
 class UrlView(ElidedLabel):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.tip = ElidedLabel.Tip.SHOW_TEXT
+        self.tip_prefix = 'Open in external web browser: '
         self.setInteractive(True)
         self.triggered.connect(self.__on_triggered)
 
