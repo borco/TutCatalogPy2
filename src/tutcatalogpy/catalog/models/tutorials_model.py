@@ -12,12 +12,13 @@ from sqlalchemy.sql.schema import Column
 
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.common.db.author import Author
-from tutcatalogpy.common.db.base import FIELD_SEPARATOR, Search
+from tutcatalogpy.common.db.base import FIELD_SEPARATOR
 from tutcatalogpy.common.db.dal import dal, tutorial_author_table
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
+from tutcatalogpy.common.db.search_flag import Search, SearchFlag, SearchValue
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.tutorial_data import TutorialData, TutorialLevel
 
@@ -32,6 +33,7 @@ class QueryResult:
     folder: Optional[Folder] = None
     has_cover: Optional[bool] = None
     has_info_tc: Optional[bool] = None
+    has_error: Optional[bool] = None
 
 
 class Columns(bytes, enum.Enum):
@@ -53,25 +55,27 @@ class Columns(bytes, enum.Enum):
     LOCATION = (3, 'Location', Disk.location)
     HAS_COVER = (4, 'Cover', (Folder.cover_id != None), 'has_cover')
     HAS_INFO_TC = (5, 'Info.tc', (Tutorial.size != None), 'has_info')
-    HAS_ERROR = (6, 'Error', Folder.error)
-    LEVEL = (7, 'Level', Tutorial.level)
-    DISK_NAME = (8, 'Disk', Disk.disk_name)
-    FOLDER_PARENT = (9, 'Folder Parent', Folder.folder_parent)
-    FOLDER_NAME = (10, 'Folder Name', Folder.folder_name)
-    PUBLISHER = (11, 'Publisher', Publisher.name)
-    TITLE = (12, 'Title', Tutorial.title)
-    AUTHORS = (13, 'Authors', Tutorial.all_authors)
-    RELEASED = (14, 'Released', Tutorial.released)
-    DURATION = (15, 'Duration', Tutorial.duration)
-    SIZE = (16, 'Size', Folder.size)
-    CREATED = (17, 'Created', Folder.created)
-    MODIFIED = (18, 'Modified', Folder.modified)
+    HAS_ERROR = (6, 'Error', (Folder.error != None), 'has_error')
+    IS_COMPLETE = (7, 'Complete', Tutorial.is_complete)
+    LEVEL = (8, 'Level', Tutorial.level)
+    DISK_NAME = (9, 'Disk', Disk.disk_name)
+    FOLDER_PARENT = (10, 'Folder Parent', Folder.folder_parent)
+    FOLDER_NAME = (11, 'Folder Name', Folder.folder_name)
+    PUBLISHER = (12, 'Publisher', Publisher.name)
+    TITLE = (13, 'Title', Tutorial.title)
+    AUTHORS = (14, 'Authors', Tutorial.all_authors)
+    RELEASED = (15, 'Released', Tutorial.released)
+    DURATION = (16, 'Duration', Tutorial.duration)
+    SIZE = (17, 'Size', Folder.size)
+    CREATED = (18, 'Created', Folder.created)
+    MODIFIED = (19, 'Modified', Folder.modified)
 
 
 class TutorialsModel(QAbstractTableModel):
 
     NO_COVER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
     NO_INFO_TC_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_info_tc.svg')
+    INCOMPLETE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/incomplete.svg')
     ERROR_ICON: Final[str] = relative_path(__file__, '../../resources/icons/error.svg')
     OFFLINE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/offline.svg')
     REMOTE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/remote.svg')
@@ -101,6 +105,7 @@ class TutorialsModel(QAbstractTableModel):
     def init_icons(self) -> None:
         self.__no_cover_icon = QIcon(self.NO_COVER_ICON)
         self.__no_info_tc_icon = QIcon(self.NO_INFO_TC_ICON)
+        self.__incomplete_icon = QIcon(self.INCOMPLETE_ICON)
         self.__error_icon = QIcon(self.ERROR_ICON)
         self.__offline_icon = QIcon(self.OFFLINE_ICON)
         self.__remote_icon = QIcon(self.REMOTE_ICON)
@@ -156,18 +161,20 @@ class TutorialsModel(QAbstractTableModel):
         column = index.column()
 
         if role == Qt.DecorationRole:
-            if column == Columns.HAS_COVER.value:
-                return None if result.has_cover else self.__no_cover_icon
-            elif column == Columns.HAS_INFO_TC.value:
-                return None if result.has_info_tc else self.__no_info_tc_icon
-            elif column == Columns.ONLINE.value:
-                return None if folder.disk.online else self.__offline_icon
-            elif column == Columns.LOCATION.value:
-                return None if folder.disk.location == Disk.Location.LOCAL else self.__remote_icon
+            if column == Columns.HAS_COVER.value and not result.has_cover:
+                return self.__no_cover_icon
+            elif column == Columns.HAS_INFO_TC.value and not result.has_info_tc:
+                return self.__no_info_tc_icon
+            elif column == Columns.HAS_ERROR.value and result.has_error:
+                return self.__error_icon
+            elif column == Columns.IS_COMPLETE.value and not folder.tutorial.is_complete:
+                return self.__incomplete_icon
+            elif column == Columns.ONLINE.value and not folder.disk.online:
+                return self.__offline_icon
+            elif column == Columns.LOCATION.value and folder.disk.location != Disk.Location.LOCAL:
+                return self.__remote_icon
             elif column == Columns.LEVEL.value:
                 return self.__level_icon.get(folder.tutorial.level, None)
-            elif column == Columns.HAS_ERROR.value:
-                return None if folder.error is None else self.__error_icon
         elif role == Qt.CheckStateRole:
             if column == Columns.CHECKED.value:
                 return Qt.Checked if folder.checked else Qt.Unchecked
@@ -234,6 +241,7 @@ class TutorialsModel(QAbstractTableModel):
                 Folder,
                 Columns.HAS_COVER.column.label(Columns.HAS_COVER.alias),
                 Columns.HAS_INFO_TC.column.label(Columns.HAS_INFO_TC.alias),
+                Columns.HAS_ERROR.column.label(Columns.HAS_ERROR.alias),
             )
         )
 
@@ -241,8 +249,8 @@ class TutorialsModel(QAbstractTableModel):
 
     def __query_result(self, row: int) -> QueryResult:
         query = self.__cached_query
-        folder, has_cover, has_info = query.offset(row).limit(1).first()
-        return QueryResult(folder, has_cover, has_info)
+        folder, has_cover, has_info, has_error = query.offset(row).limit(1).first()
+        return QueryResult(folder, has_cover, has_info, has_error)
 
     def __joined_query(self, query: Query) -> Query:
         query = (
@@ -272,6 +280,13 @@ class TutorialsModel(QAbstractTableModel):
                     .filter((Disk.disk_parent + '/' + Disk.disk_name + '/' + Folder.folder_parent + '/' + Folder.folder_name)
                     .like(f'%{key}%'))
                 )
+
+        search_flag_column = {
+            SearchValue.IS_COMPLETE: Tutorial.is_complete,
+        }
+        for search_flag in dal.session.query(SearchFlag):
+            if search_flag.search != Search.IGNORED:
+                query = query.filter(search_flag_column[search_flag.value] == (search_flag.search == Search.INCLUDE))
 
         for publisher in dal.session.query(Publisher).filter(Publisher.search == Search.INCLUDE):
             query = query.filter(Publisher.id_ == publisher.id_)

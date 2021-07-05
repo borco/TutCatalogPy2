@@ -20,6 +20,7 @@ from tutcatalogpy.common.widgets.description_view import DescriptionView
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
 from tutcatalogpy.common.widgets.elided_label import ElidedLabel
 from tutcatalogpy.common.widgets.error_view import ErrorView
+from tutcatalogpy.common.widgets.flag_view import FlagView
 from tutcatalogpy.common.widgets.form_layout import FormLayout
 from tutcatalogpy.common.widgets.horizontal_separator import HorizontalSeparator
 from tutcatalogpy.common.widgets.path_view import PathView
@@ -120,6 +121,9 @@ class InfoTcDock(DockWidget):
         self.__size = QLabel()
         form_layout.addRow('Size:', self.__size)
 
+        self.__is_complete = FlagView()
+        form_layout.addRow('Complete:', self.__is_complete)
+
         layout.addWidget(HorizontalSeparator())
 
         self.__error = ErrorView()
@@ -171,6 +175,7 @@ class InfoTcDock(DockWidget):
             self.__duration,
             self.__level,
             self.__url,
+            self.__is_complete,
             self.__error,
             self.__description,
         ]:
@@ -217,6 +222,8 @@ class InfoTcDock(DockWidget):
         self.__level.setText(TutorialData.level_to_text(tutorial.level))
 
         self.__url.set_text(tutorial.url)
+
+        self.__is_complete.set_flag(tutorial.is_complete if tutorial.size is not None else None)
 
         self.__update_info_error(folder)
         self.__update_info_description(folder)

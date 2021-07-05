@@ -2,7 +2,7 @@ import enum
 
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql.schema import Column, ForeignKey
-from sqlalchemy.sql.sqltypes import DateTime, Integer, Text
+from sqlalchemy.sql.sqltypes import Boolean, DateTime, Integer, Text
 
 from tutcatalogpy.common.db.base import Base
 
@@ -27,6 +27,8 @@ class Tutorial(Base):
     level = Column(Integer, default=0, nullable=False)
     url = Column(Text, default='', nullable=False)
     description = Column(Text, default='', nullable=False)
+
+    is_complete = Column(Boolean, default=True, nullable=False)
 
     # aggregate fields used by models to search and filter and by view to display
     # separator: base.FIELD_SEPARATOR

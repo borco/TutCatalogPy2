@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-270,-120)">
+        <g id="incomplete" transform="matrix(1,0,0,1,4,0)">
+            <rect x="266" y="120" width="24" height="24" style="fill:none;"/>
+            <g transform="matrix(1.22222,0,0,1.22222,-59.9444,-30.5556)">
+                <g transform="matrix(0.818182,0,0,0.818182,45.7727,25)">
+                    <circle cx="282" cy="132" r="11"/>
+                </g>
+                <g transform="matrix(0.9,0,0,0.9,22.7,14.2)">
+                    <path d="M282,142C287.523,142 292,137.523 292,132C292,129.348 290.946,126.804 289.071,124.929L282,132L282,142Z" style="fill:white;"/>
+                </g>
+                <g transform="matrix(0.818182,0,0,0.818182,45.7727,25)">
+                    <path d="M282,121C288.071,121 293,125.929 293,132C293,138.071 288.071,143 282,143C275.929,143 271,138.071 271,132C271,125.929 275.929,121 282,121ZM282,123.083C286.921,123.083 290.917,127.079 290.917,132C290.917,136.921 286.921,140.917 282,140.917C277.079,140.917 273.083,136.921 273.083,132C273.083,127.079 277.079,123.083 282,123.083Z"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

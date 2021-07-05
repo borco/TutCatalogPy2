@@ -8,6 +8,7 @@ from sqlalchemy.sql.schema import Table
 
 from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.publisher import Publisher
+from tutcatalogpy.common.db.search_flag import SearchFlag
 
 MINIMUM_ROW_HEIGHT: Final[int] = 16
 HORIZONTAL_ITEM_SPACING: Final[int] = 0
@@ -42,6 +43,11 @@ class AuthorItem(TagItem):
 @dataclass
 class PublisherItem(TagItem):
     table = Publisher
+
+
+@dataclass
+class SearchFlagItem(TagItem):
+    table = SearchFlag
 
 
 class TagsModel(QAbstractListModel):
@@ -184,6 +190,9 @@ class TagsFlowView(QListView):
 
     def add_publisher(self, text: str, index: int) -> None:
         self.__model.add_tag(PublisherItem(text, index))
+
+    def add_search_flag(self, text: str, index: int) -> None:
+        self.__model.add_tag(SearchFlagItem(text, index))
 
     def sizeHint(self) -> QSize:
         rect = self.rect()

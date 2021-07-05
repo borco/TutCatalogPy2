@@ -52,7 +52,7 @@ class TutorialData:
     LEVEL_KEY: Final[str] = 'level'
     RATING_KEY: Final[str] = 'rating'
     URL_KEY: Final[str] = 'url'
-    COMPLETE_KEY: Final[str] = 'complete'
+    IS_COMPLETE_KEY: Final[str] = 'complete'
     VIEWED_KEY: Final[str] = 'viewed'
     STARTED_KEY: Final[str] = 'started'
     FINISHED_KEY: Final[str] = 'finished'
@@ -93,6 +93,7 @@ class TutorialData:
             'level': {'type': 'string', 'default': ''},
             'description': {'type': 'string', 'default': ''},
             'url': {'type': 'string', 'default': ''},
+            'complete': {'type': 'boolean', 'default': True},
         }
     }
 
@@ -135,6 +136,8 @@ class TutorialData:
         tutorial.duration = TutorialData.text_to_duration(data.get(TutorialData.DURATION_KEY))
 
         tutorial.level = TutorialData.text_to_level(data.get(TutorialData.LEVEL_KEY))
+
+        tutorial.is_complete = data.get(TutorialData.IS_COMPLETE_KEY)
 
         tutorial.url = data.get(TutorialData.URL_KEY)
         tutorial.description = data.get(TutorialData.DESCRIPTION_KEY)
