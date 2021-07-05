@@ -2,7 +2,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.sql.sqltypes import Integer, Text
 
-from tutcatalogpy.common.db.base import Base, Search
+from tutcatalogpy.common.db.base import Base
+from tutcatalogpy.common.db.search_flags import Search
 
 
 class LearningPath(Base):

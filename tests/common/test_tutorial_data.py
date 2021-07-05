@@ -392,3 +392,18 @@ def test_load_from_string_reads_level(text: str, level: TutorialLevel, dal_: Dat
     dal_.renew_session()
     tutorial = dal_.session.query(Tutorial).one()
     assert tutorial.level == level
+
+
+def test_load_from_string_reads_complete(dal_: DataAccessLayer) -> None:
+    tutorial = Tutorial()
+    dal_.session.add(tutorial)
+    dal_.session.commit()
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'complete: yes')
+    assert tutorial.is_complete is True
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'complete: no')
+    assert tutorial.is_complete is False
+
+    TutorialData.load_from_string(dal_.session, tutorial, '')
+    assert tutorial.is_complete is True

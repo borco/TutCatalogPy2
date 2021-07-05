@@ -1,7 +1,8 @@
 from sqlalchemy.schema import Column
 from sqlalchemy.sql.sqltypes import Integer, Text
 
-from tutcatalogpy.common.db.base import Base, Search
+from tutcatalogpy.common.db.base import Base
+from tutcatalogpy.common.db.search_flags import Search
 
 
 class Publisher(Base):

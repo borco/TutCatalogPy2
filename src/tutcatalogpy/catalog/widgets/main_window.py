@@ -19,12 +19,12 @@ from tutcatalogpy.catalog.widgets.search_dock import SearchDock
 from tutcatalogpy.catalog.widgets.tags_dock import TagsDock
 from tutcatalogpy.catalog.widgets.tutorials_dock import TutorialsDock
 from tutcatalogpy.common.db.author import Author
-from tutcatalogpy.common.db.base import Search
 from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.publisher import Publisher
+from tutcatalogpy.common.db.search_flags import Search
 from tutcatalogpy.common.desktop_services import open_path
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles

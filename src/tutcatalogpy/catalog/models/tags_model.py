@@ -6,9 +6,9 @@ from sqlalchemy.sql.functions import func
 from sqlalchemy.sql.schema import Table
 
 from tutcatalogpy.common.db.author import Author
-from tutcatalogpy.common.db.base import Search
 from tutcatalogpy.common.db.dal import dal, tutorial_author_table
 from tutcatalogpy.common.db.publisher import Publisher
+from tutcatalogpy.common.db.search_flags import Search
 from tutcatalogpy.common.db.tutorial import Tutorial
 
 log = logging.getLogger(__name__)
