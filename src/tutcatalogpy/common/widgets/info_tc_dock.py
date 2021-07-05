@@ -19,6 +19,7 @@ from tutcatalogpy.common.tutorial_data import TutorialData
 from tutcatalogpy.common.widgets.description_view import DescriptionView
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
 from tutcatalogpy.common.widgets.elided_label import ElidedLabel
+from tutcatalogpy.common.widgets.error_view import ErrorView
 from tutcatalogpy.common.widgets.form_layout import FormLayout
 from tutcatalogpy.common.widgets.horizontal_separator import HorizontalSeparator
 from tutcatalogpy.common.widgets.path_view import PathView
@@ -117,6 +118,9 @@ class InfoTcDock(DockWidget):
 
         layout.addWidget(HorizontalSeparator())
 
+        self.__error = ErrorView()
+        layout.addWidget(self.__error)
+
         self.__description = DescriptionView()
         self.setMinimumWidth(DESCRIPTION_MINIMUM_WIDTH)
         self.setMaximumWidth(DESCRIPTION_MAXIMUM_WIDTH)
@@ -162,9 +166,12 @@ class InfoTcDock(DockWidget):
             self.__released,
             self.__duration,
             self.__level,
+            self.__error,
             self.__description,
         ]:
             widget.clear()
+
+        self.__error.hide()
 
     def __update_info(self) -> None:
         folder: Optional[Folder] = self.__folder
@@ -204,7 +211,12 @@ class InfoTcDock(DockWidget):
 
         self.__level.setText(TutorialData.level_to_text(tutorial.level))
 
+        self.__update_info_error(folder)
         self.__update_info_description(folder)
+
+    def __update_info_error(self, folder: Folder) -> None:
+        self.__error.set_error(folder.error)
+        self.__error.setVisible(folder.error is not None)
 
     def __update_info_description(self, folder: Folder) -> None:
         tutorial: Tutorial = folder.tutorial

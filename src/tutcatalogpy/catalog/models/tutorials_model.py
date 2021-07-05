@@ -53,24 +53,26 @@ class Columns(bytes, enum.Enum):
     LOCATION = (3, 'Location', Disk.location)
     HAS_COVER = (4, 'Cover', (Folder.cover_id != None), 'has_cover')
     HAS_INFO_TC = (5, 'Info.tc', (Tutorial.size != None), 'has_info')
-    DISK_NAME = (6, 'Disk', Disk.disk_name)
-    FOLDER_PARENT = (7, 'Folder Parent', Folder.folder_parent)
-    FOLDER_NAME = (8, 'Folder Name', Folder.folder_name)
-    PUBLISHER = (9, 'Publisher', Publisher.name)
-    TITLE = (10, 'Title', Tutorial.title)
-    AUTHORS = (11, 'Authors', Tutorial.all_authors)
-    RELEASED = (12, 'Released', Tutorial.released)
-    DURATION = (13, 'Duration', Tutorial.duration)
-    LEVEL = (14, 'Level', Tutorial.level)
-    SIZE = (15, 'Size', Folder.size)
-    CREATED = (16, 'Created', Folder.created)
-    MODIFIED = (17, 'Modified', Folder.modified)
+    HAS_ERROR = (6, 'Error', Folder.error)
+    LEVEL = (7, 'Level', Tutorial.level)
+    DISK_NAME = (8, 'Disk', Disk.disk_name)
+    FOLDER_PARENT = (9, 'Folder Parent', Folder.folder_parent)
+    FOLDER_NAME = (10, 'Folder Name', Folder.folder_name)
+    PUBLISHER = (11, 'Publisher', Publisher.name)
+    TITLE = (12, 'Title', Tutorial.title)
+    AUTHORS = (13, 'Authors', Tutorial.all_authors)
+    RELEASED = (14, 'Released', Tutorial.released)
+    DURATION = (15, 'Duration', Tutorial.duration)
+    SIZE = (16, 'Size', Folder.size)
+    CREATED = (17, 'Created', Folder.created)
+    MODIFIED = (18, 'Modified', Folder.modified)
 
 
 class TutorialsModel(QAbstractTableModel):
 
     NO_COVER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_cover.svg')
     NO_INFO_TC_ICON: Final[str] = relative_path(__file__, '../../resources/icons/no_info_tc.svg')
+    ERROR_ICON: Final[str] = relative_path(__file__, '../../resources/icons/error.svg')
     OFFLINE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/offline.svg')
     REMOTE_ICON: Final[str] = relative_path(__file__, '../../resources/icons/remote.svg')
     LEVEL_ICONS: Final[Dict[int, Optional[str]]] = {
@@ -99,6 +101,7 @@ class TutorialsModel(QAbstractTableModel):
     def init_icons(self) -> None:
         self.__no_cover_icon = QIcon(self.NO_COVER_ICON)
         self.__no_info_tc_icon = QIcon(self.NO_INFO_TC_ICON)
+        self.__error_icon = QIcon(self.ERROR_ICON)
         self.__offline_icon = QIcon(self.OFFLINE_ICON)
         self.__remote_icon = QIcon(self.REMOTE_ICON)
 
@@ -163,6 +166,8 @@ class TutorialsModel(QAbstractTableModel):
                 return None if folder.disk.location == Disk.Location.LOCAL else self.__remote_icon
             elif column == Columns.LEVEL.value:
                 return self.__level_icon.get(folder.tutorial.level, None)
+            elif column == Columns.HAS_ERROR.value:
+                return None if folder.error is None else self.__error_icon
         elif role == Qt.CheckStateRole:
             if column == Columns.CHECKED.value:
                 return Qt.Checked if folder.checked else Qt.Unchecked

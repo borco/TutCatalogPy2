@@ -472,6 +472,7 @@ class ScanWorker(QObject):
             tutorial = Tutorial()
             folder.tutorial = tutorial
             TutorialData.load_from_string(session, tutorial, '')
+            folder.error = None
         else:
             modified, created, system_id, size = get_path_stats(path)
 
@@ -496,11 +497,13 @@ class ScanWorker(QObject):
                     text = f.read()
 
                 TutorialData.load_from_string(session, tutorial, text)
+                folder.error = None
             except Exception as ex:
                 log.error("Couldn't parse %s: %s", path, str(ex))
                 tutorial = Tutorial()
                 folder.tutorial = tutorial
                 TutorialData.load_from_string(session, tutorial, '')
+                folder.error = 'Parse error\n' + str(ex)
 
         session.commit()
 

@@ -33,6 +33,7 @@ class Folder(Base):
     modified = Column(DateTime, default=datetime.today(), nullable=False)
     size = Column(Integer)
     checked = Column(Boolean, default=False, nullable=False)
+    error = Column(Text)
 
     disk = relationship('Disk', back_populates='folders')
     cover = relationship('Cover', backref=backref('folder', uselist=False), cascade='all, delete')
