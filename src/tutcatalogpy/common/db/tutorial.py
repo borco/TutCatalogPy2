@@ -25,6 +25,7 @@ class Tutorial(Base):
     released = Column(Text, default='', nullable=False)
     duration = Column(Integer, default=0, nullable=False)
     level = Column(Integer, default=0, nullable=False)
+    url = Column(Text, default='', nullable=False)
     description = Column(Text, default='', nullable=False)
 
     # aggregate fields used by models to search and filter and by view to display

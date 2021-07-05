@@ -24,6 +24,7 @@ from tutcatalogpy.common.widgets.form_layout import FormLayout
 from tutcatalogpy.common.widgets.horizontal_separator import HorizontalSeparator
 from tutcatalogpy.common.widgets.path_view import PathView
 from tutcatalogpy.common.widgets.tags_flow_widget import TagsFlowView
+from tutcatalogpy.common.widgets.url_view import UrlView
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -107,6 +108,9 @@ class InfoTcDock(DockWidget):
         self.__publisher = TagsFlowView()
         form_layout.addRow('Publisher:', self.__publisher)
 
+        self.__url = UrlView()
+        form_layout.addRow('URL:', self.__url)
+
         self.__path_name = PathView()
         form_layout.addRow('Folder Name:', self.__path_name)
 
@@ -166,6 +170,7 @@ class InfoTcDock(DockWidget):
             self.__released,
             self.__duration,
             self.__level,
+            self.__url,
             self.__error,
             self.__description,
         ]:
@@ -195,7 +200,7 @@ class InfoTcDock(DockWidget):
         self.__publisher.clear()
         self.__publisher.add_publisher(tutorial.publisher.name, tutorial.publisher_id)
 
-        self.__title.setText(tutorial.title)
+        self.__title.set_text(tutorial.title)
 
         author: Author
         self.__authors.clear()
@@ -210,6 +215,8 @@ class InfoTcDock(DockWidget):
         self.__duration.setText(TutorialData.duration_to_text(tutorial.duration))
 
         self.__level.setText(TutorialData.level_to_text(tutorial.level))
+
+        self.__url.set_text(tutorial.url)
 
         self.__update_info_error(folder)
         self.__update_info_description(folder)
