@@ -15,7 +15,7 @@ log.info('Launching app.')
 
 
 def load_settings():
-    setup_settings('tutcatalogpy2-catalog')
+    setup_settings(__file__, 'tutcatalogpy2-catalog')
     settings = QSettings()
     scan_config.load_settings(settings)
     del settings

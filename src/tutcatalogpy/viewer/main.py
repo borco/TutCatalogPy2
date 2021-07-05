@@ -13,7 +13,7 @@ log.info('Launching app.')
 
 
 def run():
-    setup_settings('tutcatalogpy2-viewer')
+    setup_settings(__file__, 'tutcatalogpy2-viewer')
 
     # can't extend QApplication because of a bug in Qt
     # that will result in a SIGSEGV when the garbage
