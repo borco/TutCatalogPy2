@@ -471,7 +471,7 @@ class ScanWorker(QObject):
         if not path.exists():
             tutorial = Tutorial()
             folder.tutorial = tutorial
-            text = ''
+            TutorialData.load_from_string(session, tutorial, '')
         else:
             modified, created, system_id, size = get_path_stats(path)
 
@@ -491,14 +491,16 @@ class ScanWorker(QObject):
             tutorial.modified = modified
             tutorial.size = size
 
-            with open(path, mode='r', encoding='utf-8') as f:
-                text = f.read()
+            try:
+                with open(path, mode='r', encoding='utf-8') as f:
+                    text = f.read()
 
-        try:
-            TutorialData.load_from_string(session, tutorial, text)
-        except Exception as ex:
-            folder.tutorial = Tutorial()
-            log.error("Couldn't parse %s: %s", path, str(ex))
+                TutorialData.load_from_string(session, tutorial, text)
+            except Exception as ex:
+                log.error("Couldn't parse %s: %s", path, str(ex))
+                tutorial = Tutorial()
+                folder.tutorial = tutorial
+                TutorialData.load_from_string(session, tutorial, '')
 
         session.commit()
 
