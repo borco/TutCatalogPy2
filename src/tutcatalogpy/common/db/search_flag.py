@@ -25,6 +25,7 @@ class Search(LabeledIntEnum):
 
 class SearchValue(LabeledIntEnum):
     IS_COMPLETE = (0, 'complete')
+    HAS_ERROR = (1, 'errors')
 
 
 class SearchFlag(Base):
