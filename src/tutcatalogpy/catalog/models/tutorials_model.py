@@ -18,7 +18,7 @@ from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tutorial import Tutorial
-from tutcatalogpy.common.db.search_flags import Search
+from tutcatalogpy.common.db.search_flag import Search
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.tutorial_data import TutorialData, TutorialLevel
 

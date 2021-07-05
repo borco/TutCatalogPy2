@@ -8,7 +8,7 @@ from sqlalchemy.sql.schema import Table
 from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.dal import dal, tutorial_author_table
 from tutcatalogpy.common.db.publisher import Publisher
-from tutcatalogpy.common.db.search_flags import Search
+from tutcatalogpy.common.db.search_flag import Search, SearchFlag, SearchValue
 from tutcatalogpy.common.db.tutorial import Tutorial
 
 log = logging.getLogger(__name__)
@@ -16,8 +16,10 @@ log.addHandler(logging.NullHandler())
 
 
 AUTHORS_LABEL: Final[str] = 'authors'
+FLAGS_LABEL: Final[str] = 'flags'
 LEARNING_PATHS_LABEL: Final[str] = 'learning paths'
 PUBLISHERS_LABEL: Final[str] = 'publishers'
+
 CUSTOM_TAGS_LABEL: Final[str] = 'tags (custom)'
 PUBLISHER_TAGS_LABEL: Final[str] = 'tags (publishes)'
 
@@ -125,9 +127,18 @@ class PublishersItem(GroupItem):
             self.append(TagsItem(f'{name} ({count})', publisher))
 
 
+class SearchFlagItem(GroupItem):
+    _label = FLAGS_LABEL
+
+    def _populate(self) -> None:
+        for flag in dal.session.query(SearchFlag):
+            name = SearchValue(flag.value).label
+            self.append(TagsItem(name, flag))
+
+
 class TagsModel(QAbstractItemModel):
 
-    TOP_TABLES: Final = (Author, Publisher)
+    TOP_TABLES: Final = (Author, Publisher, SearchFlag)
 
     search_changed = Signal()
 
@@ -136,15 +147,17 @@ class TagsModel(QAbstractItemModel):
         self.__root_item = TagsItem('root')
 
         self.__authors_item = AuthorsItem()
-        self.__root_item.append(self.__authors_item)
-
         self.__publishers_item = PublishersItem()
-        self.__root_item.append(self.__publishers_item)
+        self.__search_flags_item = SearchFlagItem()
 
         self.__top_items = [
             self.__authors_item,
             self.__publishers_item,
+            self.__search_flags_item,
         ]
+
+        for item in self.__top_items:
+            self.__root_item.append(item)
 
     def refresh(self) -> None:
         self.beginResetModel()
@@ -257,6 +270,7 @@ class TagsModel(QAbstractItemModel):
             if (
                 (table == Author and item == self.__authors_item)
                 or (table == Publisher and item == self.__publishers_item)
+                or (table == SearchFlag and item == self.__search_flags_item)
             ):
                 return child_index
         return QModelIndex()

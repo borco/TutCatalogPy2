@@ -43,7 +43,7 @@ class DataAccessLayer:
         from tutcatalogpy.common.db.image import Image  # noqa: F401
         from tutcatalogpy.common.db.learning_path import LearningPath  # noqa: F401
         from tutcatalogpy.common.db.publisher import Publisher  # noqa: F401
-        from tutcatalogpy.common.db.search_flags import SearchFlags  # noqa: F401
+        from tutcatalogpy.common.db.search_flag import SearchFlag  # noqa: F401
         from tutcatalogpy.common.db.tag import Tag  # noqa: F401
         from tutcatalogpy.common.db.tutorial_learning_path import TutorialLearningPath  # noqa: F401
         from tutcatalogpy.common.db.tutorial import Tutorial  # noqa: F401
@@ -57,6 +57,13 @@ class DataAccessLayer:
         self.Session = sessionmaker(bind=self.__engine)
 
         self.session = self.Session()
+
+        self.__init_tables_with_default_values()
+
+    def __init_tables_with_default_values(self) -> None:
+        from tutcatalogpy.common.db.search_flag import SearchFlag  # noqa: F401
+
+        SearchFlag.init_with_default_values(self.session)
 
     def renew_session(self) -> None:
         if self.session is not None:

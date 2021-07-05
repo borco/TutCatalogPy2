@@ -24,7 +24,7 @@ from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.disk import Disk
 from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.publisher import Publisher
-from tutcatalogpy.common.db.search_flags import Search
+from tutcatalogpy.common.db.search_flag import Search, SearchFlag, SearchValue
 from tutcatalogpy.common.desktop_services import open_path
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
@@ -435,6 +435,11 @@ class MainWindow(CommonMainWindow):
         tutorials_model.search(self.__search_dock, True)
 
     def __update_tags_on_search_dock(self) -> None:
+        def add_label() -> None:
+            nonlocal group_label
+            if group_label is not None:
+                tags_view.add_text(group_label)
+            group_label = None
 
         tags_view = self.__search_dock.search_tags
         tags_view.clear()
@@ -443,20 +448,23 @@ class MainWindow(CommonMainWindow):
             author: Author
             group_label = 'authors:'
             for author in dal.session.query(Author).filter(Author.search != Search.IGNORED).order_by(Author.name.collate('NOCASE')):
-                if group_label is not None:
-                    tags_view.add_text(group_label)
-                group_label = None
+                add_label()
                 name = ('+' if author.search == Search.INCLUDE else '-') + (author.name if author.name else UNKNOWN_AUTHOR_LABEL)
                 tags_view.add_author(name, author.id_)
 
             publisher: Publisher
             group_label = 'publishers:'
             for publisher in dal.session.query(Publisher).filter(Publisher.search != Search.IGNORED).order_by(Publisher.name.collate('NOCASE')):
-                if group_label is not None:
-                    tags_view.add_text(group_label)
-                group_label = None
+                add_label()
                 name = ('+' if publisher.search == Search.INCLUDE else '-') + (publisher.name if publisher.name else UNKNOWN_PUBLISHER_LABEL)
                 tags_view.add_publisher(name, publisher.id_)
+
+            search_flag: SearchFlag
+            group_label = 'flags:'
+            for search_flag in dal.session.query(SearchFlag).filter(SearchFlag.search != Search.IGNORED):
+                add_label()
+                name = ('+' if search_flag.search == Search.INCLUDE else '-') + SearchValue(search_flag.value).label
+                tags_view.add_search_flag(name, search_flag.id_)
 
         tags_view.adjustSize()
 
