@@ -24,6 +24,7 @@ from tutcatalogpy.common.widgets.flag_view import FlagView
 from tutcatalogpy.common.widgets.form_layout import FormLayout
 from tutcatalogpy.common.widgets.horizontal_separator import HorizontalSeparator
 from tutcatalogpy.common.widgets.path_view import PathView
+from tutcatalogpy.common.widgets.rating_view import RatingView
 from tutcatalogpy.common.widgets.tags_flow_widget import TagsFlowView
 from tutcatalogpy.common.widgets.url_view import UrlView
 
@@ -133,6 +134,9 @@ class InfoTcDock(DockWidget):
         self.__progress = QLabel()
         form_layout.addRow('Progress:', self.__progress)
 
+        self.__rating = RatingView()
+        form_layout.addRow('Rating:', self.__rating)
+
         layout.addWidget(HorizontalSeparator())
 
         self.__error = ErrorView()
@@ -188,6 +192,7 @@ class InfoTcDock(DockWidget):
             self.__is_online,
             self.__todo,
             self.__progress,
+            self.__rating,
             self.__error,
             self.__description,
         ]:
@@ -236,6 +241,7 @@ class InfoTcDock(DockWidget):
             self.__is_online.set_flag(tutorial.is_online)
             self.__todo.set_flag(tutorial.todo)
             self.__progress.setText(Tutorial.Progress(tutorial.progress).label)
+            self.__rating.set_rating(tutorial.rating)
         else:
             for widget in [
                 self.__publisher,
@@ -248,7 +254,8 @@ class InfoTcDock(DockWidget):
                 self.__is_complete,
                 self.__is_online,
                 self.__todo,
-                self.__progress
+                self.__progress,
+                self.__rating,
             ]:
                 widget.clear()
 
