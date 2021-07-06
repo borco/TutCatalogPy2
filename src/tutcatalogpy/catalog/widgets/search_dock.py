@@ -62,7 +62,7 @@ class SearchDock(DockWidget):
         search_layout.addWidget(self.__search_edit)
         self.__search_edit.setClearButtonEnabled(True)
         self.__search_edit.editingFinished.connect(self.search)
-        self.__search_edit.textChanged.connect(self.search)
+        self.__search_edit.textChanged.connect(self.__on_search_edit_text_changed)
 
         self.__search_button = QToolButton()
         search_layout.addWidget(self.__search_button)
@@ -87,6 +87,10 @@ class SearchDock(DockWidget):
 
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
+
+    def __on_search_edit_text_changed(self) -> None:
+        if len(self.text) == 0:
+            self.search.emit()
 
     def save_settings(self, settings: QSettings):
         settings.beginGroup(self.SETTINGS_GROUP)
