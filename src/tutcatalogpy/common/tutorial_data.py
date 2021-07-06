@@ -1,7 +1,7 @@
 import enum
 import logging
 from re import compile
-from typing import Any, Dict, Final, List
+from typing import Any, Dict, Final, List, Optional
 
 import fastjsonschema
 import yaml
@@ -9,9 +9,11 @@ from sqlalchemy.orm.session import Session
 
 from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.base import FIELD_SEPARATOR
+from tutcatalogpy.common.db.learning_path import LearningPath
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tag import Tag
 from tutcatalogpy.common.db.tutorial import Tutorial
+from tutcatalogpy.common.db.tutorial_learning_path import TutorialLearningPath
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -103,6 +105,7 @@ class TutorialData:
             LEGACY_EXTRA_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
             PUBLISHER_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
             PERSONAL_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            LEARNING_PATHS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
             DESCRIPTION_KEY: {'type': 'string', 'default': ''},
         }
     }
@@ -153,6 +156,8 @@ class TutorialData:
         TutorialData.add_tags(session, tutorial, data.get(TutorialData.LEGACY_EXTRA_TAGS_KEY), Tag.Source.PERSONAL)
         TutorialData.add_tags(session, tutorial, data.get(TutorialData.PERSONAL_TAGS_KEY), Tag.Source.PERSONAL)
 
+        TutorialData.set_learning_paths(session, tutorial, data.get(TutorialData.LEARNING_PATHS_KEY))
+
         tutorial.description = data.get(TutorialData.DESCRIPTION_KEY)
 
     @staticmethod
@@ -160,6 +165,7 @@ class TutorialData:
         publisher = session.query(Publisher).filter_by(name=text).first()
         if publisher is None:
             publisher = Publisher(name=text)
+            session.add(publisher)
         tutorial.publisher = publisher
 
     @staticmethod
@@ -190,6 +196,18 @@ class TutorialData:
             new_tags = list(set(new_tags))
             new_tags.sort()
             tutorial.all_tags = FIELD_SEPARATOR.join([''] + new_tags + [''])
+
+    @staticmethod
+    def set_learning_paths(session: Session, tutorial: Tutorial, values: List[str]) -> None:
+        publisher: Publisher = tutorial.publisher
+        for value in values:
+            if len(value) == 0:
+                continue
+            name = value
+            lp: Optional[LearningPath] = session.query(LearningPath).filter_by(name=name, publisher=publisher).first()
+            if lp is None:
+                lp = LearningPath(name=name, publisher=publisher)
+                tlp = TutorialLearningPath(tutorial=tutorial, learning_path=lp)
 
     @staticmethod
     def parse_progress(viewed: str, progress: str) -> int:
