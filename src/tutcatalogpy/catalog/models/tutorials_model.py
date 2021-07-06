@@ -285,6 +285,7 @@ class TutorialsModel(QAbstractTableModel):
             SearchValue.IS_COMPLETE: Tutorial.is_complete,
             SearchValue.HAS_ERROR: Columns.HAS_ERROR.column,
             SearchValue.HAS_INFO_TC: Columns.HAS_INFO_TC.column,
+            SearchValue.HAS_COVER: Columns.HAS_COVER.column,
         }
         for search_flag in dal.session.query(SearchFlag):
             if search_flag.search != Search.IGNORED:
