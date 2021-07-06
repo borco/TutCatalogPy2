@@ -121,7 +121,7 @@ class InfoTcDock(DockWidget):
         self.__size = QLabel()
         form_layout.addRow('Size:', self.__size)
 
-        self.__is_complete = FlagView()
+        self.__is_complete = FlagView(highlight_if=False)
         form_layout.addRow('Complete:', self.__is_complete)
 
         self.__is_online = FlagView()
