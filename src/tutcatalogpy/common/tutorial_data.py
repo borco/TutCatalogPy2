@@ -1,7 +1,7 @@
 import enum
 import logging
 from re import compile
-from typing import Any, Dict, Final
+from typing import Any, Dict, Final, List
 
 import fastjsonschema
 import yaml
@@ -10,6 +10,7 @@ from sqlalchemy.orm.session import Session
 from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.base import FIELD_SEPARATOR
 from tutcatalogpy.common.db.publisher import Publisher
+from tutcatalogpy.common.db.tag import Tag
 from tutcatalogpy.common.db.tutorial import Tutorial
 
 log = logging.getLogger(__name__)
@@ -57,10 +58,14 @@ class TutorialData:
     PROGRESS_KEY: Final[str] = 'progress'
     TODO_KEY: Final[str] = 'todo'
     IS_ONLINE_KEY: Final[str] = 'online'
-    TAGS_KEY: Final[str] = 'tags'
-    MY_TAGS_KEY: Final[str] = 'extraTags'
-    LEARNING_PATHS_KEY: Final[str] = 'learning_paths'
-    MY_LEARNING_PATHS_KEY: Final[str] = 'my_learning_paths'
+    TAGS_KEY: Final[str] = 'tags'  # legacy
+    EXTRA_TAGS_KEY: Final[str] = 'extraTags'  # legacy
+    PUBLISHER_TAGS_KEY: Final[str] = 'publisher_tags'
+    PERSONAL_TAGS_KEY: Final[str] = 'personal_tags'
+    LEARNING_PATHS_KEY: Final[str] = 'learning_paths'  # legacy
+    MY_LEARNING_PATHS_KEY: Final[str] = 'my_learning_paths'  # legacy
+    PUBLISHER_LEARNING_PATHS_KEY: Final[str] = 'publisher_learning_paths'
+    PERSONAL_LEARNING_PATHS_KEY: Final[str] = 'personal_learning_paths'
     DESCRIPTION_KEY: Final[str] = 'description'
 
     RELEASED_MINIMUM_YEAR: Final[int] = 1900
@@ -97,6 +102,10 @@ class TutorialData:
             VIEWED_KEY: {'type': 'boolean', 'default': False},
             PROGRESS_KEY: {'enum': [x.label for x in Tutorial.Progress], 'default': None},
             RATING_KEY: {'enum': [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5], 'default': 0},
+            TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            EXTRA_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            PUBLISHER_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            PERSONAL_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
             DESCRIPTION_KEY: {'type': 'string', 'default': ''},
         }
     }
@@ -119,21 +128,9 @@ class TutorialData:
 
         tutorial.title = str(data.get(TutorialData.TITLE_KEY))
 
-        publisher_name = str(data.get(TutorialData.PUBLISHER_KEY))
-        publisher = session.query(Publisher).filter_by(name=publisher_name).first()
-        if publisher is None:
-            publisher = Publisher(name=publisher_name)
-        tutorial.publisher = publisher
+        TutorialData.set_publisher(session, tutorial, data.get(TutorialData.PUBLISHER_KEY))
 
-        all_authors = []
-        for name in data.get(TutorialData.AUTHORS_KEY):
-            author = session.query(Author).filter_by(name=name).first()
-            if author is None:
-                author = Author(name=name)
-            tutorial.authors.append(author)
-            all_authors.append(author.name)
-        all_authors.sort()
-        tutorial.all_authors = FIELD_SEPARATOR.join([''] + all_authors + [''])
+        TutorialData.set_authors(session, tutorial, data.get(TutorialData.AUTHORS_KEY))
 
         tutorial.released = data.get(TutorialData.RELEASED_KEY)
 
@@ -149,11 +146,53 @@ class TutorialData:
 
         tutorial.progress = TutorialData.parse_progress(data.get(TutorialData.VIEWED_KEY), data.get(TutorialData.PROGRESS_KEY))
 
-
         tutorial.rating = data.get(TutorialData.RATING_KEY)
 
         tutorial.url = data.get(TutorialData.URL_KEY)
+
+        TutorialData.add_tags(session, tutorial, data.get(TutorialData.TAGS_KEY), Tag.Source.PUBLISHER)
+        TutorialData.add_tags(session, tutorial, data.get(TutorialData.PUBLISHER_TAGS_KEY), Tag.Source.PUBLISHER)
+
+        TutorialData.add_tags(session, tutorial, data.get(TutorialData.EXTRA_TAGS_KEY), Tag.Source.PERSONAL)
+        TutorialData.add_tags(session, tutorial, data.get(TutorialData.PERSONAL_TAGS_KEY), Tag.Source.PERSONAL)
+
         tutorial.description = data.get(TutorialData.DESCRIPTION_KEY)
+
+    @staticmethod
+    def set_publisher(session: Session, tutorial: Tutorial, text: str) -> None:
+        publisher = session.query(Publisher).filter_by(name=text).first()
+        if publisher is None:
+            publisher = Publisher(name=text)
+        tutorial.publisher = publisher
+
+    @staticmethod
+    def set_authors(session: Session, tutorial: Tutorial, names: List[str]) -> None:
+        all_authors = []
+        for name in names:
+            author = session.query(Author).filter_by(name=name).first()
+            if author is None:
+                author = Author(name=name)
+            tutorial.authors.append(author)
+            all_authors.append(author.name)
+        all_authors.sort()
+        tutorial.all_authors = FIELD_SEPARATOR.join([''] + all_authors + [''])
+
+    @staticmethod
+    def add_tags(session: Session, tutorial: Tutorial, names: List[str], source: Tag.Source) -> None:
+        new_tags = []
+        for name in names:
+            if len(name) == 0:
+                continue
+            tag = session.query(Tag).filter_by(name=name, source=source).first()
+            if tag is None:
+                tag = Tag(name=name, source=source)
+            tutorial.tags.append(tag)
+            new_tags.append(f'{tag.name}|{tag.source}')
+        if len(new_tags) > 0:
+            new_tags += str(tutorial.all_tags).split(FIELD_SEPARATOR)[1:-1]
+            new_tags = list(set(new_tags))
+            new_tags.sort()
+            tutorial.all_tags = FIELD_SEPARATOR.join([''] + new_tags + [''])
 
     @staticmethod
     def parse_progress(viewed: str, progress: str) -> int:

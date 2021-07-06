@@ -11,7 +11,7 @@ class Tag(Base):
 
     class Source(enum.IntEnum):
         PUBLISHER = 0
-        EXTRA = 1
+        PERSONAL = 1
 
     __tablename__ = 'tag'
 
