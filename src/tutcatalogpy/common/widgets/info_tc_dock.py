@@ -1,5 +1,5 @@
 import logging
-from typing import Final, Optional
+from typing import Final, List, Optional
 
 from humanize import naturalsize
 from PySide2.QtCore import Signal
@@ -13,6 +13,7 @@ from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.db.dal import dal
 from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.image import Image
+from tutcatalogpy.common.db.tag import Tag
 from tutcatalogpy.common.db.tutorial import Tutorial
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.tutorial_data import TutorialData
@@ -129,13 +130,19 @@ class InfoTcDock(DockWidget):
         form_layout.addRow('Online:', self.__is_online)
 
         self.__todo = FlagView()
-        form_layout.addRow('To do:', self.__todo)
+        form_layout.addRow('To Do:', self.__todo)
 
         self.__progress = QLabel()
         form_layout.addRow('Progress:', self.__progress)
 
         self.__rating = RatingView()
         form_layout.addRow('Rating:', self.__rating)
+
+        self.__publisher_tags = TagsFlowView()
+        form_layout.addRow('Publisher Tags:', self.__publisher_tags)
+
+        self.__personal_tags = TagsFlowView()
+        form_layout.addRow('Personal Tags:', self.__personal_tags)
 
         layout.addWidget(HorizontalSeparator())
 
@@ -193,6 +200,8 @@ class InfoTcDock(DockWidget):
             self.__todo,
             self.__progress,
             self.__rating,
+            self.__publisher_tags,
+            self.__personal_tags,
             self.__error,
             self.__description,
         ]:
@@ -242,6 +251,11 @@ class InfoTcDock(DockWidget):
             self.__todo.set_flag(tutorial.todo)
             self.__progress.setText(Tutorial.Progress(tutorial.progress).label)
             self.__rating.set_rating(tutorial.rating)
+
+            tags = list(tutorial.tags)
+            self.__update_info_tags(self.__publisher_tags, [tag for tag in tags if tag.source == Tag.Source.PUBLISHER])
+            self.__update_info_tags(self.__personal_tags, [tag for tag in tags if tag.source == Tag.Source.PERSONAL])
+
         else:
             for widget in [
                 self.__publisher,
@@ -256,11 +270,20 @@ class InfoTcDock(DockWidget):
                 self.__todo,
                 self.__progress,
                 self.__rating,
+                self.__publisher_tags,
+                self.__personal_tags,
             ]:
                 widget.clear()
 
         self.__update_info_error(folder)
         self.__update_info_description(folder)
+
+    def __update_info_tags(self, view: TagsFlowView, tags: List[Tag]) -> None:
+        view.clear()
+        tags.sort(key=lambda tag: tag.name.lower())
+        for tag in tags:
+            view.add_tutorial_tag(tag.name, tag.id_)
+        view.adjustSize()
 
     def __update_info_error(self, folder: Folder) -> None:
         self.__error.set_error(folder.error)
