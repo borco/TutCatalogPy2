@@ -21,6 +21,7 @@ def dal_(connection: str) -> DataAccessLayer:
     yield dal
     dal.disconnect()
 
+
 @mark.parametrize(
     'text, authors',
     [
