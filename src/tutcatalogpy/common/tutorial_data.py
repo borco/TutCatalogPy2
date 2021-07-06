@@ -57,7 +57,7 @@ class TutorialData:
     STARTED_KEY: Final[str] = 'started'
     FINISHED_KEY: Final[str] = 'finished'
     TODO_KEY: Final[str] = 'todo'
-    ONLINE_KEY: Final[str] = 'online'
+    IS_ONLINE_KEY: Final[str] = 'online'
     TAGS_KEY: Final[str] = 'tags'
     MY_TAGS_KEY: Final[str] = 'extraTags'
     LEARNING_PATHS_KEY: Final[str] = 'learning_paths'
@@ -75,25 +75,30 @@ class TutorialData:
     VALIDATION_SCHEMA: Final[Dict[str, Any]] = {
         'type': 'object',
         'properties': {
-            'publisher': {'type': 'string', 'default': ''},
-            'title': {'type': 'string', 'default': ''},
-            'author': {'type': 'array', 'items': {'type': 'string'}, 'default': ['']},
-            'released': {
+            PUBLISHER_KEY: {'type': 'string', 'default': ''},
+            TITLE_KEY: {'type': 'string', 'default': ''},
+            AUTHORS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': ['']},
+            RELEASED_KEY: {
                 'type': ['string', 'integer'],
                 'pattern': RELEASED_REGEX,
                 'minimum': RELEASED_MINIMUM_YEAR,
                 'maximum': RELEASED_MAXIMUM_YEAR,
                 'default': ''
             },
-            'duration': {
+            DURATION_KEY: {
                 'type': 'string',
                 'pattern': DURATION_REGEX,
                 'default': ''
             },
-            'level': {'type': 'string', 'default': ''},
-            'description': {'type': 'string', 'default': ''},
-            'url': {'type': 'string', 'default': ''},
-            'complete': {'type': 'boolean', 'default': True},
+            LEVEL_KEY: {'type': 'string', 'default': ''},
+            URL_KEY: {'type': 'string', 'default': ''},
+            IS_COMPLETE_KEY: {'type': 'boolean', 'default': True},
+            IS_ONLINE_KEY: {'type': 'boolean', 'default': False},
+            TODO_KEY: {'type': 'boolean', 'default': False},
+            STARTED_KEY: {'type': 'boolean', 'default': False},
+            FINISHED_KEY: {'type': 'boolean', 'default': False},
+            RATING_KEY: {'enum': [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5], 'default': 0},
+            DESCRIPTION_KEY: {'type': 'string', 'default': ''},
         }
     }
 
@@ -138,6 +143,16 @@ class TutorialData:
         tutorial.level = TutorialData.text_to_level(data.get(TutorialData.LEVEL_KEY))
 
         tutorial.is_complete = data.get(TutorialData.IS_COMPLETE_KEY)
+
+        tutorial.is_online = data.get(TutorialData.IS_ONLINE_KEY)
+
+        tutorial.todo = data.get(TutorialData.TODO_KEY)
+
+        tutorial.started = data.get(TutorialData.STARTED_KEY)
+
+        tutorial.finished = data.get(TutorialData.FINISHED_KEY)
+
+        tutorial.rating = data.get(TutorialData.RATING_KEY)
 
         tutorial.url = data.get(TutorialData.URL_KEY)
         tutorial.description = data.get(TutorialData.DESCRIPTION_KEY)

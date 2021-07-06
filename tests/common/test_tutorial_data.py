@@ -407,3 +407,88 @@ def test_load_from_string_reads_complete(dal_: DataAccessLayer) -> None:
 
     TutorialData.load_from_string(dal_.session, tutorial, '')
     assert tutorial.is_complete is True
+
+
+def test_load_from_string_reads_online(dal_: DataAccessLayer) -> None:
+    tutorial = Tutorial()
+    dal_.session.add(tutorial)
+    dal_.session.commit()
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'online: yes')
+    assert tutorial.is_online is True
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'online: no')
+    assert tutorial.is_online is False
+
+    TutorialData.load_from_string(dal_.session, tutorial, '')
+    assert tutorial.is_online is False
+
+
+def test_load_from_string_reads_todo(dal_: DataAccessLayer) -> None:
+    tutorial = Tutorial()
+    dal_.session.add(tutorial)
+    dal_.session.commit()
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'todo: yes')
+    assert tutorial.todo is True
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'todo: no')
+    assert tutorial.todo is False
+
+    TutorialData.load_from_string(dal_.session, tutorial, '')
+    assert tutorial.todo is False
+
+
+def test_load_from_string_reads_started(dal_: DataAccessLayer) -> None:
+    tutorial = Tutorial()
+    dal_.session.add(tutorial)
+    dal_.session.commit()
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'started: yes')
+    assert tutorial.started is True
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'started: no')
+    assert tutorial.started is False
+
+    TutorialData.load_from_string(dal_.session, tutorial, '')
+    assert tutorial.started is False
+
+
+def test_load_from_string_reads_finished(dal_: DataAccessLayer) -> None:
+    tutorial = Tutorial()
+    dal_.session.add(tutorial)
+    dal_.session.commit()
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'finished: yes')
+    assert tutorial.finished is True
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'finished: no')
+    assert tutorial.finished is False
+
+    TutorialData.load_from_string(dal_.session, tutorial, '')
+    assert tutorial.finished is False
+
+
+def test_load_from_string_reads_rating(dal_: DataAccessLayer) -> None:
+    tutorial = Tutorial()
+    dal_.session.add(tutorial)
+    dal_.session.commit()
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'rating: 0')
+    assert tutorial.rating == 0
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'rating: -5')
+    assert tutorial.rating == -5
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'rating: 2')
+    assert tutorial.rating == 2
+
+    TutorialData.load_from_string(dal_.session, tutorial, 'rating: 5')
+    assert tutorial.rating == 5
+
+    TutorialData.load_from_string(dal_.session, tutorial, '')
+    assert tutorial.rating == 0
+
+    for text in ['rating: -6', 'rating: 6']:
+        with raises(fastjsonschema.JsonSchemaValueException, match='^data.rating must .*'):
+            TutorialData.load_from_string(dal_.session, tutorial, text)

@@ -29,6 +29,11 @@ class Tutorial(Base):
     description = Column(Text, default='', nullable=False)
 
     is_complete = Column(Boolean, default=True, nullable=False)
+    is_online = Column(Boolean, default=False, nullable=False)
+    todo = Column(Boolean, default=False, nullable=False)
+    started = Column(Boolean, default=False, nullable=False)
+    finished = Column(Boolean, default=False, nullable=False)
+    rating = Column(Integer, default=0, nullable=False)
 
     # aggregate fields used by models to search and filter and by view to display
     # separator: base.FIELD_SEPARATOR
