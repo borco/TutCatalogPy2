@@ -131,7 +131,9 @@ class SearchFlagItem(GroupItem):
     _label = FLAGS_LABEL
 
     def _populate(self) -> None:
-        for flag in dal.session.query(SearchFlag):
+        flags = dal.session.query(SearchFlag).all()
+        flags.sort(key=lambda flag: SearchValue(flag.value).label)
+        for flag in flags:
             name = SearchValue(flag.value).label
             self.append(TagsItem(name, flag))
 
