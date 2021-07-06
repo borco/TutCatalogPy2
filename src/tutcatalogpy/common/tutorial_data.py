@@ -58,14 +58,11 @@ class TutorialData:
     PROGRESS_KEY: Final[str] = 'progress'
     TODO_KEY: Final[str] = 'todo'
     IS_ONLINE_KEY: Final[str] = 'online'
-    TAGS_KEY: Final[str] = 'tags'  # legacy
-    EXTRA_TAGS_KEY: Final[str] = 'extraTags'  # legacy
+    LEGACY_TAGS_KEY: Final[str] = 'tags'
+    LEGACY_EXTRA_TAGS_KEY: Final[str] = 'extraTags'
     PUBLISHER_TAGS_KEY: Final[str] = 'publisher_tags'
     PERSONAL_TAGS_KEY: Final[str] = 'personal_tags'
-    LEARNING_PATHS_KEY: Final[str] = 'learning_paths'  # legacy
-    MY_LEARNING_PATHS_KEY: Final[str] = 'my_learning_paths'  # legacy
-    PUBLISHER_LEARNING_PATHS_KEY: Final[str] = 'publisher_learning_paths'
-    PERSONAL_LEARNING_PATHS_KEY: Final[str] = 'personal_learning_paths'
+    LEARNING_PATHS_KEY: Final[str] = 'learning_paths'
     DESCRIPTION_KEY: Final[str] = 'description'
 
     RELEASED_MINIMUM_YEAR: Final[int] = 1900
@@ -102,8 +99,8 @@ class TutorialData:
             VIEWED_KEY: {'type': 'boolean', 'default': False},
             PROGRESS_KEY: {'enum': [x.label for x in Tutorial.Progress], 'default': None},
             RATING_KEY: {'enum': [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5], 'default': 0},
-            TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
-            EXTRA_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            LEGACY_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            LEGACY_EXTRA_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
             PUBLISHER_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
             PERSONAL_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
             DESCRIPTION_KEY: {'type': 'string', 'default': ''},
@@ -150,10 +147,10 @@ class TutorialData:
 
         tutorial.url = data.get(TutorialData.URL_KEY)
 
-        TutorialData.add_tags(session, tutorial, data.get(TutorialData.TAGS_KEY), Tag.Source.PUBLISHER)
+        TutorialData.add_tags(session, tutorial, data.get(TutorialData.LEGACY_TAGS_KEY), Tag.Source.PUBLISHER)
         TutorialData.add_tags(session, tutorial, data.get(TutorialData.PUBLISHER_TAGS_KEY), Tag.Source.PUBLISHER)
 
-        TutorialData.add_tags(session, tutorial, data.get(TutorialData.EXTRA_TAGS_KEY), Tag.Source.PERSONAL)
+        TutorialData.add_tags(session, tutorial, data.get(TutorialData.LEGACY_EXTRA_TAGS_KEY), Tag.Source.PERSONAL)
         TutorialData.add_tags(session, tutorial, data.get(TutorialData.PERSONAL_TAGS_KEY), Tag.Source.PERSONAL)
 
         tutorial.description = data.get(TutorialData.DESCRIPTION_KEY)
