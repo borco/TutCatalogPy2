@@ -18,9 +18,9 @@ log.addHandler(logging.NullHandler())
 
 class TutorialLevel(enum.IntFlag):
     UNKNOWN = 0
-    BEGINNER = 2
-    INTERMEDIATE = 4
-    ADVANCED = 8
+    BEGINNER = 1
+    INTERMEDIATE = 2
+    ADVANCED = 4
     ANY = BEGINNER | INTERMEDIATE | ADVANCED
 
 
@@ -54,8 +54,7 @@ class TutorialData:
     URL_KEY: Final[str] = 'url'
     IS_COMPLETE_KEY: Final[str] = 'complete'
     VIEWED_KEY: Final[str] = 'viewed'
-    STARTED_KEY: Final[str] = 'started'
-    FINISHED_KEY: Final[str] = 'finished'
+    PROGRESS_KEY: Final[str] = 'progress'
     TODO_KEY: Final[str] = 'todo'
     IS_ONLINE_KEY: Final[str] = 'online'
     TAGS_KEY: Final[str] = 'tags'
@@ -95,8 +94,8 @@ class TutorialData:
             IS_COMPLETE_KEY: {'type': 'boolean', 'default': True},
             IS_ONLINE_KEY: {'type': 'boolean', 'default': False},
             TODO_KEY: {'type': 'boolean', 'default': False},
-            STARTED_KEY: {'type': 'boolean', 'default': False},
-            FINISHED_KEY: {'type': 'boolean', 'default': False},
+            VIEWED_KEY: {'type': 'boolean', 'default': False},
+            PROGRESS_KEY: {'enum': [x.label for x in Tutorial.Progress], 'default': None},
             RATING_KEY: {'enum': [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5], 'default': 0},
             DESCRIPTION_KEY: {'type': 'string', 'default': ''},
         }
@@ -148,14 +147,22 @@ class TutorialData:
 
         tutorial.todo = data.get(TutorialData.TODO_KEY)
 
-        tutorial.started = data.get(TutorialData.STARTED_KEY)
+        tutorial.progress = TutorialData.parse_progress(data.get(TutorialData.VIEWED_KEY), data.get(TutorialData.PROGRESS_KEY))
 
-        tutorial.finished = data.get(TutorialData.FINISHED_KEY)
 
         tutorial.rating = data.get(TutorialData.RATING_KEY)
 
         tutorial.url = data.get(TutorialData.URL_KEY)
         tutorial.description = data.get(TutorialData.DESCRIPTION_KEY)
+
+    @staticmethod
+    def parse_progress(viewed: str, progress: str) -> int:
+        value: int = Tutorial.Progress.FINISHED.value if viewed else Tutorial.Progress.NOT_STARTED.value
+        if progress is not None:
+            p = next((x for x in list(Tutorial.Progress) if x.label == progress), None)
+            if p is not None:
+                value = p.value
+        return value
 
     @staticmethod
     def text_to_duration(text: str) -> int:

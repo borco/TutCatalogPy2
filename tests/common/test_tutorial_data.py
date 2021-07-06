@@ -439,34 +439,26 @@ def test_load_from_string_reads_todo(dal_: DataAccessLayer) -> None:
     assert tutorial.todo is False
 
 
-def test_load_from_string_reads_started(dal_: DataAccessLayer) -> None:
+@mark.parametrize(
+    'text, progress',
+    [
+        ('', Tutorial.Progress.NOT_STARTED),
+        ('viewed: no', Tutorial.Progress.NOT_STARTED),
+        ('progress: not started', Tutorial.Progress.NOT_STARTED),
+        ('progress: started', Tutorial.Progress.STARTED),
+        ('progress: finished', Tutorial.Progress.FINISHED),
+        ('viewed: no\nprogress: finished', Tutorial.Progress.FINISHED),
+        ('viewed: yes\nprogress: not started', Tutorial.Progress.NOT_STARTED),
+        ('viewed: yes\nprogress: started', Tutorial.Progress.STARTED),
+    ]
+)
+def test_load_from_string_reads_progress(text, progress, dal_: DataAccessLayer) -> None:
     tutorial = Tutorial()
     dal_.session.add(tutorial)
     dal_.session.commit()
 
-    TutorialData.load_from_string(dal_.session, tutorial, 'started: yes')
-    assert tutorial.started is True
-
-    TutorialData.load_from_string(dal_.session, tutorial, 'started: no')
-    assert tutorial.started is False
-
-    TutorialData.load_from_string(dal_.session, tutorial, '')
-    assert tutorial.started is False
-
-
-def test_load_from_string_reads_finished(dal_: DataAccessLayer) -> None:
-    tutorial = Tutorial()
-    dal_.session.add(tutorial)
-    dal_.session.commit()
-
-    TutorialData.load_from_string(dal_.session, tutorial, 'finished: yes')
-    assert tutorial.finished is True
-
-    TutorialData.load_from_string(dal_.session, tutorial, 'finished: no')
-    assert tutorial.finished is False
-
-    TutorialData.load_from_string(dal_.session, tutorial, '')
-    assert tutorial.finished is False
+    TutorialData.load_from_string(dal_.session, tutorial, text)
+    assert tutorial.progress == progress.value
 
 
 def test_load_from_string_reads_rating(dal_: DataAccessLayer) -> None:

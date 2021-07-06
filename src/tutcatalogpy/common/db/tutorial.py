@@ -1,4 +1,5 @@
 import enum
+from typing import Optional
 
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql.schema import Column, ForeignKey
@@ -17,6 +18,25 @@ class Tutorial(Base):
         NEW = enum.auto()
         DELETED = enum.auto()
 
+    class Progress(bytes, enum.Enum):
+        label: str
+
+        def __new__(cls, value: int, label: str):
+            obj = bytes.__new__(cls, [value])
+            obj._value_ = value
+            obj.label = label
+            return obj
+
+        @classmethod
+        def value_for(cls, label: str) -> Optional['Progress']:
+            for item in list(cls):
+                if item.label == label:
+                    return item.value
+
+        NOT_STARTED = (0, 'not started')
+        STARTED = (1, 'started')
+        FINISHED = (2, 'finished')
+
     __tablename__ = 'tutorial'
 
     id_ = Column('id', Integer, primary_key=True)
@@ -31,8 +51,7 @@ class Tutorial(Base):
     is_complete = Column(Boolean, default=True, nullable=False)
     is_online = Column(Boolean, default=False, nullable=False)
     todo = Column(Boolean, default=False, nullable=False)
-    started = Column(Boolean, default=False, nullable=False)
-    finished = Column(Boolean, default=False, nullable=False)
+    progress = Column(Integer, default=Progress.NOT_STARTED.value, nullable=False)
     rating = Column(Integer, default=0, nullable=False)
 
     # aggregate fields used by models to search and filter and by view to display

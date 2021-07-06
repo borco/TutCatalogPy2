@@ -124,6 +124,15 @@ class InfoTcDock(DockWidget):
         self.__is_complete = FlagView()
         form_layout.addRow('Complete:', self.__is_complete)
 
+        self.__is_online = FlagView()
+        form_layout.addRow('Online:', self.__is_online)
+
+        self.__todo = FlagView()
+        form_layout.addRow('To do:', self.__todo)
+
+        self.__progress = QLabel()
+        form_layout.addRow('Progress:', self.__progress)
+
         layout.addWidget(HorizontalSeparator())
 
         self.__error = ErrorView()
@@ -176,6 +185,9 @@ class InfoTcDock(DockWidget):
             self.__level,
             self.__url,
             self.__is_complete,
+            self.__is_online,
+            self.__todo,
+            self.__progress,
             self.__error,
             self.__description,
         ]:
@@ -202,28 +214,43 @@ class InfoTcDock(DockWidget):
 
         tutorial: Tutorial = folder.tutorial
 
-        self.__publisher.clear()
-        self.__publisher.add_publisher(tutorial.publisher.name, tutorial.publisher_id)
+        if tutorial.size is not None:
+            self.__publisher.clear()
+            self.__publisher.add_publisher(tutorial.publisher.name, tutorial.publisher_id)
 
-        self.__title.set_text(tutorial.title)
+            self.__title.set_text(tutorial.title)
 
-        author: Author
-        self.__authors.clear()
-        authors = list(tutorial.authors)
-        authors.sort(key=lambda a: a.name.lower())
-        for author in authors:
-            self.__authors.add_author(author.name, author.id_)
-        self.__authors.adjustSize()
+            author: Author
+            self.__authors.clear()
+            authors = list(tutorial.authors)
+            authors.sort(key=lambda a: a.name.lower())
+            for author in authors:
+                self.__authors.add_author(author.name, author.id_)
+            self.__authors.adjustSize()
 
-        self.__released.setText(tutorial.released)
-
-        self.__duration.setText(TutorialData.duration_to_text(tutorial.duration))
-
-        self.__level.setText(TutorialData.level_to_text(tutorial.level))
-
-        self.__url.set_text(tutorial.url)
-
-        self.__is_complete.set_flag(tutorial.is_complete if tutorial.size is not None else None)
+            self.__released.setText(tutorial.released)
+            self.__duration.setText(TutorialData.duration_to_text(tutorial.duration))
+            self.__level.setText(TutorialData.level_to_text(tutorial.level))
+            self.__url.set_text(tutorial.url)
+            self.__is_complete.set_flag(tutorial.is_complete)
+            self.__is_online.set_flag(tutorial.is_online)
+            self.__todo.set_flag(tutorial.todo)
+            self.__progress.setText(Tutorial.Progress(tutorial.progress).label)
+        else:
+            for widget in [
+                self.__publisher,
+                self.__title,
+                self.__authors,
+                self.__released,
+                self.__duration,
+                self.__level,
+                self.__url,
+                self.__is_complete,
+                self.__is_online,
+                self.__todo,
+                self.__progress
+            ]:
+                widget.clear()
 
         self.__update_info_error(folder)
         self.__update_info_description(folder)
