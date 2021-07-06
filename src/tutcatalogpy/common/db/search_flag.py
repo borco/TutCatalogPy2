@@ -25,9 +25,12 @@ class Search(LabeledIntEnum):
 
 class SearchValue(LabeledIntEnum):
     IS_COMPLETE = (0, 'complete')
-    HAS_ERROR = (1, 'errors')
+    HAS_ERROR = (1, 'error')
     HAS_INFO_TC = (2, 'info.tc')
     HAS_COVER = (3, 'cover')
+    IS_CHECKED = (4, 'checked')
+    IS_DISK_ONLINE = (5, 'disk online')
+
 
 class SearchFlag(Base):
 

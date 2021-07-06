@@ -286,6 +286,8 @@ class TutorialsModel(QAbstractTableModel):
             SearchValue.HAS_ERROR: Columns.HAS_ERROR.column,
             SearchValue.HAS_INFO_TC: Columns.HAS_INFO_TC.column,
             SearchValue.HAS_COVER: Columns.HAS_COVER.column,
+            SearchValue.IS_CHECKED: Folder.checked,
+            SearchValue.IS_DISK_ONLINE: Disk.online,
         }
         for search_flag in dal.session.query(SearchFlag):
             if search_flag.search != Search.IGNORED:
