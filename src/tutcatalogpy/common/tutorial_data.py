@@ -9,9 +9,11 @@ from sqlalchemy.orm.session import Session
 
 from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.base import FIELD_SEPARATOR
+from tutcatalogpy.common.db.learning_path import LearningPath
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.tag import Tag
 from tutcatalogpy.common.db.tutorial import Tutorial
+from tutcatalogpy.common.db.tutorial_learning_path import TutorialLearningPath
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -58,14 +60,16 @@ class TutorialData:
     PROGRESS_KEY: Final[str] = 'progress'
     TODO_KEY: Final[str] = 'todo'
     IS_ONLINE_KEY: Final[str] = 'online'
-    TAGS_KEY: Final[str] = 'tags'  # legacy
-    EXTRA_TAGS_KEY: Final[str] = 'extraTags'  # legacy
+    LEGACY_TAGS_KEY: Final[str] = 'tags'
+    LEGACY_EXTRA_TAGS_KEY: Final[str] = 'extraTags'
     PUBLISHER_TAGS_KEY: Final[str] = 'publisher_tags'
     PERSONAL_TAGS_KEY: Final[str] = 'personal_tags'
-    LEARNING_PATHS_KEY: Final[str] = 'learning_paths'  # legacy
-    MY_LEARNING_PATHS_KEY: Final[str] = 'my_learning_paths'  # legacy
-    PUBLISHER_LEARNING_PATHS_KEY: Final[str] = 'publisher_learning_paths'
-    PERSONAL_LEARNING_PATHS_KEY: Final[str] = 'personal_learning_paths'
+    LEARNING_PATHS_KEY: Final[str] = 'learning_paths'
+    LEARNING_PATHS_NAME_KEY: Final[str] = 'name'
+    LEARNING_PATHS_INDEX_KEY: Final[str] = 'index'
+    LEARNING_PATHS_PUBLISHER_KEY: Final[str] = 'publisher'
+    LEARNING_PATHS_PUBLISHER_DEFAULT: Final[str] = '*'
+    LEARNING_PATHS_SHOW_IN_TITLE_KEY: Final[str] = 'show_in_title'
     DESCRIPTION_KEY: Final[str] = 'description'
 
     RELEASED_MINIMUM_YEAR: Final[int] = 1900
@@ -102,10 +106,23 @@ class TutorialData:
             VIEWED_KEY: {'type': 'boolean', 'default': False},
             PROGRESS_KEY: {'enum': [x.label for x in Tutorial.Progress], 'default': None},
             RATING_KEY: {'enum': [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5], 'default': 0},
-            TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
-            EXTRA_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            LEGACY_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            LEGACY_EXTRA_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
             PUBLISHER_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
             PERSONAL_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            LEARNING_PATHS_KEY: {
+                'type': 'array',
+                'items': {
+                    'type': ['string', 'object'],
+                    'properties': {
+                        LEARNING_PATHS_NAME_KEY: {'type': 'string', 'default': ''},
+                        LEARNING_PATHS_INDEX_KEY: {'type': 'integer', 'default': None},
+                        LEARNING_PATHS_PUBLISHER_KEY: {'type': 'string', 'default': LEARNING_PATHS_PUBLISHER_DEFAULT},
+                        LEARNING_PATHS_SHOW_IN_TITLE_KEY: {'type': 'boolean', 'default': False},
+                    }
+                },
+                'default': []
+            },
             DESCRIPTION_KEY: {'type': 'string', 'default': ''},
         }
     }
@@ -150,20 +167,34 @@ class TutorialData:
 
         tutorial.url = data.get(TutorialData.URL_KEY)
 
-        TutorialData.add_tags(session, tutorial, data.get(TutorialData.TAGS_KEY), Tag.Source.PUBLISHER)
+        TutorialData.add_tags(session, tutorial, data.get(TutorialData.LEGACY_TAGS_KEY), Tag.Source.PUBLISHER)
         TutorialData.add_tags(session, tutorial, data.get(TutorialData.PUBLISHER_TAGS_KEY), Tag.Source.PUBLISHER)
 
-        TutorialData.add_tags(session, tutorial, data.get(TutorialData.EXTRA_TAGS_KEY), Tag.Source.PERSONAL)
+        TutorialData.add_tags(session, tutorial, data.get(TutorialData.LEGACY_EXTRA_TAGS_KEY), Tag.Source.PERSONAL)
         TutorialData.add_tags(session, tutorial, data.get(TutorialData.PERSONAL_TAGS_KEY), Tag.Source.PERSONAL)
+
+        TutorialData.set_learning_paths(session, tutorial, data.get(TutorialData.LEARNING_PATHS_KEY))
 
         tutorial.description = data.get(TutorialData.DESCRIPTION_KEY)
 
     @staticmethod
-    def set_publisher(session: Session, tutorial: Tutorial, text: str) -> None:
-        publisher = session.query(Publisher).filter_by(name=text).first()
+    def __publisher(session: Session, name: str) -> Publisher:
+        publisher = session.query(Publisher).filter_by(name=name).first()
         if publisher is None:
-            publisher = Publisher(name=text)
-        tutorial.publisher = publisher
+            publisher = Publisher(name=name)
+            session.add(publisher)
+        return publisher
+
+    @staticmethod
+    def __learning_path(session: Session, name: str, publisher: Publisher) -> LearningPath:
+        learning_path: LearningPath = session.query(LearningPath).filter_by(name=name, publisher=publisher).first()
+        if learning_path is None:
+            learning_path = LearningPath(name=name, publisher=publisher)
+        return learning_path
+
+    @staticmethod
+    def set_publisher(session: Session, tutorial: Tutorial, name: str) -> None:
+        tutorial.publisher = TutorialData.__publisher(session, name)
 
     @staticmethod
     def set_authors(session: Session, tutorial: Tutorial, names: List[str]) -> None:
@@ -193,6 +224,30 @@ class TutorialData:
             new_tags = list(set(new_tags))
             new_tags.sort()
             tutorial.all_tags = FIELD_SEPARATOR.join([''] + new_tags + [''])
+
+    @staticmethod
+    def set_learning_paths(session: Session, tutorial: Tutorial, values: List[Any]) -> None:
+        publisher: Publisher = tutorial.publisher
+        for value in values:
+            if type(value) is str:
+                name = value
+                if len(value) == 0:
+                    continue
+                learning_path = TutorialData.__learning_path(session, name, publisher)
+                TutorialLearningPath(tutorial=tutorial, learning_path=learning_path)
+            elif type(value) is dict:
+                name = value.get(TutorialData.LEARNING_PATHS_NAME_KEY)
+                if len(name) == 0:
+                    continue
+                publisher_name = value.get(TutorialData.LEARNING_PATHS_PUBLISHER_KEY)
+                if publisher_name != TutorialData.LEARNING_PATHS_PUBLISHER_DEFAULT:
+                    publisher: Publisher = TutorialData.__publisher(session, publisher_name)
+                learning_path: LearningPath = TutorialData.__learning_path(session, name, publisher)
+                tutorial_learning_path = TutorialLearningPath(tutorial=tutorial, learning_path=learning_path)
+                tutorial_learning_path.index = value.get(TutorialData.LEARNING_PATHS_INDEX_KEY)
+                tutorial_learning_path.show_in_title = value.get(TutorialData.LEARNING_PATHS_SHOW_IN_TITLE_KEY)
+            else:
+                raise RuntimeError(f"Don't know how to parse this learning path: {value}")
 
     @staticmethod
     def parse_progress(viewed: str, progress: str) -> int:

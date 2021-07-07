@@ -10,6 +10,7 @@ from tutcatalogpy.common.db.author import Author
 from tutcatalogpy.common.db.publisher import Publisher
 from tutcatalogpy.common.db.search_flag import SearchFlag
 from tutcatalogpy.common.db.tag import Tag
+from tutcatalogpy.common.db.tutorial_learning_path import TutorialLearningPath
 
 MINIMUM_ROW_HEIGHT: Final[int] = 16
 HORIZONTAL_ITEM_SPACING: Final[int] = 0
@@ -54,6 +55,11 @@ class SearchFlagItem(TagItem):
 @dataclass
 class TutorialTagItem(TagItem):
     table = Tag
+
+
+@dataclass
+class TutorialLearningPathItem(TagItem):
+    table = TutorialLearningPath
 
 
 class TagsModel(QAbstractListModel):
@@ -202,6 +208,9 @@ class TagsFlowView(QListView):
 
     def add_tutorial_tag(self, text: str, index: int) -> None:
         self.__model.add_tag(TutorialTagItem(text, index))
+
+    def add_tutorial_learning_path(self, text: str, index: int) -> None:
+        self.__model.add_tag(TutorialLearningPathItem(text, index))
 
     def sizeHint(self) -> QSize:
         rect = self.rect()

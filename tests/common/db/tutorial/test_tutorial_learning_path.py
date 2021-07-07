@@ -22,7 +22,7 @@ def dal_(connection: str) -> DataAccessLayer:
 
 
 def test_create_learning_path_without_publisher(dal_: DataAccessLayer) -> None:
-    learning_path = LearningPath(title='my path')
+    learning_path = LearningPath(name='my path')
     dal_.session.add(learning_path)
     dal_.session.commit()
 
@@ -33,12 +33,12 @@ def test_create_learning_path_without_publisher(dal_: DataAccessLayer) -> None:
 
     learning_path = learning_paths[0]
 
-    assert learning_path.title == 'my path'
+    assert learning_path.name == 'my path'
     assert learning_path.publisher is None
 
 
 def test_create_learning_path_with_publisher(dal_: DataAccessLayer) -> None:
-    learning_path = LearningPath(title='my path')
+    learning_path = LearningPath(name='my path')
     publisher = Publisher(name='my publisher')
     learning_path.publisher = publisher
     dal_.session.add(learning_path)
@@ -56,7 +56,7 @@ def test_create_tutorial_with_learning_path(dal_: DataAccessLayer) -> None:
     dal_.session.add(tutorial)
     dal_.session.commit()
 
-    learning_path = LearningPath(title='my path')
+    learning_path = LearningPath(name='my path')
     tlp = TutorialLearningPath(tutorial=tutorial, learning_path=learning_path, index=5)
     tutorial.learning_paths.append(tlp)
     dal_.session.commit()
