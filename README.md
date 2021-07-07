@@ -17,43 +17,33 @@ Main project repo: https://gitlab.com/iborco-software/tutcatalog/tutcatalogpy2
 
 ![main page](docs/main.png)
 
-## Development Environment
+## Install
+
+You need to install first [poetry](https://python-poetry.org/) in order to handle any additional dependencies.
+
+Once you have _poetry_ installed, clone the sources and run the commands bellow inside your source directory.
 
 ```bash
+# go to your source folder
+cd .../tutcatalogpy2
+
 # setup virtual environment and install dependencies
 poetry install
 
+# start a shell in the virtual environment
+poetry shell
+
 # start the catalog
-python -m tutcatalogpy.catalog
+tutcatalogpy
 
 # start the viewer
-python -m tutcatalogpy.viewer
+tutviewerpy
 
-# create py2app stubs
+# (optional) create py2app stubs
 python setup-catalog.py py2app -A
-# python setup-viewer.py py2app -A
+python setup-viewer.py py2app -A
 ```
 
-## Notes
+## Misc
 
-### Columns can't be moved
-
-* open the .ini file
-* delete the _header_state_ entries
-
-### App crashing on start (MacOS)
-
-**Problem:**
-
-Got this error when setting _system_ python with _pyenv_.
-
-**Solution:**
-
-* set a _custom_ python with pyenv
-* logout
-* login
-
-```bash
-# set custom python version with pyenv
-pyenv global 3.9.1
-```
+* [development notes](docs/development_notes.md)
