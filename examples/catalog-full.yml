@@ -2,31 +2,31 @@ disks:
   -
     path: ~/Downloads/downthemall/
     location: local
-    role: uploads
+    role: downloads
     depth: 0 # TUTORIAL
 
   -
     path: ~/Downloads/TUTORIALS_DOWNLOADS/
     location: local
-    role: uploads
+    role: downloads
     depth: 0 # TUTORIAL
 
   -
     path: ~/Downloads/_TUTORIALS_TO_LEARN
     location: local
-    role: scheduled
+    role: todos
     depth: 0 # TUTORIAL
 
   -
     path: /Volumes/HTSG-500G/Downloads [External]/downthemall
     location: local
-    role: uploads
+    role: downloads
     depth: 0 # TUTORIAL
 
   -
     path: /Volumes/HTSG-500G/Downloads [External]/downthemall [old]
     location: local
-    role: uploads
+    role: downloads
     depth: 0 # TUTORIAL
 
   -

@@ -2,13 +2,13 @@ disks:
   -
     path: ~/Downloads/_NEW_TUTORIALS/
     location: local
-    role: uploads
+    role: downloads
     depth: 0
 
   -
     path: ~/Downloads/downthemall/
     location: local
-    role: uploads
+    role: downloads
     depth: 0
 
   -

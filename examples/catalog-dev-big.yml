@@ -2,37 +2,37 @@ disks:
   -
     path: ~/Downloads/_NEW_TUTORIALS/
     location: local
-    role: uploads
+    role: downloads
     depth: 0
 
   -
     path: ~/Downloads/downthemall/
     location: local
-    role: uploads
+    role: downloads
     depth: 0
 
   -
     path: /Volumes/HTSG-500G/Downloads [External]/downthemall
     location: remote
-    role: uploads
+    role: downloads
     depth: 0
 
   -
     path: /Volumes/HTSG-500G/Downloads [External]/downthemall [old]
     location: remote
-    role: uploads
+    role: downloads
     depth: 0
 
   -
     path: /Volumes/Tutorials WD RED 6T NAS/_TUTORIALS_NEW/_TUTORIALS_NEW
     location: remote
-    role: uploads
+    role: downloads
     depth: 0
 
   -
     path: /Volumes/Tutorials WD RED 6T NAS/_TUTORIALS_NEW/_TUTORIALS_NEW_2021
     location: remote
-    role: uploads
+    role: downloads
     depth: 0
 
   -

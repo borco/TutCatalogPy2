@@ -14,9 +14,9 @@ class Disk(Base):
 
     class Role(str, enum.Enum):
         DEFAULT = ''
-        BACKUP = 'backup'
-        UPLOADS = 'uploads'
-        SCHEDULED = 'scheduled'
+        BACKUPS = 'backups'
+        DOWNLOADS = 'downloads'
+        TODOS = 'todos'
 
     class Status(enum.IntEnum):
         UNKNOWN = -1

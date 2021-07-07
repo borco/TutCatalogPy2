@@ -60,7 +60,7 @@ def test_load_config_with_one_disk(tmp_path):
             -
                 path: ~/Downloads/foo/
                 location: local
-                role: uploads
+                role: downloads
                 depth: 2
     """
 
@@ -75,7 +75,7 @@ def test_load_config_with_one_disk(tmp_path):
 
     assert disk.disk_parent == str(Path('~/Downloads/').expanduser().absolute())
     assert disk.disk_name == 'foo'
-    assert disk.role == Disk.Role.UPLOADS
+    assert disk.role == Disk.Role.DOWNLOADS
     assert disk.depth == 2
     assert disk.location == Disk.Location.LOCAL
     assert disk.id_ == 1
