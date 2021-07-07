@@ -2,16 +2,13 @@ import logging
 from pathlib import Path
 from typing import Final, List, Optional
 
-from PySide2.QtCore import QSize, QTimer, QUrl, Qt
-from PySide2.QtGui import QCloseEvent, QDesktopServices, QIcon, QKeySequence, QPixmap
+from PySide2.QtCore import QModelIndex, QSize, QTimer, Qt
+from PySide2.QtGui import QCloseEvent, QIcon, QKeySequence, QPixmap
 from PySide2.QtWidgets import QAction, QFileDialog, QFrame, QLabel, QMenu, QMenuBar, QToolBar
 
 from tutcatalogpy.catalog.config import config
-from tutcatalogpy.catalog.db.cover import Cover
-from tutcatalogpy.catalog.db.dal import dal
-from tutcatalogpy.catalog.db.disk import Disk
-from tutcatalogpy.catalog.db.folder import Folder
 from tutcatalogpy.catalog.models.disks_model import disks_model
+from tutcatalogpy.catalog.models.tags_model import UNKNOWN_AUTHOR_LABEL, UNKNOWN_PUBLISHER_LABEL, tags_model
 from tutcatalogpy.catalog.models.tutorials_model import tutorials_model
 from tutcatalogpy.catalog.scan_controller import scan_controller
 from tutcatalogpy.catalog.widgets.cover_dock import CoverDock
@@ -19,10 +16,20 @@ from tutcatalogpy.catalog.widgets.disks_dock import DisksDock
 from tutcatalogpy.catalog.widgets.scan_config_dock import ScanConfigDock
 from tutcatalogpy.catalog.widgets.scan_dialog import ScanDialog
 from tutcatalogpy.catalog.widgets.search_dock import SearchDock
+from tutcatalogpy.catalog.widgets.tags_dock import TagsDock
 from tutcatalogpy.catalog.widgets.tutorials_dock import TutorialsDock
+from tutcatalogpy.common.db.author import Author
+from tutcatalogpy.common.db.cover import Cover
+from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.disk import Disk
+from tutcatalogpy.common.db.folder import Folder
+from tutcatalogpy.common.db.publisher import Publisher
+from tutcatalogpy.common.db.search_flag import Search, SearchFlag, SearchValue
+from tutcatalogpy.common.desktop_services import open_path
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.recent_files import RecentFiles
 from tutcatalogpy.common.widgets.file_browser_dock import FileBrowserDock
+from tutcatalogpy.common.widgets.info_tc_dock import InfoTcDock
 from tutcatalogpy.common.widgets.logging_dock import LoggingDock
 from tutcatalogpy.common.widgets.main_window import CommonMainWindow
 
@@ -60,9 +67,11 @@ class MainWindow(CommonMainWindow):
 
     FOLDER_TOOLBAR_OBJECT_NAME: Final[str] = 'folder_toolbar'
 
+    OPEN_PARENT_FOLDER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_parent_folder.svg')
+    OPEN_PARENT_FOLDER_TIP: Final[str] = 'Open parent folder in external file browser'
     OPEN_FOLDER_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_folder.svg')
     OPEN_FOLDER_TIP: Final[str] = 'Open folder in external file browser'
-    OPEN_TC_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_tc.svg')
+    OPEN_TC_ICON: Final[str] = relative_path(__file__, '../../resources/icons/open_info_tc.svg')
     OPEN_TC_TIP: Final[str] = 'Open info.tc in external viewer'
 
     __current_folder_id: Optional[int] = None
@@ -73,12 +82,13 @@ class MainWindow(CommonMainWindow):
         self.setWindowTitle(self.WINDOW_TITLE)
 
         disks_model.setParent(self)
+        disks_model.init_icons()
+
         tutorials_model.setParent(self)
         tutorials_model.init_icons()
 
         self.__recent_files = RecentFiles(self)
 
-        self.__connect_objects()
         self._setup_statusbar()
         self._setup_docks()
         self.__setup_actions()
@@ -93,16 +103,13 @@ class MainWindow(CommonMainWindow):
         ]
         self._persistent_objects += self._docks
 
-    def __connect_objects(self) -> None:
-        config.loaded.connect(self.__on_config_loaded)
-
     def _setup_statusbar(self) -> None:
         super()._setup_statusbar()
 
-        self.__folder_summary = QLabel()
-        self.__folder_summary.setFrameShape(QFrame.StyledPanel)
-        self.__folder_summary.setMinimumWidth(200)
-        self._statusbar.addPermanentWidget(self.__folder_summary)
+        self.__tutorials_summary = QLabel()
+        self.__tutorials_summary.setFrameShape(QFrame.StyledPanel)
+        self.__tutorials_summary.setMinimumWidth(150)
+        self._statusbar.addPermanentWidget(self.__tutorials_summary)
 
     def _setup_docks(self) -> None:
         class CatalogLoggingDock(LoggingDock):
@@ -116,7 +123,13 @@ class MainWindow(CommonMainWindow):
         self.__tutorials_dock = TutorialsDock()
         self.__tutorials_dock.set_model(tutorials_model)
 
+        self.__info_tc_dock = InfoTcDock()
+
         self.__cover_dock = CoverDock()
+
+        self.__tags_dock = TagsDock()
+        self.__tags_dock.set_model(tags_model)
+        self.__tags_dock.view.activated.connect(self.__on_tags_dock_view_activated)
 
         self.__file_browser_dock = FileBrowserDock()
 
@@ -128,7 +141,9 @@ class MainWindow(CommonMainWindow):
             self.__search_dock,
             self.__disks_dock,
             self.__tutorials_dock,
+            self.__info_tc_dock,
             self.__cover_dock,
+            self.__tags_dock,
             self.__file_browser_dock,
             self.__log_dock,
             self.__scan_config_dock,
@@ -152,6 +167,11 @@ class MainWindow(CommonMainWindow):
         self.__scan_extended_action.setIcon(QIcon(self.SCAN_EXTENDED_ICON))
         self.__scan_extended_action.triggered.connect(self.__on_scan_extended_action_triggered)
 
+        self.__open_parent_folder_action = QAction()
+        self.__open_parent_folder_action.setIcon(QIcon(self.OPEN_PARENT_FOLDER_ICON))
+        self.__open_parent_folder_action.setStatusTip(self.OPEN_PARENT_FOLDER_TIP)
+        self.__open_parent_folder_action.triggered.connect(self.__on_open_parent_folder_triggered)
+
         self.__open_folder_action = QAction()
         self.__open_folder_action.setIcon(QIcon(self.OPEN_FOLDER_ICON))
         self.__open_folder_action.setStatusTip(self.OPEN_FOLDER_TIP)
@@ -169,6 +189,7 @@ class MainWindow(CommonMainWindow):
         ]
 
         self.__folder_actions = [
+            self.__open_parent_folder_action,
             self.__open_folder_action,
             self.__open_tc_action,
         ]
@@ -188,7 +209,6 @@ class MainWindow(CommonMainWindow):
         action.triggered.connect(self.__open_config)
         menu.addAction(action)
 
-        self.__recent_files.triggered.connect(self.__load_config)
         menu.addMenu(self.__recent_files.menu)
 
         action = QAction(self.FILE_QUIT_MENU, self)
@@ -210,9 +230,6 @@ class MainWindow(CommonMainWindow):
     def __setup_controllers(self) -> None:
         scan_controller.setParent(self)
         scan_controller.setup()
-        scan_worker = scan_controller.worker
-        scan_worker.scan_started.connect(self.__on_scan_worker_scan_started)
-        scan_worker.scan_finished.connect(self.__on_scan_worker_scan_finished)
 
     def __setup_toolbars(self) -> None:
         self.__scan_toolbar = QToolBar()
@@ -232,8 +249,23 @@ class MainWindow(CommonMainWindow):
 
     def __setup_connections(self) -> None:
         self.__search_dock.search.connect(lambda: tutorials_model.search(self.__search_dock))
+        self.__search_dock.search_tags.tag_clicked.connect(tags_model.clear_search_tag)
         disks_model.disk_checked_changed.connect(lambda: tutorials_model.search(self.__search_dock, True))
+        tags_model.search_changed.connect(self.__on_tags_model_search_changed)
+
         self.__tutorials_dock.selection_changed.connect(self.__on_tutorials_dock_selection_changed)
+        self.__recent_files.triggered.connect(self.__load_config)
+        self.__scan_dialog.finished.connect(self.__on_scan_dialog_finished)
+
+        self.__info_tc_dock.tag_clicked.connect(tags_model.include_search_tag)
+
+        config.loaded.connect(self.__on_config_loaded)
+
+        scan_worker = scan_controller.worker
+        scan_worker.scan_started.connect(self.__on_scan_worker_scan_started)
+        scan_worker.scan_finished.connect(self.__on_scan_worker_scan_finished)
+
+        tutorials_model.summary_changed.connect(self.__on_tutorials_model_summary_changed)
 
     def __cleanup_controllers(self) -> None:
         scan_controller.cleanup()
@@ -242,12 +274,14 @@ class MainWindow(CommonMainWindow):
         self.__scan_dialog: Optional[ScanDialog] = None
         self.__scan_dialog = ScanDialog(parent=self)
         self.__scan_dialog.set_scan_worker(scan_controller.worker)
-        self.__scan_dialog.finished.connect(self.__on_scan_dialog_finished)
 
     def __refresh_models(self) -> None:
         disks_model.refresh()
         tutorials_model.refresh()
+        tags_model.refresh()
+        # self.__tags_dock.view.expandAll()
         self.__update_ui_with_current_folder()
+        self.__update_tags_on_search_dock()
 
     def __on_scan_startup_action_triggered(self) -> None:
         scan_controller.scan_startup()
@@ -313,7 +347,13 @@ class MainWindow(CommonMainWindow):
         if folder is not None:
             path = folder.path()
             if path.exists():
-                QDesktopServices.openUrl(QUrl(f'file://{path}', QUrl.TolerantMode))
+                open_path(path)
+
+    def __on_open_parent_folder_triggered(self) -> None:
+        folder: Optional[Folder] = self.__get_current_folder(self.__current_folder_id)
+        if folder is not None:
+            path = folder.path()
+            open_path(path, in_parent=True)
 
     def __on_open_tc_triggered(self) -> None:
         folder: Optional[Folder] = self.__get_current_folder(self.__current_folder_id)
@@ -323,16 +363,19 @@ class MainWindow(CommonMainWindow):
                 tc_path = path / 'info.tc'
                 if not tc_path.exists():
                     tc_path.touch()
-                QDesktopServices.openUrl(QUrl(f'file://{tc_path}', QUrl.TolerantMode))
+                open_path(tc_path)
 
     def __update_ui_with_current_folder(self) -> None:
         folder_id = self.__current_folder_id
         folder = self.__get_current_folder(folder_id)
         online = (folder is not None and folder.disk.online)
 
+        self.__info_tc_dock.set_folder(folder_id)
         self.__update_cover_dock(folder_id)
         self.__update_file_browser_dock(folder_id)
+
         selected_one_folder = (folder_id is not None)
+        self.__open_parent_folder_action.setEnabled(selected_one_folder and online)
         self.__open_folder_action.setEnabled(selected_one_folder and online)
         self.__open_tc_action.setEnabled(selected_one_folder and online)
 
@@ -360,7 +403,7 @@ class MainWindow(CommonMainWindow):
         offline = False
         file_format: Cover.FileFormat = Cover.FileFormat.NONE
         if session is not None and folder_id is not None:
-            cover = session.query(Cover).filter(Cover.folder_id == folder_id).first()
+            cover = session.query(Cover).join(Folder, Folder.cover_id == Cover.id_).filter(Folder.id_ == folder_id).first()
             if cover is not None:
                 if cover.data is not None:
                     pixmap = QPixmap()
@@ -369,7 +412,7 @@ class MainWindow(CommonMainWindow):
                 offline = not cover.folder.disk.online
 
         self.__cover_dock.set_cover(pixmap)
-        self.__cover_dock.set_has_cover(pixmap is not None and folder_id is not None)
+        self.__cover_dock.set_has_cover(pixmap is not None or folder_id is None)
         self.__cover_dock.set_cover_format(file_format)
         self.__cover_dock.set_offline(offline and folder_id is not None)
 
@@ -380,6 +423,50 @@ class MainWindow(CommonMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         self.__cleanup_controllers()
         super().closeEvent(event)
+
+    def __on_tags_dock_view_activated(self, index: QModelIndex) -> None:
+        tags_model.cycle_search_flag(index)
+
+    def __on_tutorials_model_summary_changed(self, summary: str) -> None:
+        self.__tutorials_summary.setText(summary)
+
+    def __on_tags_model_search_changed(self) -> None:
+        self.__update_tags_on_search_dock()
+        tutorials_model.search(self.__search_dock, True)
+
+    def __update_tags_on_search_dock(self) -> None:
+        def add_label() -> None:
+            nonlocal group_label
+            if group_label is not None:
+                tags_view.add_text(group_label)
+            group_label = None
+
+        tags_view = self.__search_dock.search_tags
+        tags_view.clear()
+
+        if dal.session is not None:
+            author: Author
+            group_label = 'authors:'
+            for author in dal.session.query(Author).filter(Author.search != Search.IGNORED).order_by(Author.name.collate('NOCASE')):
+                add_label()
+                name = ('+' if author.search == Search.INCLUDE else '-') + (author.name if author.name else UNKNOWN_AUTHOR_LABEL)
+                tags_view.add_author(name, author.id_)
+
+            publisher: Publisher
+            group_label = 'publishers:'
+            for publisher in dal.session.query(Publisher).filter(Publisher.search != Search.IGNORED).order_by(Publisher.name.collate('NOCASE')):
+                add_label()
+                name = ('+' if publisher.search == Search.INCLUDE else '-') + (publisher.name if publisher.name else UNKNOWN_PUBLISHER_LABEL)
+                tags_view.add_publisher(name, publisher.id_)
+
+            search_flag: SearchFlag
+            group_label = 'flags:'
+            for search_flag in dal.session.query(SearchFlag).filter(SearchFlag.search != Search.IGNORED):
+                add_label()
+                name = ('+' if search_flag.search == Search.INCLUDE else '-') + SearchValue(search_flag.value).label
+                tags_view.add_search_flag(name, search_flag.id_)
+
+        tags_view.adjustSize()
 
 
 if __name__ == '__main__':

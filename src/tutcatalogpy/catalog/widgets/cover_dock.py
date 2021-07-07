@@ -7,7 +7,7 @@ from PySide2.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QWidget
 from PySide2.QtSvg import QSvgWidget
 
 
-from tutcatalogpy.catalog.db.cover import Cover
+from tutcatalogpy.common.db.cover import Cover
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.aspectratiopixmaplabel import AspectRatioPixmapLabel
 from tutcatalogpy.common.widgets.dock_widget import DockWidget

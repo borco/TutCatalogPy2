@@ -4,7 +4,7 @@ from typing import Final
 from PySide2.QtCore import QByteArray, QItemSelection, QModelIndex, QSettings, Qt, Signal
 from PySide2.QtWidgets import QAction, QMenu, QTableView
 
-from tutcatalogpy.catalog.models.tutorials_model import TutorialsModel
+from tutcatalogpy.catalog.models.tutorials_model import TutorialsModel, Columns
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
 
@@ -15,6 +15,7 @@ log.addHandler(logging.NullHandler())
 class TutorialsDock(DockWidget):
     SETTINGS_GROUP: Final[str] = 'tutorial_list_dock'
     SETTINGS_HEADER_STATE: Final[str] = 'header_state'
+    SETTINGS_VERTICAL_HEADER_VISIBLE: Final[str] = 'vertical_header_visible'
 
     DOCK_TITLE: Final[str] = 'Tutorials'
     DOCK_OBJECT_NAME: Final[str] = 'tutorial_list_dock'
@@ -41,7 +42,7 @@ class TutorialsDock(DockWidget):
         self.__tutorials_view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self.__tutorials_view.setSortingEnabled(True)
 
-        self.__tutorials_view.verticalHeader().setVisible(False)
+        self.__tutorials_view.verticalHeader().setVisible(True)
 
         horizontal_header = self.__tutorials_view.horizontalHeader()
         horizontal_header.setSectionsMovable(True)
@@ -58,8 +59,20 @@ class TutorialsDock(DockWidget):
     def __setup_context_menu(self) -> None:
         header = self.__tutorials_view.horizontalHeader()
         menu = QMenu(self)
-        for section in range(len(TutorialsModel.Columns)):
-            label = TutorialsModel.Columns(section).label
+
+        # vertical header
+        label = 'Row Number'
+        action = QAction(label, menu)
+        action.setData(None)
+        action.setCheckable(True)
+        action.setChecked(True)
+        action.triggered.connect(self.__on_header_custom_context_menu_triggered)
+        menu.addAction(action)
+        self.__vertical_header_visible_action = action
+
+        # other columns
+        for section in range(len(Columns)):
+            label = Columns(section).label
             action = QAction(label, menu)
             action.setData(section)
             action.setCheckable(True)
@@ -75,20 +88,29 @@ class TutorialsDock(DockWidget):
     def save_settings(self, settings: QSettings):
         settings.beginGroup(self.SETTINGS_GROUP)
         settings.setValue(self.SETTINGS_HEADER_STATE, self.__tutorials_view.horizontalHeader().saveState())
+        settings.setValue(self.SETTINGS_VERTICAL_HEADER_VISIBLE, self.__tutorials_view.verticalHeader().isVisible())
         settings.endGroup()
 
     def load_settings(self, settings: QSettings):
         settings.beginGroup(self.SETTINGS_GROUP)
         self.__tutorials_view.horizontalHeader().restoreState(QByteArray(settings.value(self.SETTINGS_HEADER_STATE, b'')))
+        vertical_header_visible = settings.value(self.SETTINGS_VERTICAL_HEADER_VISIBLE, True, type=bool)
         settings.endGroup()
+
         self.__setup_context_menu()
+        self.__tutorials_view.verticalHeader().setVisible(vertical_header_visible)
+        self.__vertical_header_visible_action.setChecked(vertical_header_visible)
 
     def __on_header_custom_context_menu_requested(self, pos):
         self.__context_menu.exec_(self.__tutorials_view.mapToGlobal(pos))
 
     def __on_header_custom_context_menu_triggered(self, checked):
-        header = self.__tutorials_view.horizontalHeader()
-        header.setSectionHidden(self.sender().data(), not checked)
+        if self.sender().data() is None:
+            header = self.__tutorials_view.verticalHeader()
+            header.setVisible(checked)
+        else:
+            header = self.__tutorials_view.horizontalHeader()
+            header.setSectionHidden(self.sender().data(), not checked)
 
     def __on_tutorials_view_selection_changed(self, selected: QItemSelection, deselected: QItemSelection) -> None:
         data_model: TutorialsModel = self.__tutorials_view.model()
@@ -97,15 +119,15 @@ class TutorialsDock(DockWidget):
 
         selection_model = self.__tutorials_view.selectionModel()
 
-        tutorials = []
+        folders = []
         index: QModelIndex
         for index in selection_model.selectedRows():
-            data = data_model.tutorial(index.row())
-            tutorials.append(data.id_)
+            folder = data_model.folder(index.row())
+            folders.append(folder.id_)
 
-        # log.info('Selected tutorials: %s', tutorials)
+        # log.info('Selected tutorials: %s', folders)
 
-        self.selection_changed.emit(tutorials)
+        self.selection_changed.emit(folders)
 
 
 if __name__ == '__main__':

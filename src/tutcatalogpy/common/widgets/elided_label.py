@@ -1,3 +1,4 @@
+from enum import IntEnum, auto
 from typing import Optional
 
 from PySide2.QtCore import QPoint, Qt, Signal
@@ -6,6 +7,12 @@ from PySide2.QtWidgets import QAbstractButton, QWidget
 
 
 class ElidedLabel(QAbstractButton):
+    class Tip(IntEnum):
+        NO_TIP = 0
+        SHOW_DATA = auto()
+        SHOW_TEXT = auto()
+        SHOW_TEXT_IF_ELIDED = auto()
+
     textChanged = Signal(str)
     triggered = Signal(str)
     interactivityChanged = Signal(bool)
@@ -15,12 +22,20 @@ class ElidedLabel(QAbstractButton):
 
         self.__data: Optional[str] = None
         self.__text: str = ''
+        self.__elided: bool = False
 
         # make sure we trigger the first paint event that determines the minimum height
         self.setMinimumSize(10, 10)
 
         self.__interactive = False
         self.setInteractive(False)
+
+        self.tip = ElidedLabel.Tip.NO_TIP
+        self.tip_prefix = ''
+
+    @property
+    def elided(self) -> bool:
+        return self.__elided
 
     def interactive(self) -> bool:
         return self.__interactive
@@ -50,18 +65,21 @@ class ElidedLabel(QAbstractButton):
         else:
             self.setCursor(QCursor())
 
-    def setText(self, value: str) -> None:
+    def set_text(self, value: str) -> None:
         # print(f'set text: {value}')
         if value != self.__text:
             self.__text = value
             self.update()
             self.textChanged.emit(self.__text)
 
-    def setData(self, value: str) -> None:
+    def set_data(self, value: Optional[str]) -> None:
         self.__data = value
+        self.update()
 
     def clear(self) -> None:
-        self.setText('')
+        self.set_text('')
+        self.set_data(None)
+        self.setStatusTip('')
 
     def paintEvent(self, event: QPaintEvent) -> None:
         # print('ElidedLabel.paintEvent')
@@ -87,6 +105,17 @@ class ElidedLabel(QAbstractButton):
 
         painter.end()
 
+        self.__elided = (elidedContent != self.__text)
+        self.__update_status_tip()
+
+    def __update_status_tip(self) -> None:
+        if self.tip == ElidedLabel.Tip.SHOW_DATA and self.__data is not None:
+            self.setStatusTip(self.tip_prefix + self.__data)
+        elif self.tip == ElidedLabel.Tip.SHOW_TEXT or (self.tip == ElidedLabel.Tip.SHOW_TEXT_IF_ELIDED and self.__elided):
+            self.setStatusTip(self.tip_prefix + self.__text)
+        else:
+            self.setStatusTip('')
+
 
 if __name__ == '__main__':
     from PySide2.QtWidgets import QApplication, QCheckBox, QLabel, QVBoxLayout
@@ -95,7 +124,7 @@ if __name__ == '__main__':
     window = QWidget(None)
 
     label = ElidedLabel(window)
-    label.setText('/some/very/very/very/very/long/path')
+    label.set_text('/some/very/very/very/very/long/path')
     label.triggered.connect(lambda url: print(f'clicked: {url}'))
 
     checkbox = QCheckBox('interactive', window)

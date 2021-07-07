@@ -123,7 +123,7 @@ class FileBrowserDock(DockWidget):
 
                 self.__view.setVisible(True)
 
-                log.info('Showing folder %s', path)
+                log.debug('Showing folder %s', path)
                 return
 
         if self.__model:

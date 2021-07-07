@@ -3,8 +3,10 @@
 import logging
 import os
 import platform
+import re
 from datetime import datetime
 from pathlib import Path
+from typing import Set
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -50,3 +52,13 @@ def get_folder_size(path: Path) -> int:
 
     log.debug('Folder size: %s: %d (%d files)', path, size, count)
     return size
+
+
+def get_images(path: Path) -> Set[Path]:
+    images: Set[Path] = set()
+
+    regex = re.compile(r'^image_?\d{1,2}\.(jpg|png)', re.IGNORECASE)
+    for file in path.iterdir():
+        if regex.match(file.name):
+            images.add(file)
+    return images

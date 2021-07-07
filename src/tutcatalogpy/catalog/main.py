@@ -5,8 +5,8 @@ from PySide2.QtCore import QSettings
 from PySide2.QtWidgets import QApplication
 
 import tutcatalogpy.common.logging_config  # noqa: F401
-from tutcatalogpy.catalog.scan_config import scan_config
 from tutcatalogpy.catalog.widgets.main_window import MainWindow
+from tutcatalogpy.common.scan_config import scan_config
 from tutcatalogpy.common.settings import setup_settings
 from tutcatalogpy.common.widgets.application import Application
 
@@ -15,7 +15,7 @@ log.info('Launching app.')
 
 
 def load_settings():
-    setup_settings('tutcatalogpy2-catalog')
+    setup_settings(__file__, 'tutcatalogpy2-catalog')
     settings = QSettings()
     scan_config.load_settings(settings)
     del settings

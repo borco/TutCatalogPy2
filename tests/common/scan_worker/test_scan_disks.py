@@ -1,15 +1,14 @@
 import shutil
 from pathlib import Path
-from typing import Final, List
+from typing import Final
 
-from pytest import fixture, mark
+from pytest import fixture
 from sqlalchemy.orm.session import Session
 
-from tutcatalogpy.catalog.scan_config import ScanConfig
-from tutcatalogpy.catalog.scan_worker import ScanWorker
-from tutcatalogpy.catalog.db.dal import dal
-from tutcatalogpy.catalog.db.disk import Disk
-from tutcatalogpy.catalog.db.folder import Folder
+from tutcatalogpy.common.scan_config import ScanConfig
+from tutcatalogpy.common.scan_worker import ScanWorker
+from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.disk import Disk
 import tutcatalogpy.common.logging_config  # noqa: F401
 
 

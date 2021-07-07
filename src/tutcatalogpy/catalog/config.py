@@ -6,8 +6,8 @@ from typing import Optional, TextIO
 import yaml
 from PySide2.QtCore import QObject, Signal
 
-from tutcatalogpy.catalog.db.dal import dal
-from tutcatalogpy.catalog.db.disk import Disk
+from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.disk import Disk
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -66,7 +66,6 @@ class Config(QObject):
             raise RuntimeError(f'cache not supported: {cache_type}')
 
         dal.connect(connection_string)
-        dal.session = dal.Session()
 
     def __config_disks(self, data) -> None:
         session = dal.session

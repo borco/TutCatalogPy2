@@ -3,10 +3,11 @@ from typing import Final
 
 from PySide2.QtCore import QSettings, Signal
 from PySide2.QtGui import QIcon
-from PySide2.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QToolButton, QVBoxLayout, QWidget
+from PySide2.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QSizePolicy, QToolButton, QVBoxLayout, QWidget
 
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
+from tutcatalogpy.common.widgets.tags_flow_widget import TagsFlowView
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -61,7 +62,7 @@ class SearchDock(DockWidget):
         search_layout.addWidget(self.__search_edit)
         self.__search_edit.setClearButtonEnabled(True)
         self.__search_edit.editingFinished.connect(self.search)
-        self.__search_edit.textChanged.connect(self.search)
+        self.__search_edit.textChanged.connect(self.__on_search_edit_text_changed)
 
         self.__search_button = QToolButton()
         search_layout.addWidget(self.__search_button)
@@ -72,8 +73,24 @@ class SearchDock(DockWidget):
         layout.addWidget(self.__only_show_checked_disks)
         self.__only_show_checked_disks.toggled.connect(self.search)
 
+        self.__search_tags = TagsFlowView()
+        layout.addWidget(self.__search_tags)
+
+        layout.addStretch(1)
+
+        policy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
+        widget.setSizePolicy(policy)
+
+    @property
+    def search_tags(self) -> TagsFlowView:
+        return self.__search_tags
+
     def __setup_actions(self) -> None:
         self._setup_dock_toolbar()
+
+    def __on_search_edit_text_changed(self) -> None:
+        if len(self.text) == 0:
+            self.search.emit()
 
     def save_settings(self, settings: QSettings):
         settings.beginGroup(self.SETTINGS_GROUP)
@@ -89,7 +106,9 @@ class SearchDock(DockWidget):
         self.search.emit()
 
     def clear(self):
-        pass
+        self.__only_show_checked_disks.setChecked(False)
+        self.__search_edit.clear()
+        self.__search_tags.clear()
 
 
 if __name__ == '__main__':

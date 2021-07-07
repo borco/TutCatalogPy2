@@ -4,7 +4,7 @@ from typing import Final
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QDialog, QDialogButtonBox, QGridLayout, QLabel, QProgressBar, QVBoxLayout
 
-from tutcatalogpy.catalog.scan_worker import ScanWorker
+from tutcatalogpy.common.scan_worker import ScanWorker
 from tutcatalogpy.common.widgets.elided_label import ElidedLabel
 
 log = logging.getLogger(__name__)
@@ -98,8 +98,8 @@ class ScanDialog(QDialog):
     def __on_scan_worker_progress_changed(self, progress: ScanWorker.Progress) -> None:
         self.__step.setText(progress.step_name)
         self.__disk.setText(progress.disk_name)
-        self.__tutorial_path.setText(progress.folder_parent)
-        self.__tutorial_name.setText(progress.folder_name)
+        self.__tutorial_path.set_text(progress.folder_parent)
+        self.__tutorial_name.set_text(progress.folder_name)
         self.__elapsed_time.setText(self.__scan_worker.elapsed_time_str)
 
         if progress.folder_count > 0:

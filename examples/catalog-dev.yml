@@ -15,3 +15,8 @@ disks:
     path: /Volumes/Tutorials WD RED 6T NAS/TUTORIALS_2/Watts Atelier
     location: remote
     depth: 0
+
+  -
+    path: /Volumes/Tutorials WD RED 6T NAS/TUTORIALS_2/Art School Videos
+    location: remote
+    depth: 0

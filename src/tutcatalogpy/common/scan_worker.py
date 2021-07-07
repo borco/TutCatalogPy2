@@ -8,13 +8,15 @@ from humanize import precisedelta
 from PySide2.QtCore import QObject, QThread, Signal
 from sqlalchemy.orm.session import Session
 
-from tutcatalogpy.catalog.db.cover import Cover
-from tutcatalogpy.catalog.db.dal import dal
-from tutcatalogpy.catalog.db.disk import Disk
-from tutcatalogpy.catalog.db.folder import Folder
-from tutcatalogpy.catalog.scan_config import ScanConfig, scan_config
-from tutcatalogpy.common.files import get_creation_datetime, get_modification_datetime, get_folder_size
-
+from tutcatalogpy.common.db.cover import Cover
+from tutcatalogpy.common.db.dal import dal
+from tutcatalogpy.common.db.disk import Disk
+from tutcatalogpy.common.db.image import Image
+from tutcatalogpy.common.db.folder import Folder
+from tutcatalogpy.common.db.tutorial import Tutorial
+from tutcatalogpy.common.files import get_creation_datetime, get_modification_datetime, get_folder_size, get_images
+from tutcatalogpy.common.scan_config import ScanConfig, scan_config
+from tutcatalogpy.common.tutorial_data import TutorialData
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -36,6 +38,11 @@ def get_path_stats(path: Path) -> PathStats:
     return PathStats(modified, created, id, size)
 
 
+def get_image_data(path: Path) -> bytes:
+    with open(path, 'rb') as f:
+        return f.read()
+
+
 class ScanWorker(QObject):
     class Progress:
         disk_name: str = ''
@@ -46,6 +53,7 @@ class ScanWorker(QObject):
         folder_index: int = 0
 
     COVER_NAMES: Final[List[Cover.FileFormat]] = [Cover.FileFormat.JPG, Cover.FileFormat.PNG]
+    INFO_TC_NAME: Final[str] = 'info.tc'
 
     scan_started = Signal()
     scan_finished = Signal()
@@ -153,7 +161,7 @@ class ScanWorker(QObject):
                 )
                 if query:
                     folder, disk = query
-                    self.__update_folder_details(session, folder, disk)
+                    self.__update_folder_details(session, folder)
                     log.info('Updated folder details: %s | %s | %s | %s', disk_parent, disk_name, folder_parent, folder_name)
                 else:
                     log.warning('Could not find folder in db: %s | %s | %s | %s', disk_parent, disk_name, folder_parent, folder_name)
@@ -356,7 +364,7 @@ class ScanWorker(QObject):
 
             if folder.status not in [Folder.Status.DELETED.value] or not folder.size:
                 if scan_config.can_scan(mode, ScanConfig.Option.FOLDER_DETAILS):
-                    self.__update_folder_details(session, folder, disk)
+                    self.__update_folder_details(session, folder)
 
             self.__progress.disk_name = disk.disk_name
             self.__progress.folder_parent = folder.folder_parent
@@ -365,36 +373,39 @@ class ScanWorker(QObject):
             self.__progress.folder_index += 1
             # QThread.msleep(100)
 
-    def __update_folder_details(self, session: Session, folder: Folder, disk: Disk):
+    def __update_folder_details(self, session: Session, folder: Folder):
         path = folder.path()
         folder.size = get_folder_size(path)
         folder.status = Folder.Status.OK
-        self.__update_cover(session, folder)
+        ScanWorker.update_folder_cover(session, folder)
+        ScanWorker.update_folder_images(session, folder)
+        ScanWorker.update_folder_tutorial(session, folder)
         session.commit()
 
-    def __update_cover(self, session: Session, folder: Folder) -> None:
-        disk: Disk = folder.disk
-
+    @staticmethod
+    def update_folder_cover(session: Session, folder: Folder) -> None:
         has_cover: bool = False
 
-        cover: Optional[Cover] = session.query(Cover).filter(Cover.folder_id == folder.id_).first()
-        if cover is None:
-            cover = Cover(folder_id=folder.id_)
-            session.add(cover)
+        query = session.query(Cover).join(Folder, Folder.cover_id == Cover.id_).filter(Folder.id_ == folder.id_)
 
-        for file_format in self.COVER_NAMES:
+        for file_format in ScanWorker.COVER_NAMES:
             path: Path = folder.path() / file_format.file_name
             if path.exists():
                 modified, created, system_id, size = get_path_stats(path)
 
-                if (
+                cover: Optional[Cover] = query.first()
+                if cover is None:
+                    cover = Cover()
+                    session.add(cover)
+                    session.flush()
+                    folder.cover_id = cover.id_
+                    log.debug('Found cover: %s', path)
+                elif (
                     cover.size == size
                     and cover.modified == modified
                     and cover.created == created
                     and cover.system_id == system_id):
                     return
-
-                log.info('Found cover: %s', path)
 
                 data = None
                 with open(path, mode='rb') as f:
@@ -412,13 +423,87 @@ class ScanWorker(QObject):
                 break
 
         if not has_cover:
+            cover: Optional[Cover] = query.first()
+            if cover is not None:
+                folder.cover_id = None
+                session.delete(cover)
 
-            cover.file_format = Cover.FileFormat.NONE.value
-            cover.system_id = None
-            cover.created = None
-            cover.modified = None
-            cover.size = None
-            cover.data = None
+        session.commit()
+
+    @staticmethod
+    def update_folder_images(session: Session, folder: Folder) -> None:
+        current_images = get_images(folder.path())
+
+        image: Image
+        for image in folder.images:
+            image_path = folder.path() / image.name
+            if image_path not in current_images:
+                folder.images.remove(image)
+                # image.tutorial_id = None
+                # session.delete(image)
+            else:
+                modified, created, system_id, size = get_path_stats(image_path)
+                if (
+                    image.system_id == system_id
+                    and image.modified == modified
+                    and image.created == created
+                    and image.size == size
+                ):
+                    continue
+
+                image.data = get_image_data(image_path)
+                current_images.remove(image_path)
+
+        for image_path in current_images:
+            image = Image()
+            image.name = image_path.name
+            image.modified, image.created, image.system_id, image.size = get_path_stats(image_path)
+            image.data = get_image_data(image_path)
+            session.add(image)
+            folder.images.append(image)
+
+        session.commit()
+
+    @staticmethod
+    def update_folder_tutorial(session: Session, folder: Folder) -> None:
+        path: Path = folder.path() / ScanWorker.INFO_TC_NAME
+
+        if not path.exists():
+            tutorial = Tutorial()
+            folder.tutorial = tutorial
+            TutorialData.load_from_string(session, tutorial, '')
+            folder.error = None
+        else:
+            modified, created, system_id, size = get_path_stats(path)
+
+            tutorial: Tutorial = folder.tutorial
+            if tutorial is None:
+                tutorial = Tutorial()
+                folder.tutorial = tutorial
+            elif (
+                tutorial.size == size
+                and tutorial.modified == modified
+                and tutorial.created == created
+                and tutorial.system_id == system_id):
+                return
+
+            tutorial.system_id = system_id
+            tutorial.created = created
+            tutorial.modified = modified
+            tutorial.size = size
+
+            try:
+                with open(path, mode='r', encoding='utf-8') as f:
+                    text = f.read()
+
+                TutorialData.load_from_string(session, tutorial, text)
+                folder.error = None
+            except Exception as ex:
+                log.error("Couldn't parse %s: %s", path, str(ex))
+                tutorial = Tutorial()
+                folder.tutorial = tutorial
+                TutorialData.load_from_string(session, tutorial, '')
+                folder.error = 'Parse error\n' + str(ex)
 
         session.commit()
 

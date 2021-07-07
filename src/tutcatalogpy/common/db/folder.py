@@ -2,11 +2,11 @@ import enum
 from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import backref, relationship
 from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.sql.sqltypes import Boolean, DateTime, Integer, Text
 
-from tutcatalogpy.catalog.db.base import Base
+from tutcatalogpy.common.db.base import Base
 
 
 class Folder(Base):
@@ -22,18 +22,22 @@ class Folder(Base):
     __tablename__ = 'folder'
 
     id_ = Column('id', Integer, primary_key=True)
-    disk_id = Column(Integer, ForeignKey('disk.id'), nullable=False)
-    folder_parent = Column(Text, unique=False, nullable=True)
-    folder_name = Column(Text, unique=False, nullable=True)
+    disk_id = Column(Integer, ForeignKey('disk.id'))
+    cover_id = Column(Integer, ForeignKey('cover.id'))
+    tutorial_id = Column(Integer, ForeignKey('tutorial.id'))
+    folder_parent = Column(Text)
+    folder_name = Column(Text)
     system_id = Column(Text, default='', nullable=False)
     status = Column(Integer, default=Status.OK, nullable=False)
     created = Column(DateTime, default=datetime.today(), nullable=False)
     modified = Column(DateTime, default=datetime.today(), nullable=False)
-    size = Column(Integer, default=None, nullable=True)
+    size = Column(Integer)
     checked = Column(Boolean, default=False, nullable=False)
+    error = Column(Text)
 
     disk = relationship('Disk', back_populates='folders')
-    cover = relationship('Cover', back_populates='folder', cascade='all, delete')
+    cover = relationship('Cover', backref=backref('folder', uselist=False), cascade='all, delete')
+    tutorial = relationship('Tutorial', backref=backref('folder', uselist=False), cascade='all, delete')
 
     __table_args__ = (
         UniqueConstraint('disk_id', 'folder_parent', 'folder_name'),
@@ -41,4 +45,7 @@ class Folder(Base):
     )
 
     def path(self) -> Path:
-        return self.disk.path() / self.folder_parent / self.folder_name
+        if self.disk is not None:
+            return self.disk.path() / self.folder_parent / self.folder_name
+        else:
+            return Path(self.folder_parent) / self.folder_name

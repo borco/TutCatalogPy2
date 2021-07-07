@@ -4,7 +4,7 @@ from typing import Final
 from PySide2.QtCore import QByteArray, QSettings, Qt
 from PySide2.QtWidgets import QAction, QMenu, QTableView
 
-from tutcatalogpy.catalog.models.disks_model import DisksModel
+from tutcatalogpy.catalog.models.disks_model import Columns
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.widgets.dock_widget import DockWidget
 
@@ -15,6 +15,7 @@ log.addHandler(logging.NullHandler())
 class DisksDock(DockWidget):
     SETTINGS_GROUP: Final[str] = 'disk_dock'
     SETTINGS_HEADER_STATE: Final[str] = 'header_state'
+    SETTINGS_VERTICAL_HEADER_VISIBLE: Final[str] = 'vertical_header_visible'
 
     DOCK_TITLE: Final[str] = 'Disks'
     DOCK_OBJECT_NAME: Final[str] = 'disk_dock'
@@ -57,8 +58,20 @@ class DisksDock(DockWidget):
     def __setup_header_context_menu(self) -> None:
         header = self.__disks_view.horizontalHeader()
         menu = QMenu(self)
-        for section in range(len(DisksModel.Columns)):
-            label = DisksModel.Columns(section).label
+
+        # vertical header
+        label = 'Row Number'
+        action = QAction(label, menu)
+        action.setData(None)
+        action.setCheckable(True)
+        action.setChecked(True)
+        action.triggered.connect(self.__on_header_context_menu_triggered)
+        menu.addAction(action)
+        self.__vertical_header_visible_action = action
+
+        # other columns
+        for section in range(len(Columns)):
+            label = Columns(section).label
             action = QAction(label, menu)
             action.setData(section)
             action.setCheckable(True)
@@ -71,8 +84,12 @@ class DisksDock(DockWidget):
         self.__context_menu.exec_(self.__disks_view.mapToGlobal(pos))
 
     def __on_header_context_menu_triggered(self, checked):
-        header = self.__disks_view.horizontalHeader()
-        header.setSectionHidden(self.sender().data(), not checked)
+        if self.sender().data() is None:
+            header = self.__disks_view.verticalHeader()
+            header.setVisible(checked)
+        else:
+            header = self.__disks_view.horizontalHeader()
+            header.setSectionHidden(self.sender().data(), not checked)
 
     def set_model(self, model) -> None:
         self.__disks_view.setModel(model)
@@ -80,13 +97,18 @@ class DisksDock(DockWidget):
     def save_settings(self, settings: QSettings):
         settings.beginGroup(self.SETTINGS_GROUP)
         settings.setValue(self.SETTINGS_HEADER_STATE, self.__disks_view.horizontalHeader().saveState())
+        settings.setValue(self.SETTINGS_VERTICAL_HEADER_VISIBLE, self.__disks_view.verticalHeader().isVisible())
         settings.endGroup()
 
     def load_settings(self, settings: QSettings):
         settings.beginGroup(self.SETTINGS_GROUP)
         self.__disks_view.horizontalHeader().restoreState(QByteArray(settings.value(self.SETTINGS_HEADER_STATE, b'')))
+        vertical_header_visible = settings.value(self.SETTINGS_VERTICAL_HEADER_VISIBLE, True, type=bool)
         settings.endGroup()
+
         self.__setup_header_context_menu()
+        self.__disks_view.verticalHeader().setVisible(vertical_header_visible)
+        self.__vertical_header_visible_action.setChecked(vertical_header_visible)
 
     def clear(self):
         pass

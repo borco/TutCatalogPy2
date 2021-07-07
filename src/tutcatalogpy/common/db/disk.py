@@ -4,7 +4,7 @@ from pathlib import Path
 from sqlalchemy import Boolean, Column, Enum, Integer, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
-from tutcatalogpy.catalog.db.base import Base
+from tutcatalogpy.common.db.base import Base
 
 
 class Disk(Base):
