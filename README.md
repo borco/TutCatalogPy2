@@ -8,14 +8,14 @@ This incarnation of the TutCatalog is the fourth one, after 2 in C++ and another
 
 Main project repo: https://gitlab.com/iborco-software/tutcatalog/tutcatalogpy2
 
-![main page](docs/main.png)
-
 ## Project Status
 
 * the main catalog application
-  * [WIP] parse and display info from _info.tc_ files
+  * parse and display info from _info.tc_ files
   * [TODO] edit the _info.tc_ files
 * [TODO] the viewer application
+
+![main page](docs/main.png)
 
 ## Development Environment
 
