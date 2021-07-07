@@ -9,8 +9,9 @@ class TutorialLearningPath(Base):
 
     __tablename__ = 'tutorial_learning_path'
 
-    tutorial_id = Column(Integer, ForeignKey('tutorial.id'), primary_key=True)
-    learning_path_id = Column(Integer, ForeignKey('learning_path.id'), primary_key=True)
+    id_ = Column('id', Integer, primary_key=True)
+    tutorial_id = Column(Integer, ForeignKey('tutorial.id'))
+    learning_path_id = Column(Integer, ForeignKey('learning_path.id'))
     index = Column(Integer)  # index in learning path
     show_in_title = Column(Boolean)
 

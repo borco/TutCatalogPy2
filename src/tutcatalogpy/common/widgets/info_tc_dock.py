@@ -15,6 +15,7 @@ from tutcatalogpy.common.db.folder import Folder
 from tutcatalogpy.common.db.image import Image
 from tutcatalogpy.common.db.tag import Tag
 from tutcatalogpy.common.db.tutorial import Tutorial
+from tutcatalogpy.common.db.tutorial_learning_path import TutorialLearningPath
 from tutcatalogpy.common.files import relative_path
 from tutcatalogpy.common.tutorial_data import TutorialData
 from tutcatalogpy.common.widgets.description_view import DescriptionView
@@ -144,6 +145,9 @@ class InfoTcDock(DockWidget):
         self.__personal_tags = TagsFlowView()
         form_layout.addRow('Personal Tags:', self.__personal_tags)
 
+        self.__learning_paths = TagsFlowView()
+        form_layout.addRow('Learning Paths:', self.__learning_paths)
+
         layout.addWidget(HorizontalSeparator())
 
         self.__error = ErrorView()
@@ -202,6 +206,7 @@ class InfoTcDock(DockWidget):
             self.__rating,
             self.__publisher_tags,
             self.__personal_tags,
+            self.__learning_paths,
             self.__error,
             self.__description,
         ]:
@@ -256,6 +261,8 @@ class InfoTcDock(DockWidget):
             self.__update_info_tags(self.__publisher_tags, [tag for tag in tags if tag.source == Tag.Source.PUBLISHER])
             self.__update_info_tags(self.__personal_tags, [tag for tag in tags if tag.source == Tag.Source.PERSONAL])
 
+            self.__update_info_learning_paths(self.__learning_paths, tutorial.learning_paths)
+
         else:
             for widget in [
                 self.__publisher,
@@ -272,11 +279,17 @@ class InfoTcDock(DockWidget):
                 self.__rating,
                 self.__publisher_tags,
                 self.__personal_tags,
+                self.__learning_paths,
             ]:
                 widget.clear()
 
         self.__update_info_error(folder)
         self.__update_info_description(folder)
+
+    def __update_info_learning_paths(self, view: TagsFlowView, tutorial_learning_paths: List[TutorialLearningPath]) -> None:
+        view.clear()
+        for tlp in tutorial_learning_paths:
+            view.add_tutorial_learning_path(tlp.learning_path.name, tlp.id_)
 
     def __update_info_tags(self, view: TagsFlowView, tags: List[Tag]) -> None:
         view.clear()
