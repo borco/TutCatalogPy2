@@ -31,7 +31,16 @@ def dal_(connection: str) -> DataAccessLayer:
             learning_paths:
                 - lp 1
                 - lp 2
-        """, {('pub 1', 'lp 1', None), ('pub 1', 'lp 2', None)})
+        """, {('pub 1', 'lp 1', None, None), ('pub 1', 'lp 2', None, None)}),
+        ("""
+            publisher: pub 1
+            learning_paths:
+                -
+                    name: lp 1
+                    index: 10
+                    show_in_title: yes
+                - lp 2
+        """, {('pub 1', 'lp 1', 10, True), ('pub 1', 'lp 2', None, None)})
     ]
 )
 def test_load_from_string_learning_paths_for_one_tutorial(text: str, learning_paths: Set[Tuple[str, str, str]], dal_: DataAccessLayer) -> None:
@@ -40,7 +49,7 @@ def test_load_from_string_learning_paths_for_one_tutorial(text: str, learning_pa
     dal_.session.commit()
 
     TutorialData.load_from_string(dal_.session, tutorial, text)
-    assert {(tlp.learning_path.publisher.name, tlp.learning_path.name, tlp.index) for tlp in tutorial.learning_paths} == learning_paths
+    assert {(tlp.learning_path.publisher.name, tlp.learning_path.name, tlp.index, tlp.show_in_title) for tlp in tutorial.learning_paths} == learning_paths
 
 
 @mark.parametrize(

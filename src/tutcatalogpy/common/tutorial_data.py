@@ -1,7 +1,7 @@
 import enum
 import logging
 from re import compile
-from typing import Any, Dict, Final, List, Optional
+from typing import Any, Dict, Final, List
 
 import fastjsonschema
 import yaml
@@ -65,6 +65,11 @@ class TutorialData:
     PUBLISHER_TAGS_KEY: Final[str] = 'publisher_tags'
     PERSONAL_TAGS_KEY: Final[str] = 'personal_tags'
     LEARNING_PATHS_KEY: Final[str] = 'learning_paths'
+    LEARNING_PATHS_NAME_KEY: Final[str] = 'name'
+    LEARNING_PATHS_INDEX_KEY: Final[str] = 'index'
+    LEARNING_PATHS_PUBLISHER_KEY: Final[str] = 'publisher'
+    LEARNING_PATHS_PUBLISHER_DEFAULT: Final[str] = '*'
+    LEARNING_PATHS_SHOW_IN_TITLE_KEY: Final[str] = 'show_in_title'
     DESCRIPTION_KEY: Final[str] = 'description'
 
     RELEASED_MINIMUM_YEAR: Final[int] = 1900
@@ -105,7 +110,19 @@ class TutorialData:
             LEGACY_EXTRA_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
             PUBLISHER_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
             PERSONAL_TAGS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
-            LEARNING_PATHS_KEY: {'type': 'array', 'items': {'type': 'string'}, 'default': []},
+            LEARNING_PATHS_KEY: {
+                'type': 'array',
+                'items': {
+                    'type': ['string', 'object'],
+                    'properties': {
+                        LEARNING_PATHS_NAME_KEY: {'type': 'string', 'default': ''},
+                        LEARNING_PATHS_INDEX_KEY: {'type': 'integer', 'default': None},
+                        LEARNING_PATHS_PUBLISHER_KEY: {'type': 'string', 'default': LEARNING_PATHS_PUBLISHER_DEFAULT},
+                        LEARNING_PATHS_SHOW_IN_TITLE_KEY: {'type': 'boolean', 'default': False},
+                    }
+                },
+                'default': []
+            },
             DESCRIPTION_KEY: {'type': 'string', 'default': ''},
         }
     }
@@ -161,12 +178,23 @@ class TutorialData:
         tutorial.description = data.get(TutorialData.DESCRIPTION_KEY)
 
     @staticmethod
-    def set_publisher(session: Session, tutorial: Tutorial, text: str) -> None:
-        publisher = session.query(Publisher).filter_by(name=text).first()
+    def __publisher(session: Session, name: str) -> Publisher:
+        publisher = session.query(Publisher).filter_by(name=name).first()
         if publisher is None:
-            publisher = Publisher(name=text)
+            publisher = Publisher(name=name)
             session.add(publisher)
-        tutorial.publisher = publisher
+        return publisher
+
+    @staticmethod
+    def __learning_path(session: Session, name: str, publisher: Publisher) -> LearningPath:
+        learning_path: LearningPath = session.query(LearningPath).filter_by(name=name, publisher=publisher).first()
+        if learning_path is None:
+            learning_path = LearningPath(name=name, publisher=publisher)
+        return learning_path
+
+    @staticmethod
+    def set_publisher(session: Session, tutorial: Tutorial, name: str) -> None:
+        tutorial.publisher = TutorialData.__publisher(session, name)
 
     @staticmethod
     def set_authors(session: Session, tutorial: Tutorial, names: List[str]) -> None:
@@ -198,16 +226,28 @@ class TutorialData:
             tutorial.all_tags = FIELD_SEPARATOR.join([''] + new_tags + [''])
 
     @staticmethod
-    def set_learning_paths(session: Session, tutorial: Tutorial, values: List[str]) -> None:
+    def set_learning_paths(session: Session, tutorial: Tutorial, values: List[Any]) -> None:
         publisher: Publisher = tutorial.publisher
         for value in values:
-            if len(value) == 0:
-                continue
-            name = value
-            lp: Optional[LearningPath] = session.query(LearningPath).filter_by(name=name, publisher=publisher).first()
-            if lp is None:
-                lp = LearningPath(name=name, publisher=publisher)
-            TutorialLearningPath(tutorial=tutorial, learning_path=lp)
+            if type(value) is str:
+                name = value
+                if len(value) == 0:
+                    continue
+                learning_path = TutorialData.__learning_path(session, name, publisher)
+                TutorialLearningPath(tutorial=tutorial, learning_path=learning_path)
+            elif type(value) is dict:
+                name = value.get(TutorialData.LEARNING_PATHS_NAME_KEY)
+                if len(name) == 0:
+                    continue
+                publisher_name = value.get(TutorialData.LEARNING_PATHS_PUBLISHER_KEY)
+                if publisher_name != TutorialData.LEARNING_PATHS_PUBLISHER_DEFAULT:
+                    publisher: Publisher = TutorialData.__publisher(session, publisher_name)
+                learning_path: LearningPath = TutorialData.__learning_path(session, name, publisher)
+                tutorial_learning_path = TutorialLearningPath(tutorial=tutorial, learning_path=learning_path)
+                tutorial_learning_path.index = value.get(TutorialData.LEARNING_PATHS_INDEX_KEY)
+                tutorial_learning_path.show_in_title = value.get(TutorialData.LEARNING_PATHS_SHOW_IN_TITLE_KEY)
+            else:
+                raise RuntimeError(f"Don't know how to parse this learning path: {value}")
 
     @staticmethod
     def parse_progress(viewed: str, progress: str) -> int:
