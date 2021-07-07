@@ -207,7 +207,7 @@ class TutorialData:
             lp: Optional[LearningPath] = session.query(LearningPath).filter_by(name=name, publisher=publisher).first()
             if lp is None:
                 lp = LearningPath(name=name, publisher=publisher)
-                tlp = TutorialLearningPath(tutorial=tutorial, learning_path=lp)
+            TutorialLearningPath(tutorial=tutorial, learning_path=lp)
 
     @staticmethod
     def parse_progress(viewed: str, progress: str) -> int:
