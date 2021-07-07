@@ -1,5 +1,5 @@
 from sqlalchemy.orm import relationship
-from sqlalchemy.schema import Column, ForeignKey
+from sqlalchemy.schema import Column, ForeignKey, UniqueConstraint
 from sqlalchemy.sql.sqltypes import Integer
 
 from tutcatalogpy.common.db.base import Base
@@ -15,6 +15,10 @@ class TutorialLearningPath(Base):
 
     tutorial = relationship('Tutorial', backref='learning_paths')
     learning_path = relationship('LearningPath', backref='tutorials')
+
+    __table_args__ = (
+        UniqueConstraint('tutorial_id', 'learning_path_id'),
+    )
 
 
 if __name__ == '__main__':
