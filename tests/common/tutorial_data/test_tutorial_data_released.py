@@ -24,9 +24,14 @@ def dal_(connection: str) -> DataAccessLayer:
     'text, released',
     [
         ('', ''),
-        ('released: 2000', '2000'),
+        ('released: 1900', '1900'),
+        ('released: 2199', '2199'),
+        ('released: 1900/01', '1900/01'),
         ('released: 2000/01', '2000/01'),
+        ('released: 2199/01', '2199/01'),
         ('released: 2000/01/01', '2000/01/01'),
+        ('released: 2199/12/01', '2199/12/01'),
+        ('released: 2199/12/31', '2199/12/31'),
     ]
 )
 def test_load_from_string_reads_released(text: str, released: str, dal_: DataAccessLayer) -> None:
@@ -47,12 +52,16 @@ def test_load_from_string_reads_released(text: str, released: str, dal_: DataAcc
     [
         # verify integer values
         'released: 1899',
-        'released: 3001',
+        'released: 2200',
         # 'released: 2000.', # we can't test for this, as it will be interpretted as an integer
         # verify string values
         'released: x',
+        'released: 2200/01',
         'released: 2000/1',
+        'released: 2000/13',
+        'released: 2000/13/01',
         'released: 2000/01/1',
+        'released: 2000/01/32',
     ]
 )
 def test_load_from_string_detects_invalid_released(text: str) -> None:

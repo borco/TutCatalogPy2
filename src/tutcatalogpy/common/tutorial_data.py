@@ -73,8 +73,8 @@ class TutorialData:
     DESCRIPTION_KEY: Final[str] = 'description'
 
     RELEASED_MINIMUM_YEAR: Final[int] = 1900
-    RELEASED_MAXIMUM_YEAR: Final[int] = 3000
-    RELEASED_REGEX: Final[str] = r'^\d{4}(/\d{2}(/\d{2})?)?$'
+    RELEASED_MAXIMUM_YEAR: Final[int] = 2199
+    RELEASED_REGEX: Final[str] = r'^(19|2[01])\d{2}\/(0[1-9]|1[0-2])(\/(0[1-9]|1\d|2\d|3[01]))?$'
     DURATION_REGEX: Final[str] = r'(^(?P<hours>\d{1,3})h)? *((?P<minutes>[0-5]?\d)m)? *((?P<seconds>[0-5]?\d)s)?$'
 
     # fastjsonschema returns default values if no data is provided
