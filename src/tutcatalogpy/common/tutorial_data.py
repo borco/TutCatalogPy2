@@ -75,7 +75,7 @@ class TutorialData:
     RELEASED_MINIMUM_YEAR: Final[int] = 1900
     RELEASED_MAXIMUM_YEAR: Final[int] = 3000
     RELEASED_REGEX: Final[str] = r'^\d{4}(/\d{2}(/\d{2})?)?$'
-    DURATION_REGEX: Final[str] = r'(^(?P<hours>\d{1,3})h)? *((?P<minutes>\d{1,2})m)?$'
+    DURATION_REGEX: Final[str] = r'(^(?P<hours>\d{1,3})h)? *((?P<minutes>[0-5]?\d)m)? *((?P<seconds>[0-5]?\d)s)?$'
 
     # fastjsonschema returns default values if no data is provided
     # https://horejsek.github.io/python-fastjsonschema/
@@ -264,8 +264,11 @@ class TutorialData:
         if match is not None:
             h = match['hours']
             m = match['minutes']
+            s = match['seconds']
             h = int(h) if h is not None else 0
             m = int(m) if m is not None else 0
+            s = int(s) if s is not None else 0
+            m += 1 if (s > 30) else 0
             return h * 60 + m
         else:
             # fastjsonschema doesn't correctly

@@ -32,6 +32,11 @@ def dal_(connection: str) -> DataAccessLayer:
         ('100h', 6000),
         ('1h 1m', 61),
         ('10h  1m', 601),
+        ('10h     1m', 601),
+        ('0s', 0),
+        ('30s', 0),
+        ('31s', 1),
+        ('59s', 1),
     ]
 )
 def test_text_to_duration(text: str, duration: int) -> None:
@@ -76,6 +81,7 @@ def test_load_from_string_reads_duration(text: str, duration: int, dal_: DataAcc
         'duration: 1',
         'duration: m',
         'duration: 111m',
+        'duration: 60s',
     ]
 )
 def test_load_from_string_detects_invalid_duration(text: str, dal_: DataAccessLayer) -> None:
