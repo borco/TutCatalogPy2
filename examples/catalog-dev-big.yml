@@ -6,32 +6,8 @@ disks:
     depth: 0
 
   -
-    path: ~/Downloads/downthemall/
+    path: /Users/borco/Downloads/tests
     location: local
-    role: downloads
-    depth: 0
-
-  -
-    path: /Volumes/HTSG-500G/Downloads [External]/downthemall
-    location: remote
-    role: downloads
-    depth: 0
-
-  -
-    path: /Volumes/HTSG-500G/Downloads [External]/downthemall [old]
-    location: remote
-    role: downloads
-    depth: 0
-
-  -
-    path: /Volumes/Tutorials WD RED 6T NAS/_TUTORIALS_NEW/_TUTORIALS_NEW
-    location: remote
-    role: downloads
-    depth: 0
-
-  -
-    path: /Volumes/Tutorials WD RED 6T NAS/_TUTORIALS_NEW/_TUTORIALS_NEW_2021
-    location: remote
     role: downloads
     depth: 0
 
