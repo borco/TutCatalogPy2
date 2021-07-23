@@ -362,7 +362,9 @@ class MainWindow(CommonMainWindow):
             if path.exists():
                 tc_path = path / 'info.tc'
                 if not tc_path.exists():
-                    tc_path.touch()
+                    with open(tc_path, 'wt') as f:
+                        log.debug('adding some text')
+                        f.write('\n')
                 open_path(tc_path)
 
     def __update_ui_with_current_folder(self) -> None:
