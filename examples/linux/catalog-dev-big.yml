@@ -1,0 +1,33 @@
+disks:
+  -
+    path: /mnt/DATA/TUTORIALS_NEW_3/
+    location: remote
+    role: downloads
+    depth: 0
+
+  -
+    path: /mnt/DATA/TUTORIALS_NEW_2/
+    location: remote
+    role: downloads
+    depth: 0
+
+  -
+    path: /mnt/DATA/TUTORIALS_NEW_1/
+    location: remote
+    role: downloads
+    depth: 0
+
+  -
+    path: /mnt/DATA/TUTORIALS_2/Watts Atelier
+    location: remote
+    depth: 0
+
+  -
+    path: /mnt/DATA/TUTORIALS_2/Art School Videos
+    location: remote
+    depth: 0
+
+  -
+    path: /mnt/DATA/TUTORIALS_2/New Masters Academy
+    location: remote
+    depth: 0

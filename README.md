@@ -38,10 +38,24 @@ tutcatalogpy
 
 # start the viewer
 tutviewerpy
+```
 
-# (optional) create py2app stubs
+### macOS
+
+```bash
+# (macos) create py2app stubs
 python setup-catalog.py py2app -A
 python setup-viewer.py py2app -A
+```
+
+### Linux
+
+```bash
+# copy the .desktop path
+cp examples/linux/tutcatalogpy2.desktop ~/.local/share/applications
+
+# fix .desktop paths
+vim ~/.local/share/applications/tutcatalogpy2.desktop
 ```
 
 ## Misc

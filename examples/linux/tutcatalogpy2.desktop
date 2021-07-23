@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Exec=/home/borco/Developer/tutcatalogpy2/.venv/bin/tutcatalogpy
+Name=TutCatalogPy2
+GenericName=Tutorial Catalog v2
+Icon=/home/borco/Developer/tutcatalogpy2/src/tutcatalogpy/resources/icons/catalog.png
+Terminal=false
+Categories=Utility
+StartupWMClass=tutcatalogpy
