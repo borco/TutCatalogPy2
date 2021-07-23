@@ -51,11 +51,31 @@ python setup-viewer.py py2app -A
 ### Linux
 
 ```bash
-# copy the .desktop path
-cp examples/linux/tutcatalogpy2.desktop ~/.local/share/applications
+# install the *.desktop files
+cp examples/linux/*.desktop ~/.local/share/applications
 
-# fix .desktop paths
+# fix tutcatalogpy2.desktop paths
 vim ~/.local/share/applications/tutcatalogpy2.desktop
+
+# fix infoviewer.desktop paths
+vim ~/.local/share/applications/infoviewer.desktop
+
+# register mime for *.tc files
+cp user-extension-tc.xml ~/.local/share/mime/packages/
+
+# update mime database
+update-mime-database ~/.local/share/mime
+
+# test mime
+# empty files are identified as text/plain so we add something to the file
+echo -e "\n" > info.tc
+
+mimetype info.tc
+info.tc: application/x-tc
+
+gio info info.tc  | grep "standard::content-type"
+
+# associate *.tc with in the Files app
 ```
 
 ## Misc

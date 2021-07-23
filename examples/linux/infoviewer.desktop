@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Exec=/home/borco/Developer/build-tutcatalog-Desktop_Qt_5_15_2_GCC_64bit-Debug/bin/infoviewer %F
+Name=TutCatalog Infoviewer
+GenericName=TutCatalog Infoviewer
+Icon=/home/borco/Developer/tutcatalog/src/infoviewer/macos/infoviewer.png
+Terminal=false
+Categories=Utility;
+MimeType=application/x-tc;
