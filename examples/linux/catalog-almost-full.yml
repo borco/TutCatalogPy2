@@ -24,6 +24,12 @@ disks:
     depth: 0
 
   -
+    path: /mnt/DATA/TUTORIALS_NEW_PROCESSED/
+    location: local
+    role: downloads
+    depth: 0
+
+  -
     path: /mnt/DATA/TUTORIALS_1
     location: remote
     depth: 1 # PUBLISHER / TUTORIAL
