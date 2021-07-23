@@ -1,0 +1,39 @@
+disks:
+  -
+    path: ~/Downloads/downthemall/
+    location: local
+    role: downloads
+    depth: 0 # TUTORIAL
+
+  -
+    path: /mnt/DATA/TUTORIALS_NEW_1/
+    location: remote
+    role: downloads
+    depth: 0
+
+  -
+    path: /mnt/DATA/TUTORIALS_NEW_2/
+    location: remote
+    role: downloads
+    depth: 0
+
+  -
+    path: /mnt/DATA/TUTORIALS_NEW_3/
+    location: remote
+    role: downloads
+    depth: 0
+
+  -
+    path: /mnt/DATA/TUTORIALS_1
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
+
+  -
+    path: /mnt/DATA/TUTORIALS_2
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
+
+  -
+    path: /mnt/DATA/TUTORIALS_ONLINE_1
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
