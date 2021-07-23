@@ -11,7 +11,7 @@ authors = ["Ioan Calin <iborco@gmail.com>"]
 [tool.poetry.dependencies]
 python = ">=3.9,<3.10"
 PySide2 = "^5.15.2"
-pyobjc-framework-Cocoa = "^7.2"
+pyobjc-framework-Cocoa = {version = "^7.2", markers = "sys_platform == 'darwin'"}
 SQLAlchemy = "^1.4.17"
 py2app = "^0.24"
 humanize = "^3.6.0"
