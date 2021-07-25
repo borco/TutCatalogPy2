@@ -1,0 +1,63 @@
+disks:
+  -
+    path: ~/Downloads/downthemall/
+    location: local
+    role: downloads
+    depth: 0 # TUTORIAL
+
+  -
+    path: /Volumes/DATA/TUTORIALS_NEW_READY/
+    location: local
+    role: downloads
+    depth: 0
+
+  -
+    path: /Volumes/DATA/TUTORIALS_NEW_6/
+    location: local
+    role: downloads
+    depth: 0
+
+  -
+    path: /Volumes/DATA/TUTORIALS_NEW_5/
+    location: local
+    role: downloads
+    depth: 0
+
+  -
+    path: /Volumes/DATA/TUTORIALS_NEW_4/
+    location: local
+    role: downloads
+    depth: 0
+
+  -
+    path: /Volumes/DATA/TUTORIALS_NEW_3/
+    location: local
+    role: downloads
+    depth: 0
+
+  -
+    path: /Volumes/DATA/TUTORIALS_NEW_2
+    location: local
+    role: downloads
+    depth: 0
+
+  -
+    path: /Volumes/DATA/TUTORIALS_NEW_1/
+    location: local
+    role: downloads
+    depth: 0
+
+  -
+    path: /Volumes/DATA/TUTORIALS_1
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
+
+  -
+    path: /Volumes/DATA/TUTORIALS_2
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
+
+  # -
+  #   path: /Volumes/DATA/TUTORIALS_ONLINE_1
+  #   location: remote
+  #   depth: 1 # PUBLISHER / TUTORIAL
