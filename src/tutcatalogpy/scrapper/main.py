@@ -33,7 +33,6 @@ def make_driver(driver_name, show_driver):
             executable_path=executable_path,
             options=options,
         )
-        driver.maximize_window()
     else:
         driver = None
     return driver
@@ -79,7 +78,7 @@ def run(url, driver_name, show_driver, images, verbose):
         print(f"Don't know how to scrap: {url}")
         sys.exit(1)
 
-    time.sleep(5)
+    driver.quit()
 
 
 if __name__ == '__main__':
