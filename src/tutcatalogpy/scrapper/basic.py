@@ -22,6 +22,11 @@ class Scrapper:
         self.info = {}
         self.can_scrap = (publisher in location.split('.'))
 
+    @staticmethod
+    def valid_fs_name(s: str) -> str:
+        """Return a string that can be used as a filename component."""
+        return s.replace(':', ' -').strip()
+
     def get_title(self) -> None:
         pass
 

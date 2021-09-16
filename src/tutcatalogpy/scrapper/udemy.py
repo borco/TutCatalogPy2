@@ -8,7 +8,7 @@ class Scrapper(BasicScrapper):
     def get_title(self) -> None:
         title = self.soup.find('h1', attrs={'data-purpose': 'lead-title'})
         if title and title.string:
-            self.info[self.TITLE_TAG] = title.string.replace(':', ' -').strip()
+            self.info[self.TITLE_TAG] = self.valid_fs_name(title.string)
 
     def get_authors(self) -> None:
         authors = []
