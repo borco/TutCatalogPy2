@@ -3,6 +3,7 @@ import yaml
 import dateutil.parser
 from bs4 import BeautifulSoup
 
+from tutcatalogpy.common.tutorial_data import TutorialData
 
 class Scrapper:
     PUBLISHER_TAG = 'publisher'
@@ -23,6 +24,10 @@ class Scrapper:
         self.publisher = publisher_name
         self.info = {}
         self.can_scrap = (publisher in location.split('.'))
+
+    @staticmethod
+    def secs_to_duration(value: int) -> str:
+        return TutorialData.duration_to_text(value // 60)
 
     @staticmethod
     def parse_date(value: str) -> datetime:

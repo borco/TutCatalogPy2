@@ -1,3 +1,4 @@
+import json
 import re
 
 from tutcatalogpy.scrapper.basic import Scrapper as BasicScrapper
@@ -47,6 +48,26 @@ class Scrapper(BasicScrapper):
                 released = self.parse_released(span.string)
                 if len(released):
                     self.info[self.RELEASED_TAG] = released
+
+    def get_duration(self) -> None:
+        div = self.soup.find('div', 'ud-component--course-landing-page-udlite--curriculum')
+        if div:
+            data = json.loads(div['data-component-props'])
+            duration = data['estimated_content_length_in_seconds']
+            self.info[self.DURATION_TAG] = self.secs_to_duration(duration)
+        pass
+
+    def get_level(self) -> None:
+        pass
+
+    def get_tags(self) -> None:
+        pass
+
+    def get_description(self) -> None:
+        pass
+
+    def get_images(self) -> None:
+        pass
 
 
 if __name__ == "__main__":
