@@ -80,4 +80,5 @@ gio info info.tc  | grep "standard::content-type"
 
 ## Misc
 
+* [scrapper tool](src/tutcatalogpy/scrapper/README.md)
 * [development notes](docs/development_notes.md)
