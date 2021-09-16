@@ -11,3 +11,5 @@ dist
 *.pyc
 *.pyproject.user
 .python-version
+
+geckodriver.log

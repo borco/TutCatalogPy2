@@ -1,6 +1,7 @@
 [tool.poetry.scripts]
 tutcatalogpy = 'tutcatalogpy.catalog.main:run'
 tutviewerpy = 'tutcatalogpy.viewer.main:run'
+tutscrapperpy = 'tutcatalogpy.scrapper.main:run'
 
 [tool.poetry]
 name = "tutcatalogpy"
@@ -20,6 +21,13 @@ natsort = "^7.1.1"
 pymediainfo = "^5.1.0"
 PyYAML = "^5.4.1"
 fastjsonschema = "^2.15.1"
+click = "^8.0.1"
+selenium = "^3.141.0"
+beautifulsoup4 = "^4.10.0"
+python-dateutil = "^2.8.2"
+markdownify = "^0.9.4"
+requests = "^2.26.0"
+Pillow = "^8.3.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

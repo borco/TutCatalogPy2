@@ -6,25 +6,23 @@ disks:
     depth: 0 # TUTORIAL
 
   -
-    path: /mnt/DATA/TUTORIALS_NEW_READY/
+    path: /mnt/DATA/TUTORIALS_1/
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
+
+  -
+    path: /mnt/DATA/TUTORIALS_2/
+    location: remote
+    depth: 1 # PUBLISHER / TUTORIAL
+
+  -
+    path: /mnt/DATA/TUTORIALS_NEW_1/
     location: local
     role: downloads
     depth: 0
 
   -
-    path: /mnt/DATA/TUTORIALS_NEW_6/
-    location: local
-    role: downloads
-    depth: 0
-
-  -
-    path: /mnt/DATA/TUTORIALS_NEW_5/
-    location: local
-    role: downloads
-    depth: 0
-
-  -
-    path: /mnt/DATA/TUTORIALS_NEW_4/
+    path: /mnt/DATA/TUTORIALS_NEW_2/
     location: local
     role: downloads
     depth: 0
@@ -36,26 +34,34 @@ disks:
     depth: 0
 
   -
-    path: /mnt/DATA/TUTORIALS_NEW_2
+    path: /mnt/DATA/TUTORIALS_NEW_4/
     location: local
     role: downloads
     depth: 0
 
   -
-    path: /mnt/DATA/TUTORIALS_NEW_1/
+    path: /mnt/DATA/TUTORIALS_NEW_5/
     location: local
     role: downloads
     depth: 0
 
   -
-    path: /mnt/DATA/TUTORIALS_1
-    location: remote
-    depth: 1 # PUBLISHER / TUTORIAL
+    path: /mnt/DATA/TUTORIALS_NEW_6/
+    location: local
+    role: downloads
+    depth: 0
 
   -
-    path: /mnt/DATA/TUTORIALS_2
-    location: remote
-    depth: 1 # PUBLISHER / TUTORIAL
+    path: /mnt/DATA/TUTORIALS_NEW_7/
+    location: local
+    role: downloads
+    depth: 0
+
+  -
+    path: /mnt/DATA/TUTORIALS_NEW_READY/
+    location: local
+    role: downloads
+    depth: 0
 
   # -
   #   path: /mnt/DATA/TUTORIALS_ONLINE_1
