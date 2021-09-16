@@ -1,11 +1,11 @@
-class Scrapper:
-    def scrap(self, location: str, url: str, driver: object, images: bool, verbose: bool) -> bool:
-        if 'udemy' not in location.split('.'):
-            return False
-        if verbose:
-            print('Using udemy scrapper')
-        return True
+from tutcatalogpy.scrapper.basic import Scrapper as BasicScrapper
 
-    def info(self):
-        ret = ''
-        return ret
+
+class Scrapper(BasicScrapper):
+    def __init__(self, location: str, url: str, source: str, images: bool, verbose: bool) -> None:
+        super().__init__('udemy', 'Udemy', location, url, source, images, verbose)
+
+    def get_title(self) -> None:
+        title = self.soup.find('h1', attrs={'data-purpose': 'lead-title'})
+        if title and title.string:
+            self.info['title'] = title.string.strip()
