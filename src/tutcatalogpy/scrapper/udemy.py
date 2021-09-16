@@ -69,12 +69,13 @@ class Scrapper(BasicScrapper):
             self.info[self.DURATION_TAG] = self.secs_to_duration(duration)
 
     def get_description(self) -> None:
-        text = ''
+        text = f'![{self.COVER_HINT}]({self.COVER_FILE})\n'
 
         converter = md.MarkdownConverter(heading_style=md.ATX, bullets='*')
 
         headline = self.soup.find('div', attrs={'data-purpose': 'lead-headline'})
         if headline:
+            text += '\n'
             text += self.italic(headline.string.strip()) + '\n'
 
         section = self.get_data_component_props('ud-component--course-landing-page-udlite--whatwillyoulearn')
@@ -109,7 +110,10 @@ class Scrapper(BasicScrapper):
         self.info[self.DESCRIPTION_TAG] = block(text)
 
     def get_images(self) -> None:
-        pass
+        url = self.soup.head.find('meta', property='og:image')
+        if url:
+            url = url['content']
+            self.download_image(url, self.COVER_FILE)
 
 
 if __name__ == '__main__':

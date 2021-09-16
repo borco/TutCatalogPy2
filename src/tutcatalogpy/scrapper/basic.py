@@ -1,8 +1,11 @@
+import sys
 from datetime import datetime
 
 import dateutil.parser
+import requests
 import yaml
 from bs4 import BeautifulSoup
+from PIL import Image
 
 from tutcatalogpy.common.tutorial_data import TutorialData
 
@@ -31,13 +34,20 @@ class Scrapper:
     TAGS_TAG = 'tags'
     DESCRIPTION_TAG = 'description'
 
+    MAX_IMAGE_WIDTH = 300
+    IMAGE_EXT = 'JPEG'
+    COVER_FILE = 'cover.jpg'
+    COVER_HINT = 'cover'
+
     def __init__(self, publisher: str, publisher_name: str, location: str, url: str, source: str, images: bool, verbose: bool) -> None:
-        self.url = url
         self.source = source
         self.download_images = images
         self.verbose = verbose
+
         self.publisher = publisher_name
+        self.url = url
         self.info = {}
+
         self.can_scrap = (publisher in location.split('.'))
 
     @staticmethod
@@ -60,6 +70,22 @@ class Scrapper:
     @staticmethod
     def h(level: int, value: str) -> str:
         return f"{'#' * level} {value}\n\n"
+
+    @staticmethod
+    def download_image(url: str, filename: str) -> bool:
+        r = requests.get(url, stream=True)
+
+        # Check if the image was retrieved successfully
+        if r.status_code == 200:
+            # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
+            r.raw.decode_content = True
+
+            im = Image.open(r.raw)
+            im.thumbnail(size=(Scrapper.MAX_IMAGE_WIDTH, sys.maxsize), resample=Image.LANCZOS)
+            im.save(filename, Scrapper.IMAGE_EXT)
+            return True
+        else:
+            return False
 
     def get_title(self) -> None:
         pass
