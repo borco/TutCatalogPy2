@@ -8,4 +8,14 @@ class Scrapper(BasicScrapper):
     def get_title(self) -> None:
         title = self.soup.find('h1', attrs={'data-purpose': 'lead-title'})
         if title and title.string:
-            self.info['title'] = title.string.strip()
+            self.info[self.TITLE_TAG] = title.string.replace(':', ' -').strip()
+
+    def get_authors(self) -> None:
+        authors = []
+        a_tags = self.soup.find('div', attrs={'data-purpose': 'instructor-name-top'}).find_all('a')
+        for a_tag in a_tags:
+            name = a_tag.span.string.strip()
+            if name:
+                authors.append(name)
+        if len(authors):
+            self.info[self.AUTHORS_TAG] = authors
