@@ -1,9 +1,24 @@
 from datetime import datetime
-import yaml
+
 import dateutil.parser
+import yaml
 from bs4 import BeautifulSoup
 
 from tutcatalogpy.common.tutorial_data import TutorialData
+
+
+class block(str):
+    pass
+
+
+def block_representer(dumper, data):
+    style = '|'
+    tag = u'tag:yaml.org,2002:str'
+    return dumper.represent_scalar(tag, data, style=style)
+
+
+yaml.add_representer(block, block_representer)
+
 
 class Scrapper:
     PUBLISHER_TAG = 'publisher'
@@ -38,6 +53,14 @@ class Scrapper:
         """Return a string that can be used as a filename component."""
         return value.replace(':', ' -').strip()
 
+    @staticmethod
+    def italic(value: str) -> str:
+        return f'*{value}*'
+
+    @staticmethod
+    def h(level: int, value: str) -> str:
+        return f"{'#' * level} {value}\n\n"
+
     def get_title(self) -> None:
         pass
 
@@ -66,11 +89,13 @@ class Scrapper:
         if self.download_images:
             self.get_images()
 
+        self.info[self.PUBLISHER_TAG] = self.publisher
         self.get_title()
         self.get_authors()
         self.get_released()
         self.get_duration()
         self.get_level()
+        self.info[self.URL_TAG] = self.url
         self.get_tags()
         self.get_description()
 
@@ -78,11 +103,7 @@ class Scrapper:
         if self.verbose:
             print(f'Using {__name__} scrapper')
         self.soup = BeautifulSoup(self.source, 'html.parser')
-
-        self.info[self.PUBLISHER_TAG] = self.publisher
-        self.info[self.URL_TAG] = self.url
-
         self.get_info()
 
     def dump(self):
-        return yaml.dump(self.info)
+        return yaml.dump(self.info, sort_keys=False)
