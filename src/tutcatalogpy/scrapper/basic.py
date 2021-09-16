@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 class Scrapper:
     PUBLISHER_TAG = 'publisher'
     TITLE_TAG = 'title'
-    AUTHORS_TAG = 'authors'
+    AUTHORS_TAG = 'author'
     RELEASED_TAG = 'released'
     DURATION_TAG = 'duration'
     LEVEL_TAG = 'level'
