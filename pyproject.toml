@@ -1,6 +1,7 @@
 [tool.poetry.scripts]
 tutcatalogpy = 'tutcatalogpy.catalog.main:run'
 tutviewerpy = 'tutcatalogpy.viewer.main:run'
+tutscrapperpy = 'tutcatalogpy.scrapper.main:run'
 
 [tool.poetry]
 name = "tutcatalogpy"
