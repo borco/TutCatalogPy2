@@ -1,21 +1,34 @@
 import json
 import re
+from typing import Optional, Union
 
-from tutcatalogpy.scrapper.basic import Scrapper as BasicScrapper
+import markdownify as md
+from bs4.element import Tag, NavigableString
+
+from tutcatalogpy.scrapper.basic import block, Scrapper as BasicScrapper
 
 
 class Scrapper(BasicScrapper):
     def __init__(self, location: str, url: str, source: str, images: bool, verbose: bool) -> None:
         super().__init__('udemy', 'Udemy', location, url, source, images, verbose)
 
+    def get_data_purpose(self, tag, purpose) -> Optional[Union[Tag, NavigableString]]:
+        return self.soup.find(tag, attrs={'data-purpose': purpose})
+
+    def get_data_component_props(self, class_: str) -> Optional[dict]:
+        div = self.soup.find('div', class_)
+        if div:
+            return json.loads(div['data-component-props'])
+        return None
+
     def get_title(self) -> None:
-        title = self.soup.find('h1', attrs={'data-purpose': 'lead-title'})
+        title = self.get_data_purpose('h1', 'lead-title')
         if title and title.string:
             self.info[self.TITLE_TAG] = self.valid_fs_name(title.string)
 
     def get_authors(self) -> None:
         authors = []
-        a_tags = self.soup.find('div', attrs={'data-purpose': 'instructor-name-top'}).find_all('a')
+        a_tags = self.get_data_purpose('div', 'instructor-name-top').find_all('a')
         for a_tag in a_tags:
             name = a_tag.span.string.strip()
             if name:
@@ -41,7 +54,7 @@ class Scrapper(BasicScrapper):
         return Scrapper.parse_date(value).strftime('%Y/%m')
 
     def get_released(self) -> None:
-        div = self.soup.find('div', attrs={'data-purpose': 'last-update-date'})
+        div = self.get_data_purpose('div', 'last-update-date')
         if div:
             span = div.find_all('span')[-1]
             if span:
@@ -50,26 +63,55 @@ class Scrapper(BasicScrapper):
                     self.info[self.RELEASED_TAG] = released
 
     def get_duration(self) -> None:
-        div = self.soup.find('div', 'ud-component--course-landing-page-udlite--curriculum')
-        if div:
-            data = json.loads(div['data-component-props'])
+        data = self.get_data_component_props('ud-component--course-landing-page-udlite--curriculum')
+        if data:
             duration = data['estimated_content_length_in_seconds']
             self.info[self.DURATION_TAG] = self.secs_to_duration(duration)
-        pass
-
-    def get_level(self) -> None:
-        pass
-
-    def get_tags(self) -> None:
-        pass
 
     def get_description(self) -> None:
-        pass
+        text = ''
+
+        converter = md.MarkdownConverter(heading_style=md.ATX, bullets='*')
+
+        headline = self.soup.find('div', attrs={'data-purpose': 'lead-headline'})
+        if headline:
+            text += self.italic(headline.string.strip()) + '\n'
+
+        section = self.get_data_component_props('ud-component--course-landing-page-udlite--whatwillyoulearn')
+        if section:
+            text += '\n'
+            text += self.h(1, "What you'll learn")
+            text += ''.join(f'* {item.strip()}\n' for item in section['objectives'])
+
+        section = self.get_data_component_props('ud-component--course-landing-page-udlite--requirements')
+        if section:
+            text += '\n'
+            text += self.h(1, 'Requirements')
+            text += ''.join(f'* {item.strip()}\n' for item in section['prerequisites'])
+
+        section = self.get_data_component_props('ud-component--course-landing-page-udlite--description')
+        if section:
+            text += '\n'
+            text += self.h(1, 'Description')
+            description = converter.convert(section['description'])
+            description = description.replace('\u2013', '--').replace('\u2019', "'")
+            description = '\n'.join([line.strip() for line in description.split('\n')])
+            # description = description.strip('\n')
+            text += description
+
+        section = self.get_data_purpose('div', 'target-audience')
+        if section:
+            text += '\n'
+            text += self.h(1, 'Who this course is for')
+            audience = converter.convert(section.ul.decode_contents())
+            text += audience
+
+        self.info[self.DESCRIPTION_TAG] = block(text)
 
     def get_images(self) -> None:
         pass
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import doctest
     doctest.testmod()

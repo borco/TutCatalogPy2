@@ -275,6 +275,18 @@ python-versions = ">=3.6"
 testing = ["coverage", "pyyaml"]
 
 [[package]]
+name = "markdownify"
+version = "0.9.4"
+description = "Convert HTML to markdown."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+beautifulsoup4 = ">=4.9,<5"
+six = ">=1.15,<2"
+
+[[package]]
 name = "mccabe"
 version = "0.6.1"
 description = "McCabe checker, plugin for flake8"
@@ -663,7 +675,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.10"
-content-hash = "9186d81350b249888aecded20f55bd219a8f354978f1aba3c31398d6ff49eca3"
+content-hash = "d3a80fa6887c45978fdf3ad661ebf431bd6f165f71292e2f28a67efbc6bc705c"
 
 [metadata.files]
 altgraph = [
@@ -802,6 +814,10 @@ macholib = [
 markdown = [
     {file = "Markdown-3.3.4-py3-none-any.whl", hash = "sha256:96c3ba1261de2f7547b46a00ea8463832c921d3f9d6aba3f255a6f71386db20c"},
     {file = "Markdown-3.3.4.tar.gz", hash = "sha256:31b5b491868dcc87d6c24b7e3d19a0d730d59d3e46f4eea6430a321bed387a49"},
+]
+markdownify = [
+    {file = "markdownify-0.9.4-py3-none-any.whl", hash = "sha256:153c9e739544a5dc086dbc55709c5019532f81052fbdf0dc937f7835009110dd"},
+    {file = "markdownify-0.9.4.tar.gz", hash = "sha256:a32d7d6b0801f81d12a44533093a5681b402c6b7e9a7049512d26697517eb795"},
 ]
 mccabe = [
     {file = "mccabe-0.6.1-py2.py3-none-any.whl", hash = "sha256:ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42"},
