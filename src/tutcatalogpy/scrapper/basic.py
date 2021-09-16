@@ -1,4 +1,6 @@
+from datetime import datetime
 import yaml
+import dateutil.parser
 from bs4 import BeautifulSoup
 
 
@@ -23,9 +25,13 @@ class Scrapper:
         self.can_scrap = (publisher in location.split('.'))
 
     @staticmethod
-    def valid_fs_name(s: str) -> str:
+    def parse_date(value: str) -> datetime:
+        return dateutil.parser.parse(value, None, tzinfos={'EDT': 0})
+
+    @staticmethod
+    def valid_fs_name(value: str) -> str:
         """Return a string that can be used as a filename component."""
-        return s.replace(':', ' -').strip()
+        return value.replace(':', ' -').strip()
 
     def get_title(self) -> None:
         pass

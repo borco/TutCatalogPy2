@@ -1,3 +1,5 @@
+import re
+
 from tutcatalogpy.scrapper.basic import Scrapper as BasicScrapper
 
 
@@ -19,3 +21,34 @@ class Scrapper(BasicScrapper):
                 authors.append(name)
         if len(authors):
             self.info[self.AUTHORS_TAG] = authors
+
+    @staticmethod
+    def parse_released(value: str) -> str:
+        """
+        >>> s = Scrapper
+        >>> s.parse_released("\\n\\n  Published 8/2016")
+        '2016/08'
+        >>> s.parse_released("2017-05-30T16:24:30Z")
+        '2017/05'
+        >>> s.parse_released('\\n\\nLast updated 7/2021\\n\\n')
+        '2021/07'
+        """
+        r = re.compile(r'\s*(Published|Last updated)*\s*([^<]*)')
+        m = r.match(value)
+        if m is not None and len(m.groups()) == 2:
+            value = m.groups()[1]
+        return Scrapper.parse_date(value).strftime('%Y/%m')
+
+    def get_released(self) -> None:
+        div = self.soup.find('div', attrs={'data-purpose': 'last-update-date'})
+        if div:
+            span = div.find_all('span')[-1]
+            if span:
+                released = self.parse_released(span.string)
+                if len(released):
+                    self.info[self.RELEASED_TAG] = released
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
