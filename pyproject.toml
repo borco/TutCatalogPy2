@@ -22,6 +22,8 @@ pymediainfo = "^5.1.0"
 PyYAML = "^5.4.1"
 fastjsonschema = "^2.15.1"
 click = "^8.0.1"
+selenium = "^3.141.0"
+beautifulsoup4 = "^4.10.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
