@@ -22,6 +22,16 @@ class Scrapper(BasicScrapper):
         )
         self.info[self.TITLE_TAG] = self.valid_fs_name(title)
 
+    @BasicScrapper.store_exceptions
+    def get_authors(self) -> None:
+        authors = []
+        for a in (self.soup
+                .find('div', class_='course-header-new')
+                .find_all('a', class_='js-teacher-popover-link')):
+            authors.append(str(a.string))
+
+        self.info[self.AUTHORS_TAG] = authors
+
 
 if __name__ == '__main__':
     import doctest
