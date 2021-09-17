@@ -2,7 +2,6 @@ import json
 import re
 from typing import Optional, Union
 
-import markdownify as md
 from bs4.element import Tag, NavigableString
 
 from tutcatalogpy.scrapper.basic import block, Scrapper as BasicScrapper
@@ -21,11 +20,13 @@ class Scrapper(BasicScrapper):
             return json.loads(div['data-component-props'])
         return None
 
+    @BasicScrapper.store_exceptions
     def get_title(self) -> None:
         title = self.get_data_purpose('h1', 'lead-title')
         if title and title.string:
             self.info[self.TITLE_TAG] = self.valid_fs_name(title.string)
 
+    @BasicScrapper.store_exceptions
     def get_authors(self) -> None:
         authors = []
         a_tags = self.get_data_purpose('div', 'instructor-name-top').find_all('a')
@@ -53,6 +54,7 @@ class Scrapper(BasicScrapper):
             value = m.groups()[1]
         return Scrapper.parse_date(value).strftime('%Y/%m')
 
+    @BasicScrapper.store_exceptions
     def get_released(self) -> None:
         div = self.get_data_purpose('div', 'last-update-date')
         if div:
@@ -62,16 +64,25 @@ class Scrapper(BasicScrapper):
                 if len(released):
                     self.info[self.RELEASED_TAG] = released
 
+    @BasicScrapper.store_exceptions
     def get_duration(self) -> None:
         data = self.get_data_component_props('ud-component--course-landing-page-udlite--curriculum')
         if data:
             duration = data['estimated_content_length_in_seconds']
             self.info[self.DURATION_TAG] = self.secs_to_duration(duration)
 
-    def get_description(self) -> None:
-        text = f'![{self.COVER_HINT}]({self.COVER_FILE})\n'
+    @BasicScrapper.store_exceptions
+    def download_cover(self) -> None:
+        url = self.soup.head.find('meta', property='og:image')
+        if url:
+            url = url['content']
+            self.download_image(url, self.COVER_FILE)
 
-        converter = md.MarkdownConverter(heading_style=md.ATX, bullets='*')
+    @BasicScrapper.store_exceptions
+    def get_description(self) -> None:
+        self.download_cover()
+
+        text = f'![{self.COVER_HINT}]({self.COVER_FILE})\n'
 
         headline = self.soup.find('div', attrs={'data-purpose': 'lead-headline'})
         if headline:
@@ -94,9 +105,7 @@ class Scrapper(BasicScrapper):
         if section:
             text += '\n'
             text += self.h(1, 'Description')
-            description = converter.convert(section['description'])
-            description = description.replace('\u2013', '--').replace('\u2019', "'")
-            description = '\n'.join([line.strip() for line in description.split('\n')])
+            description = self.md.convert(section['description'])
             # description = description.strip('\n')
             text += description
 
@@ -104,16 +113,10 @@ class Scrapper(BasicScrapper):
         if section:
             text += '\n'
             text += self.h(1, 'Who this course is for')
-            audience = converter.convert(section.ul.decode_contents())
+            audience = self.md.convert(section.ul.decode_contents())
             text += audience
 
         self.info[self.DESCRIPTION_TAG] = block(text)
-
-    def get_images(self) -> None:
-        url = self.soup.head.find('meta', property='og:image')
-        if url:
-            url = url['content']
-            self.download_image(url, self.COVER_FILE)
 
 
 if __name__ == '__main__':
