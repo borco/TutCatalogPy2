@@ -2,7 +2,6 @@ import json
 import re
 from typing import Optional, Union
 
-import markdownify as md
 from bs4.element import Tag, NavigableString
 
 from tutcatalogpy.scrapper.basic import block, Scrapper as BasicScrapper
@@ -71,8 +70,6 @@ class Scrapper(BasicScrapper):
     def get_description(self) -> None:
         text = f'![{self.COVER_HINT}]({self.COVER_FILE})\n'
 
-        converter = md.MarkdownConverter(heading_style=md.ATX, bullets='*')
-
         headline = self.soup.find('div', attrs={'data-purpose': 'lead-headline'})
         if headline:
             text += '\n'
@@ -94,9 +91,7 @@ class Scrapper(BasicScrapper):
         if section:
             text += '\n'
             text += self.h(1, 'Description')
-            description = converter.convert(section['description'])
-            description = description.replace('\u2013', '--').replace('\u2019', "'")
-            description = '\n'.join([line.strip() for line in description.split('\n')])
+            description = self.md.convert(section['description'])
             # description = description.strip('\n')
             text += description
 
@@ -104,7 +99,7 @@ class Scrapper(BasicScrapper):
         if section:
             text += '\n'
             text += self.h(1, 'Who this course is for')
-            audience = converter.convert(section.ul.decode_contents())
+            audience = self.md.convert(section.ul.decode_contents())
             text += audience
 
         self.info[self.DESCRIPTION_TAG] = block(text)
