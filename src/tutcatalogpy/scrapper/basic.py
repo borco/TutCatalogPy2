@@ -80,7 +80,7 @@ class Scrapper:
 
     def __init__(self, publisher: str, publisher_name: str, location: str, url: str, source: str, images: bool, verbose: bool) -> None:
         self.source = source
-        self.download_images = images
+        self.with_images = images
         self.verbose = verbose
 
         self.publisher = publisher_name
@@ -150,13 +150,7 @@ class Scrapper:
     def get_description(self) -> None:
         pass
 
-    def get_images(self) -> None:
-        pass
-
     def get_info(self) -> None:
-        if self.download_images:
-            self.get_images()
-
         self.info[self.PUBLISHER_TAG] = self.publisher
         self.get_title()
         self.get_authors()
