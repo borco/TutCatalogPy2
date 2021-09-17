@@ -71,6 +71,7 @@ class Scrapper(BasicScrapper):
 
     @BasicScrapper.store_exceptions
     def get_description(self):
+        # process text
         content = self.soup.find(id='main-content')
 
         description = ''
@@ -97,6 +98,16 @@ class Scrapper(BasicScrapper):
         description += self.h(1, 'Teacher Details')
         description += self.md.convert(str(content.find('div', class_='course-teacher-new__summary')))
 
+        description += self.h(1, 'Contents')
+        sections = content.find_all('li', 'toc-new__item')
+        for index, section in enumerate(sections):
+            prefix = f'U{index + 1}' if (index < len(sections) - 1) else 'FP'
+            title = section.find('h4', 'toc-new__unit-title')
+            description += f'\n**{prefix} {title.string.strip()}**\n\n'
+            for item in section.find_all('div', 'toc-new__lesson-title'):
+                description += f'1. {item.string.strip()}\n'
+
+        # process images
         self.download_cover()
 
         image_urls = self.find_images(description)
