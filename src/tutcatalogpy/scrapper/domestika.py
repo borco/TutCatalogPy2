@@ -97,6 +97,8 @@ class Scrapper(BasicScrapper):
         description += self.h(1, 'Teacher Details')
         description += self.md.convert(str(content.find('div', class_='course-teacher-new__summary')))
 
+        self.download_cover()
+
         image_urls = self.find_images(description)
         images = self.download_images(image_urls)
         description = self.replace_images(description, images)
@@ -104,6 +106,13 @@ class Scrapper(BasicScrapper):
         description = f'![{self.COVER_HINT}]({self.COVER_FILE})\n\n' + description
 
         self.info[self.DESCRIPTION_TAG] = block(description)
+
+    def download_cover(self) -> None:
+        if self.with_images:
+            content = self.soup.find(id='main-content')
+            div = content.find('div', class_='video-container')
+            url = div.find('img')['src']
+            self.download_image(url, self.COVER_FILE)
 
     def find_images(self, description: str) -> List[str]:
         return re.findall(r'!\[[^\]]*\]\(([^\)]*)\)', description)
@@ -121,7 +130,8 @@ class Scrapper(BasicScrapper):
     def replace_images(self, description: str, images: Dict[str, str]) -> str:
         for url, local_file in images.items():
             description = description.replace(f'({url})', f'({local_file})')
-        description = re.sub(r'\s*!\[', '\n\n![', description)
+        description = re.sub(r'\s*!\[', r'\n\n![', description)
+        description = re.sub(r'!\[\]\(', '![image](', description)
         return description
 
 
