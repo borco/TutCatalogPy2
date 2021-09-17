@@ -1,5 +1,9 @@
 import sys
+import functools
+import traceback
+from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
 import dateutil.parser
 import requests
@@ -39,6 +43,30 @@ class Scrapper:
     COVER_FILE = 'cover.jpg'
     COVER_HINT = 'cover'
 
+    @dataclass
+    class Error:
+        file: str
+        line: int
+        message: str
+
+    class store_exceptions:
+        def __init__(self, func) -> None:
+            functools.update_wrapper(self, func)
+            self.func = func
+
+        def __get__(self, instance, owner):
+            return type(self)(self.func.__get__(instance, owner))
+
+        def __call__(self, *args, **kwargs):
+            try:
+                self.func(*args, **kwargs)
+            except Exception as ex:
+                scrapper = self.func.__self__
+                exc_tb = sys.exc_info()[2]
+                exc_file = traceback.extract_tb(exc_tb)[-1][0]
+                exc_line = traceback.extract_tb(exc_tb)[-1][1]
+                scrapper.errors.append(Scrapper.Error(exc_file, exc_line, str(ex)))
+
     def __init__(self, publisher: str, publisher_name: str, location: str, url: str, source: str, images: bool, verbose: bool) -> None:
         self.source = source
         self.download_images = images
@@ -47,6 +75,7 @@ class Scrapper:
         self.publisher = publisher_name
         self.url = url
         self.info = {}
+        self.errors = []
 
         self.can_scrap = (publisher in location.split('.'))
 
@@ -132,4 +161,18 @@ class Scrapper:
         self.get_info()
 
     def dump(self):
+        if len(self.errors):
+            description = self.info.get(self.DESCRIPTION_TAG, '')
+            separator = '<div style="background-color:red">&nbsp;</div>\n'
+
+            text = separator + '\n# PARSING ERRORS\n\n'
+            err: Scrapper.Error
+            for err in self.errors:
+                text += f'* {err.message} [[{Path(err.file).name}:{err.line}]({err.file}:{err.line})]\n'
+            text += '\n' + separator
+            if len(description):
+                text += '\n' + description
+
+            self.info[self.DESCRIPTION_TAG] = block(text)
+
         return yaml.dump(self.info, sort_keys=False)
