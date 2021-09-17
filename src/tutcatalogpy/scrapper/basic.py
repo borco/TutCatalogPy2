@@ -1,11 +1,13 @@
-import sys
 import functools
+import re
+import sys
 import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
 import dateutil.parser
+import markdownify
 import requests
 import yaml
 from bs4 import BeautifulSoup
@@ -15,7 +17,16 @@ from tutcatalogpy.common.tutorial_data import TutorialData
 
 
 class block(str):
-    pass
+    def __new__(cls, value):
+        o = (
+            value
+            .replace('\u2013', '--')
+            .replace('\u2014', '--')
+            .replace('\u2019', "'")
+        )
+        o = re.sub(r'\n\s*\n', '\n\n', o)
+        o = re.sub(r'[\t ]*\n', '\n', o)
+        return str.__new__(cls, o)
 
 
 def block_representer(dumper, data):
@@ -78,6 +89,8 @@ class Scrapper:
         self.errors = []
 
         self.can_scrap = (publisher in location.split('.'))
+
+        self.md = markdownify.MarkdownConverter(heading_style=markdownify.ATX, bullets='*')
 
     @staticmethod
     def secs_to_duration(value: int) -> str:
