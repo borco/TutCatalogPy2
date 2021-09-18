@@ -9,6 +9,7 @@ from selenium import webdriver
 from selenium.webdriver.remote.webdriver import WebDriver
 
 import tutcatalogpy.scrapper.domestika as domestika
+import tutcatalogpy.scrapper.gumroad as gumroad
 import tutcatalogpy.scrapper.udemy as udemy
 from tutcatalogpy.common.files import relative_path
 
@@ -92,8 +93,9 @@ def run(url, driver_name, source_file, images, headless, timeout, verbose):
 
     scrapped = False
     scrappers = [
-        udemy.Scrapper,
         domestika.Scrapper,
+        gumroad.Scrapper,
+        udemy.Scrapper,
     ]
 
     for scrapper_class in scrappers:
