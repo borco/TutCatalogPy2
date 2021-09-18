@@ -10,7 +10,8 @@ class Scrapper(BasicScrapper):
 
     @BasicScrapper.store_exceptions
     def get_title(self):
-        self.info[self.TITLE_TAG] = self.soup.head.find('meta', attrs={'property':'og:title'})['content']
+        title = self.soup.head.find('meta', attrs={'property':'og:title'})['content']
+        self.info[self.TITLE_TAG] = self.valid_fs_name(title)
 
     @BasicScrapper.store_exceptions
     def get_authors(self):
