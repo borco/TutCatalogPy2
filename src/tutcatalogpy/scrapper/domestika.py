@@ -114,7 +114,7 @@ class Scrapper(BasicScrapper):
         images = self.download_images(image_urls)
         description = self.replace_images(description, images)
 
-        description = f'![{self.COVER_HINT}]({self.COVER_FILE})\n\n' + description
+        description = self.COVER_LINE + description
 
         self.info[self.DESCRIPTION_TAG] = block(description)
 

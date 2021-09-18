@@ -54,6 +54,8 @@ class Scrapper:
     COVER_FILE = 'cover.jpg'
     COVER_HINT = 'cover'
 
+    COVER_LINE = f'![{COVER_HINT}]({COVER_FILE})\n\n'
+
     @dataclass
     class Error:
         file: str
