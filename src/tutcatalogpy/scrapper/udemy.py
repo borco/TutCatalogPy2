@@ -71,7 +71,6 @@ class Scrapper(BasicScrapper):
             duration = data['estimated_content_length_in_seconds']
             self.info[self.DURATION_TAG] = self.secs_to_duration(duration)
 
-    @BasicScrapper.store_exceptions
     def download_cover(self) -> None:
         url = self.soup.head.find('meta', property='og:image')
         if url:
@@ -80,9 +79,10 @@ class Scrapper(BasicScrapper):
 
     @BasicScrapper.store_exceptions
     def get_description(self) -> None:
-        self.download_cover()
+        if self.with_images:
+            self.download_cover()
 
-        text = f'![{self.COVER_HINT}]({self.COVER_FILE})\n'
+        text = self.COVER_LINE
 
         headline = self.soup.find('div', attrs={'data-purpose': 'lead-headline'})
         if headline:
