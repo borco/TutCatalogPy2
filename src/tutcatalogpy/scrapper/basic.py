@@ -9,6 +9,7 @@ from pathlib import Path
 import dateutil.parser
 import markdownify
 import requests
+import unidecode
 import yaml
 from bs4 import BeautifulSoup
 from PIL import Image
@@ -26,6 +27,7 @@ class block(str):
         )
         o = re.sub(r'\n\s*\n', '\n\n', o)
         o = re.sub(r'[\t ]*\n', '\n', o)
+        o = unidecode.unidecode(o)
         return str.__new__(cls, o)
 
 
@@ -104,8 +106,19 @@ class Scrapper:
 
     @staticmethod
     def valid_fs_name(value: str) -> str:
-        """Return a string that can be used as a filename component."""
-        return value.replace(':', ' -').strip()
+        """Return a string that can be used as a filename component.
+
+        >>> s = Scrapper
+        >>> s.valid_fs_name('foo')
+        'foo'
+        >>> s.valid_fs_name('foo: bar')
+        'foo - bar'
+        >>> s.valid_fs_name('Raúl Salazar')
+        'Raul Salazar'
+        """
+        value = value.replace(':', ' -')
+        value = unidecode.unidecode(value)
+        return value.strip()
 
     @staticmethod
     def italic(value: str) -> str:
@@ -184,4 +197,14 @@ class Scrapper:
 
             self.info[self.DESCRIPTION_TAG] = block(text)
 
+        # remove diacritics from the author names
+        authors = self.info.get(self.AUTHORS_TAG, [])
+        for index, author in enumerate(authors):
+            authors[index] = unidecode.unidecode(author)
+
         return yaml.dump(self.info, sort_keys=False)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

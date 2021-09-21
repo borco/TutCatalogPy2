@@ -28,6 +28,7 @@ python-dateutil = "^2.8.2"
 markdownify = "^0.9.4"
 requests = "^2.26.0"
 Pillow = "^8.3.2"
+Unidecode = "^1.3.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
