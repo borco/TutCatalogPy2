@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 from bs4.element import Tag, NavigableString
 
-from tutcatalogpy.scrapper.basic import block, Scrapper as BasicScrapper
+from tutcatalogpy.scrapper.basic import Scrapper as BasicScrapper
 
 
 class Scrapper(BasicScrapper):
@@ -24,7 +24,7 @@ class Scrapper(BasicScrapper):
     def get_title(self) -> None:
         title = self.get_data_purpose('h1', 'lead-title')
         if title and title.string:
-            self.info.title = self.valid_fs_name(title.string)
+            self.info.title = title.string
 
     @BasicScrapper.store_exceptions
     def get_authors(self) -> None:
@@ -116,7 +116,7 @@ class Scrapper(BasicScrapper):
             audience = self.md.convert(section.ul.decode_contents())
             text += audience
 
-        self.info.description = block(text)
+        self.info.description = text
 
 
 if __name__ == '__main__':

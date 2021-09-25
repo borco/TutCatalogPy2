@@ -1,6 +1,6 @@
 import doctest
 
-from tutcatalogpy.scrapper.basic import block, Scrapper as BasicScrapper
+from tutcatalogpy.scrapper.basic import Scrapper as BasicScrapper
 
 
 class Scrapper(BasicScrapper):
@@ -9,8 +9,7 @@ class Scrapper(BasicScrapper):
 
     @BasicScrapper.store_exceptions
     def get_title(self):
-        title = self.soup.head.find('meta', attrs={'property':'og:title'})['content']
-        self.info.title = self.valid_fs_name(title)
+        self.info.title = self.soup.head.find('meta', attrs={'property':'og:title'})['content']
 
     @BasicScrapper.store_exceptions
     def get_authors(self):
@@ -24,7 +23,7 @@ class Scrapper(BasicScrapper):
 
         description = self.soup.select_one('blockquote.product-description').decode_contents()
         description = self.COVER_LINE + self.md.convert(description)
-        self.info.description = block(description)
+        self.info.description = description
 
     def download_cover(self) -> None:
         url = self.soup.head.find('meta', property='og:image')

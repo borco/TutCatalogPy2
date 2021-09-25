@@ -14,6 +14,7 @@ import unidecode
 import yaml
 from bs4 import BeautifulSoup
 from PIL import Image
+from titlecase import titlecase
 
 from tutcatalogpy.common.tutorial_data import TutorialData
 
@@ -77,7 +78,7 @@ class Scrapper:
             if self.publisher:
                 d[PUBLISHER_TAG] = self.publisher
             if self.title:
-                d[TITLE_TAG] = self.title
+                d[TITLE_TAG] = Scrapper.valid_fs_name(titlecase(self.title))
             if len(self.authors):
                 d[AUTHORS_TAG] = self.authors
             if self.released:
@@ -91,7 +92,7 @@ class Scrapper:
             if len(self.tags):
                 d[TAGS_TAG] = self.tags
             if self.description:
-                d[DESCRIPTION_TAG] = self.description
+                d[DESCRIPTION_TAG] = block(self.description)
 
             return d
 
@@ -164,8 +165,11 @@ class Scrapper:
         return f"{'#' * level} {value}\n\n"
 
     @staticmethod
-    def download_image(url: str, filename: str) -> bool:
-        r = requests.get(url, stream=True)
+    def download_image(url: str, filename: str, referer: Optional[str] = None) -> None:
+        s = requests.Session()
+        if referer is not None:
+            s.headers.update({'referer': referer})
+        r = s.get(url, stream=True)
 
         # Check if the image was retrieved successfully
         if r.status_code == 200:
@@ -175,9 +179,8 @@ class Scrapper:
             im = Image.open(r.raw)
             im.thumbnail(size=(Scrapper.MAX_IMAGE_WIDTH, sys.maxsize), resample=Image.LANCZOS)
             im.save(filename, Scrapper.IMAGE_EXT)
-            return True
         else:
-            return False
+            raise Exception(str(r))
 
     def get_title(self) -> None:
         pass
