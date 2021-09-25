@@ -2,9 +2,10 @@ import functools
 import re
 import sys
 import traceback
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 import dateutil.parser
 import markdownify
@@ -41,22 +42,58 @@ yaml.add_representer(block, block_representer)
 
 
 class Scrapper:
-    PUBLISHER_TAG = 'publisher'
-    TITLE_TAG = 'title'
-    AUTHORS_TAG = 'author'
-    RELEASED_TAG = 'released'
-    DURATION_TAG = 'duration'
-    LEVEL_TAG = 'level'
-    URL_TAG = 'url'
-    TAGS_TAG = 'tags'
-    DESCRIPTION_TAG = 'description'
-
     MAX_IMAGE_WIDTH = 300
     IMAGE_EXT = 'JPEG'
     COVER_FILE = 'cover.jpg'
     COVER_HINT = 'cover'
 
     COVER_LINE = f'![{COVER_HINT}]({COVER_FILE})\n\n'
+
+    @dataclass
+    class Info:
+        publisher: str = ''
+        title: str = ''
+        authors: List[str] = field(default_factory=list)
+        released: str = ''
+        duration: str = ''
+        level: str = ''
+        url: str = ''
+        tags: List[str] = field(default_factory=list)
+        description: str = ''
+
+        def dump(self) -> Dict[str, Any]:
+            PUBLISHER_TAG = 'publisher'
+            TITLE_TAG = 'title'
+            AUTHORS_TAG = 'author'
+            RELEASED_TAG = 'released'
+            DURATION_TAG = 'duration'
+            LEVEL_TAG = 'level'
+            URL_TAG = 'url'
+            TAGS_TAG = 'tags'
+            DESCRIPTION_TAG = 'description'
+
+            d = {}
+
+            if self.publisher:
+                d[PUBLISHER_TAG] = self.publisher
+            if self.title:
+                d[TITLE_TAG] = self.title
+            if len(self.authors):
+                d[AUTHORS_TAG] = self.authors
+            if self.released:
+                d[RELEASED_TAG] = self.released
+            if self.duration:
+                d[DURATION_TAG] = self.duration
+            if self.level:
+                d[LEVEL_TAG] = self.level
+            if self.url:
+                d[URL_TAG] = self.url
+            if len(self.tags):
+                d[TAGS_TAG] = self.tags
+            if self.description:
+                d[DESCRIPTION_TAG] = self.description
+
+            return d
 
     @dataclass
     class Error:
@@ -82,17 +119,15 @@ class Scrapper:
                 exc_line = traceback.extract_tb(exc_tb)[-1][1]
                 scrapper.errors.append(Scrapper.Error(exc_file, exc_line, str(ex)))
 
-    def __init__(self, publisher: str, publisher_name: str, location: str, url: str, source: str, images: bool, verbose: bool) -> None:
+    def __init__(self, publisher: Optional[str], publisher_name: str, location: str, url: str, source: str, images: bool, verbose: bool) -> None:
         self.source = source
         self.with_images = images
         self.verbose = verbose
 
-        self.publisher = publisher_name
-        self.url = url
-        self.info = {}
+        self.info: Scrapper.Info = Scrapper.Info(url=url, publisher=publisher_name)
         self.errors = []
 
-        self.can_scrap = (publisher in location.split('.'))
+        self.can_scrap = publisher is not None and (publisher in location.split('.'))
 
         self.md = markdownify.MarkdownConverter(heading_style=markdownify.ATX, bullets='*')
 
@@ -166,13 +201,11 @@ class Scrapper:
         pass
 
     def get_info(self) -> None:
-        self.info[self.PUBLISHER_TAG] = self.publisher
         self.get_title()
         self.get_authors()
         self.get_released()
         self.get_duration()
         self.get_level()
-        self.info[self.URL_TAG] = self.url
         self.get_tags()
         self.get_description()
 
@@ -184,7 +217,7 @@ class Scrapper:
 
     def dump(self):
         if len(self.errors):
-            description = self.info.get(self.DESCRIPTION_TAG, '')
+            description = self.info.description
             separator = '<div style="background-color:red">&nbsp;</div>\n'
 
             text = separator + '\n# PARSING ERRORS\n\n'
@@ -195,14 +228,14 @@ class Scrapper:
             if len(description):
                 text += '\n' + description
 
-            self.info[self.DESCRIPTION_TAG] = block(text)
+            self.info.description = block(text)
 
         # remove diacritics from the author names
-        authors = self.info.get(self.AUTHORS_TAG, [])
+        authors = self.info.authors
         for index, author in enumerate(authors):
             authors[index] = unidecode.unidecode(author)
 
-        return yaml.dump(self.info, sort_keys=False)
+        return yaml.dump(self.info.dump(), sort_keys=False)
 
 
 if __name__ == '__main__':

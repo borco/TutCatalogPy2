@@ -16,7 +16,7 @@ class Scrapper(BasicScrapper):
             .find('h1', class_='course-header-new__title')
             .find('a').string
         )
-        self.info[self.TITLE_TAG] = self.valid_fs_name(title)
+        self.info.title = self.valid_fs_name(title)
 
     @BasicScrapper.store_exceptions
     def get_authors(self) -> None:
@@ -26,7 +26,7 @@ class Scrapper(BasicScrapper):
                 .find_all('a', class_='js-teacher-popover-link')):
             authors.append(str(a.string))
 
-        self.info[self.AUTHORS_TAG] = authors
+        self.info.authors = authors
 
     @staticmethod
     def parse_duration(value):
@@ -46,7 +46,7 @@ class Scrapper(BasicScrapper):
             .find('ul', class_="course-details-list")
             .find('i', class_='a-icon-film')
             .parent)
-        self.info[self.DURATION_TAG] = self.parse_duration(tag.text)
+        self.info.duration = self.parse_duration(tag.text)
 
     @staticmethod
     def parse_level(value):
@@ -67,7 +67,7 @@ class Scrapper(BasicScrapper):
             .find('i', class_='a-icon-chart-bar')
             .parent)
 
-        self.info[self.LEVEL_TAG] = self.parse_level(tag.text)
+        self.info.level = self.parse_level(tag.text)
 
     @BasicScrapper.store_exceptions
     def get_description(self):
@@ -116,7 +116,7 @@ class Scrapper(BasicScrapper):
 
         description = self.COVER_LINE + description
 
-        self.info[self.DESCRIPTION_TAG] = block(description)
+        self.info.description = block(description)
 
     def download_cover(self) -> None:
         if self.with_images:

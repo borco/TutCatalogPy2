@@ -24,7 +24,7 @@ class Scrapper(BasicScrapper):
     def get_title(self) -> None:
         title = self.get_data_purpose('h1', 'lead-title')
         if title and title.string:
-            self.info[self.TITLE_TAG] = self.valid_fs_name(title.string)
+            self.info.title = self.valid_fs_name(title.string)
 
     @BasicScrapper.store_exceptions
     def get_authors(self) -> None:
@@ -35,7 +35,7 @@ class Scrapper(BasicScrapper):
             if name:
                 authors.append(name)
         if len(authors):
-            self.info[self.AUTHORS_TAG] = authors
+            self.info.authors = authors
 
     @staticmethod
     def parse_released(value: str) -> str:
@@ -62,14 +62,14 @@ class Scrapper(BasicScrapper):
             if span:
                 released = self.parse_released(span.string)
                 if len(released):
-                    self.info[self.RELEASED_TAG] = released
+                    self.info.released = released
 
     @BasicScrapper.store_exceptions
     def get_duration(self) -> None:
         data = self.get_data_component_props('ud-component--course-landing-page-udlite--curriculum')
         if data:
             duration = data['estimated_content_length_in_seconds']
-            self.info[self.DURATION_TAG] = self.secs_to_duration(duration)
+            self.info.duration = self.secs_to_duration(duration)
 
     def download_cover(self) -> None:
         url = self.soup.head.find('meta', property='og:image')
@@ -116,7 +116,7 @@ class Scrapper(BasicScrapper):
             audience = self.md.convert(section.ul.decode_contents())
             text += audience
 
-        self.info[self.DESCRIPTION_TAG] = block(text)
+        self.info.description = block(text)
 
 
 if __name__ == '__main__':
