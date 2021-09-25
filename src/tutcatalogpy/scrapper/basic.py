@@ -1,4 +1,5 @@
 import functools
+import json
 import re
 import sys
 import traceback
@@ -62,10 +63,11 @@ class Scrapper:
         tags: List[str] = field(default_factory=list)
         description: str = ''
 
-        def dump(self) -> Dict[str, Any]:
+        def dump(self, as_json: bool) -> Dict[str, Any]:
             PUBLISHER_TAG = 'publisher'
             TITLE_TAG = 'title'
             AUTHORS_TAG = 'author'
+            AUTHORS_TAG_JSON = 'authors'  # historical
             RELEASED_TAG = 'released'
             DURATION_TAG = 'duration'
             LEVEL_TAG = 'level'
@@ -80,7 +82,10 @@ class Scrapper:
             if self.title:
                 d[TITLE_TAG] = Scrapper.valid_fs_name(titlecase(self.title))
             if len(self.authors):
-                d[AUTHORS_TAG] = self.authors
+                if as_json:
+                    d[AUTHORS_TAG_JSON] = self.authors
+                else:
+                    d[AUTHORS_TAG] = self.authors
             if self.released:
                 d[RELEASED_TAG] = self.released
             if self.duration:
@@ -218,7 +223,7 @@ class Scrapper:
         self.soup = BeautifulSoup(self.source, 'html.parser')
         self.get_info()
 
-    def dump(self):
+    def dump(self, as_json: bool):
         if len(self.errors):
             description = self.info.description
             separator = '<div style="background-color:red">&nbsp;</div>\n'
@@ -238,7 +243,11 @@ class Scrapper:
         for index, author in enumerate(authors):
             authors[index] = unidecode.unidecode(author)
 
-        return yaml.dump(self.info.dump(), sort_keys=False)
+        info = self.info.dump(as_json)
+        if as_json:
+            return json.dumps(info, indent=2, sort_keys=True)
+        else:
+            return yaml.dump(info, sort_keys=False)
 
 
 if __name__ == '__main__':

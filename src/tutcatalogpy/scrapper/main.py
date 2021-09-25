@@ -52,10 +52,11 @@ def make_driver(driver_name: str, headless: bool) -> Optional[WebDriver]:
 @click.option('-g', '--gecko', 'driver_name', flag_value='gecko', default=True, help='Use firefox and geckodriver.')
 @click.option('-s', '--source', 'source_file', type=click.File('rb'), help='Use FILENAME instead of downloading from internet.')
 @click.option('-h/-H', '--headless/--no-headless', default=True, help='Run headless.')
+@click.option('-j/-J', '--json/--no-json', 'as_json', default=True, help='Return info as JSON.')
 @click.option('--images/--no-images', ' /-I', default=True, help='Download images.')
 @click.option('-t', '--timeout', default=0, help='Timeout after finishing scrapping (in seconds).')
 @click.option('-v', '--verbose', is_flag=True, default=False, help='Verbose output.')
-def run(url, driver_name, source_file, images, headless, timeout, verbose):
+def run(url, driver_name, source_file, images, headless, as_json, timeout, verbose):
     if verbose:
         print(f"""Scrapping:       {url}
     driver:      {driver_name}
@@ -104,7 +105,7 @@ def run(url, driver_name, source_file, images, headless, timeout, verbose):
         scrapper = scrapper_class(parsed_url.netloc, url, source, images, verbose)
         if scrapper.can_scrap:
             scrapper.scrap()
-            print(scrapper.dump().rstrip('\n'))
+            print(scrapper.dump(as_json).rstrip('\n'))
             scrapped = True
             break
 
