@@ -10,6 +10,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 
 import tutcatalogpy.scrapper.domestika as domestika
 import tutcatalogpy.scrapper.gumroad as gumroad
+import tutcatalogpy.scrapper.newmastersacademy as newmastersacademy
 import tutcatalogpy.scrapper.udemy as udemy
 from tutcatalogpy.common.files import relative_path
 
@@ -95,6 +96,7 @@ def run(url, driver_name, source_file, images, headless, timeout, verbose):
     scrappers = [
         domestika.Scrapper,
         gumroad.Scrapper,
+        newmastersacademy.Scrapper,
         udemy.Scrapper,
     ]
 
