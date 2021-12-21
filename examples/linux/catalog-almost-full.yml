@@ -55,7 +55,7 @@ disks:
     path: /mnt/DATA/TUTORIALS_NEW_7/
     location: local
     role: downloads
-    depth: 0
+    depth: 1
 
   -
     path: /mnt/DATA/TUTORIALS_NEW_READY/
