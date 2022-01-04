@@ -61,14 +61,15 @@ vim ~/.local/share/applications/tutcatalogpy2.desktop
 vim ~/.local/share/applications/infoviewer.desktop
 
 # register mime for *.tc files
-cp user-extension-tc.xml ~/.local/share/mime/packages/
+mkdir -p ~/.local/share/mime/packages/
+cp examples/linux/user-extension-tc.xml ~/.local/share/mime/packages/
 
 # update mime database
 update-mime-database ~/.local/share/mime
 
 # test mime
 # empty files are identified as text/plain so we add something to the file
-echo -e "\n" > info.tc
+echo -e "\n\n" > info.tc
 
 mimetype info.tc
 info.tc: application/x-tc
@@ -76,6 +77,13 @@ info.tc: application/x-tc
 gio info info.tc  | grep "standard::content-type"
 
 # associate *.tc with in the Files app
+```
+
+#### Transitional
+
+```bash
+# for C++ infoviewer
+sudo apt install ffmpeg
 ```
 
 ## Misc
